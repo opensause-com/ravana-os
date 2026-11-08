@@ -6,6 +6,8 @@ OUT=/shots
 { ls -la /usr/bin/kwin_wayland* /usr/libexec/kwin* 2>&1; file /usr/bin/kwin_wayland 2>&1; head -c 600 /usr/bin/kwin_wayland | strings | head -20; echo; ls /usr/share/icons; } > "$OUT/kwin-info.txt" 2>&1
 useradd -m -s /bin/bash ravana 2>/dev/null || true
 install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
+chmod 666 /dev/dri/* 2>/dev/null || true
+ls -la /dev/dri >> "$OUT/kwin-info.txt" 2>&1
 
 cat > /home/ravana/session.sh <<'SESSION'
 #!/usr/bin/env bash

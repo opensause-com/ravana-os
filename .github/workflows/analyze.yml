@@ -55,6 +55,18 @@ jobs:
               /usr/share/sddm /usr/share/plasma /usr/share/fastfetch /usr/libexec /usr/bin 2>/dev/null | head -150
             echo "### Plymouth theme"
             plymouth-set-default-theme 2>/dev/null || true
+            echo "### Login manager (theming)"
+            rpm -qa | grep -iE "plasma-login|sddm|plasmalogin" | sort
+            rpm -ql plasma-login-manager 2>/dev/null | grep -vE "/locale/|/doc/|/man/" | head -80
+            for f in /etc/plasmalogin.conf /etc/plasmalogin.conf.d/* /usr/lib/plasmalogin.conf.d/* /usr/share/plasmalogin/*.conf; do
+              [ -f "$f" ] && { echo "== $f"; cat "$f"; }
+            done
+            echo "### Plymouth themes available"
+            ls /usr/share/plymouth/themes/; cat /usr/share/plymouth/themes/spinner/spinner.plymouth 2>/dev/null
+            ls /usr/share/plymouth/themes/spinner/ | head -80
+            plymouth --version 2>/dev/null || rpm -q plymouth
+            echo "### KSplash themes"
+            ls /usr/share/plasma/look-and-feel/*/contents/splash 2>/dev/null | head -40
             echo "### Flatpaks preinstalled list"
             ls /usr/share/ublue-os/ 2>/dev/null; cat /usr/share/ublue-os/flatpaks* /etc/ublue-os/*flatpak* 2>/dev/null | head -60
           '

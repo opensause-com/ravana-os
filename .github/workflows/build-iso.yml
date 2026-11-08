@@ -57,6 +57,19 @@ jobs:
           (cd output && sha256sum "${{ inputs.image }}.iso" > "${{ inputs.image }}.iso.sha256")
           ls -lh output
 
+      - name: Inspect ISO branding
+        run: |
+          sudo apt-get install -y -qq xorriso >/dev/null
+          ISO="output/${{ inputs.image }}.iso"
+          xorriso -indev "$ISO" -pvd_info 2>/dev/null | grep -iE "volume id|publisher|application"
+          xorriso -indev "$ISO" -ls / /images /EFI/BOOT /boot/grub2 2>/dev/null || true
+          mkdir -p /tmp/isoinfo
+          for f in EFI/BOOT/grub.cfg boot/grub2/grub.cfg .discinfo .buildstamp .treeinfo; do
+            xorriso -osirrox on -indev "$ISO" -extract "/$f" "/tmp/isoinfo/$(echo $f | tr / _)" 2>/dev/null \
+              && { echo "===== /$f"; cat "/tmp/isoinfo/$(echo $f | tr / _)"; }
+          done
+          true
+
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.image }}-iso

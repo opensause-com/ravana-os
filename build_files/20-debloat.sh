@@ -9,8 +9,6 @@ SESSION_SWITCH="$(command -v steamos-session-select || true)"
 
 # ---------- 1. Packages ----------
 REMOVE=(
-    # ROCm static/devel compiler bits (~2.3 GB); ROCm runtime (HIP/OpenCL) stays
-    rocm-llvm-static rocm-llvm-devel
     # Non-x86 VM emulation + ARM VM firmware (~0.5 GB); x86 VMs (KVM/QEMU) stay
     edk2-aarch64 edk2-arm
     qemu-system-aarch64-core qemu-system-mips-core qemu-system-ppc-core
@@ -37,6 +35,13 @@ if [ ${#PRESENT[@]} -gt 0 ]; then
     dnf5 remove -y --disablerepo='*' --setopt=clean_requirements_on_remove=False "${PRESENT[@]}"
 fi
 
+# ROCm's static LLVM libraries (~2.2 GB). Packages stay installed because
+# rocm-hip -> hipcc -> rocm-llvm-devel depend on them; only the .a archives go.
+# They are used to link LLVM statically into compilers, never at runtime.
+if rpm -q rocm-llvm-static >/dev/null 2>&1; then
+    rpm -ql rocm-llvm-static | grep -E '\.a$' | xargs -r rm -f
+fi
+
 # Docs (~0.24 GB); man pages and licenses stay
 find /usr/share/doc -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
@@ -59,7 +64,7 @@ hide_autostart geoclue-demo-agent.desktop
 
 # ---------- 3. Safety net: core features must still be here ----------
 MUST_HAVE=(
-    kernel-core plasma-workspace plasma-desktop kwin steam gamescope
+    kernel-core plasma-workspace plasma-desktop kwin steam
     gamescope-session-steam mesa-vulkan-drivers mesa-dri-drivers
     code docker-ce podman distrobox flatpak NetworkManager pipewire
     rocm-hip rocm-opencl qemu-kvm libvirt plasma-login-manager
@@ -71,6 +76,8 @@ if [ ${#MISSING[@]} -gt 0 ]; then
     exit 1
 fi
 test -f /usr/share/wayland-sessions/gamescope-session-steam.desktop
+command -v gamescope   # Game Mode compositor (package name varies)
+command -v hipcc       # ROCm HIP toolchain
 test -f /usr/share/wayland-sessions/plasma.desktop
 if [ -n "$SESSION_SWITCH" ]; then test -x "$SESSION_SWITCH"; fi
 

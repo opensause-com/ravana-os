@@ -1,0 +1,4 @@
+# Ravana OS: file indexing off by default (saves ~100-300 MB RAM and disk I/O).
+# Users can re-enable it in System Settings → Search.
+[Basic Settings]
+Indexing-Enabled=false

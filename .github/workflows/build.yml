@@ -1,0 +1,77 @@
+name: Build Ravana OS image
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'docs/**']
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '30 6 * * *'   # daily, picks up Bazzite / Fedora updates
+  workflow_dispatch:
+
+env:
+  IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.image }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ravana-os
+            base: ghcr.io/ublue-os/bazzite-dx:stable
+          - image: ravana-os-nvidia
+            base: ghcr.io/ublue-os/bazzite-dx-nvidia:stable
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Free disk space (base image is ~15 GB unpacked)
+        uses: ublue-os/remove-unwanted-software@v9
+
+      - name: Prepare tags
+        run: |
+          echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> "$GITHUB_ENV"
+          echo "TAGS=latest $(date -u +%Y%m%d) $(date -u +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Build image
+        run: |
+          sudo podman build --pull=newer \
+            --build-arg BASE_IMAGE=${{ matrix.base }} \
+            --build-arg IMAGE_NAME=${{ matrix.image }} \
+            --build-arg IMAGE_VENDOR=${{ github.repository_owner }} \
+            --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
+            --label org.opencontainers.image.version="$(date -u +%Y%m%d)-${GITHUB_SHA::7}" \
+            -t localhost/${{ matrix.image }}:latest -f Containerfile .
+
+      # Re-split the image into package-based layers so updates only download
+      # what actually changed (usually a few hundred MB instead of GBs).
+      - name: Rechunk for small updates
+        run: |
+          GRAPHROOT="$(sudo podman info --format '{{.Store.GraphRoot}}')"
+          sudo podman run --rm --pull=never --privileged \
+            --mount=type=image,src=localhost/${{ matrix.image }}:latest,target=/rpm-ostree \
+            --mount=type=bind,src="$GRAPHROOT",target=/run/host-container-storage,rw \
+            --mount=type=tmpfs,target=/run/rpm-ostree-storage \
+            --entrypoint /usr/bin/rpm-ostree \
+            localhost/${{ matrix.image }}:latest \
+            compose build-chunked-oci --max-layers 127 --format-version=2 --bootc \
+            --rootfs /rpm-ostree \
+            --output "containers-storage:[overlay@/run/host-container-storage+/run/rpm-ostree-storage]localhost/${{ matrix.image }}:latest"
+
+      - name: Push to GHCR
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          for tag in $TAGS; do
+            sudo podman push localhost/${{ matrix.image }}:latest "$IMAGE_REGISTRY/${{ matrix.image }}:$tag"
+          done

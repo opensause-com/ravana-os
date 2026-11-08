@@ -1,0 +1,21 @@
+# Anaconda installer config for the Ravana OS ISO.
+# After install, point the system at the registry so `bootc upgrade` / auto-updates
+# pull new Ravana OS builds. @IMAGE_REF@ is filled in by the workflow.
+[customizations.installer.kickstart]
+contents = """
+%post
+bootc switch --mutate-in-place --transport registry @IMAGE_REF@
+%end
+"""
+
+[customizations.installer.modules]
+enable = [
+  "org.fedoraproject.Anaconda.Modules.Storage",
+  "org.fedoraproject.Anaconda.Modules.Runtime",
+  "org.fedoraproject.Anaconda.Modules.Network",
+  "org.fedoraproject.Anaconda.Modules.Security",
+  "org.fedoraproject.Anaconda.Modules.Services",
+  "org.fedoraproject.Anaconda.Modules.Users",
+  "org.fedoraproject.Anaconda.Modules.Timezone"
+]
+disable = ["org.fedoraproject.Anaconda.Modules.Subscription"]

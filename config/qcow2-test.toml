@@ -1,0 +1,6 @@
+# Test-only login for the QEMU disk image built by `sudo scripts/build-disk.sh qcow2`.
+# Not used by the installer ISO (Anaconda asks for a user during install).
+[[customizations.user]]
+name = "ravana"
+password = "ravana"
+groups = ["wheel"]

@@ -28,16 +28,23 @@ jobs:
       - name: Free disk space
         uses: ublue-os/remove-unwanted-software@v9
 
+      - name: Virtual GPU (vgem) so KWin has a render device
+        run: |
+          sudo apt-get install -y -qq "linux-modules-extra-$(uname -r)" >/dev/null 2>&1 || true
+          sudo modprobe vgem && ls -la /dev/dri || echo "vgem not available"
+
       - name: Screenshot the desktop
         run: |
           IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ravana-os:${{ inputs.tag || 'testing' }}"
           sudo podman pull -q "$IMAGE"
           mkdir -p shots
-          sudo podman run --rm --privileged --security-opt label=disable \
-            -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" \
+          sudo podman run --rm --privileged --security-opt label=disable --device /dev/dri \
+            -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" -v "$PWD/.github/screenshot/capture.py:/capture.py:ro" -v "$PWD/build_files/fedora-build.repo:/fedora-build.repo:ro" \
             "$IMAGE" bash /run.sh
           sudo chown -R "$USER" shots
-          tail -n 40 shots/session.log || true
+          cat shots/steps.log || true
+          tail -n 40 shots/kwin.log || true
+          tail -n 60 shots/session.log || true
           grep -iE "ravana|error|qml|file:" shots/plasmashell.log | grep -v "^$" | head -60 || true
           cat shots/panels.txt || true
 

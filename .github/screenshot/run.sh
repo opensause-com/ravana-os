@@ -3,11 +3,7 @@
 # and screenshots the desktop, Launchpad, Spotlight, the Ravana menu and a window.
 set -uo pipefail
 OUT=/shots
-# Weston: tiny headless outer display whose screenshot tool needs no GPU.
-cp /fedora-build.repo /etc/yum.repos.d/ravana-shot.repo
-dnf5 -y -q install --setopt=install_weak_deps=False --repo=ravana-build-fedora --repo=ravana-build-updates weston >/dev/null 2>&1 \
-  && echo "weston installed" || echo "weston install FAILED"
-{ ls -la /usr/bin/kwin_wayland* /usr/libexec/kwin* 2>&1; file /usr/bin/kwin_wayland 2>&1; head -c 600 /usr/bin/kwin_wayland | strings | head -20; echo; kwin_wayland --help 2>&1 | head -60; } > "$OUT/kwin-info.txt" 2>&1
+{ ls -la /usr/bin/kwin_wayland* /usr/libexec/kwin* 2>&1; file /usr/bin/kwin_wayland 2>&1; head -c 600 /usr/bin/kwin_wayland | strings | head -20; echo; ls /usr/share/icons; } > "$OUT/kwin-info.txt" 2>&1
 useradd -m -s /bin/bash ravana 2>/dev/null || true
 install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
 
@@ -18,8 +14,7 @@ log() { echo "[$(date +%T)] $*" >> "$OUT/steps.log"; }
 shot() {
   sleep "${2:-3}"
   log "capturing $1"
-  ( cd /tmp/wshots && rm -f wayland-screenshot*.png && WAYLAND_DISPLAY=wayland-weston weston-screenshooter >> "$OUT/steps.log" 2>&1 \
-    && mv wayland-screenshot*.png "$OUT/$1.png" ) && log "shot $1" || log "FAILED shot $1"
+  python3 /capture.py "$OUT/$1.png" >> "$OUT/steps.log" 2>&1 && log "shot $1" || log "FAILED shot $1"
 }
 send() { dbus-send --session --type=method_call --print-reply "$@" >/dev/null 2>&1; }
 
@@ -76,13 +71,9 @@ chmod 777 "$OUT"
 cat > /home/ravana/wrapper.sh <<'WRAP'
 #!/usr/bin/env bash
 OUT=/shots
-mkdir -p /tmp/wshots
-weston --backend=headless --renderer=pixman --width=1920 --height=1080 --debug --socket=wayland-weston --idle-time=0 > "$OUT/weston.log" 2>&1 &
-WPID=$!
-sleep 3
-# KWin runs nested as a full-size window inside Weston
-WAYLAND_DISPLAY=wayland-weston kwin_wayland --wayland-display=wayland-weston --no-lockscreen --width 1920 --height 1080 --socket wayland-ravana > "$OUT/kwin.log" 2>&1 &
+kwin_wayland --virtual --no-lockscreen --width 1920 --height 1080 --socket wayland-ravana > "$OUT/kwin.log" 2>&1 &
 KPID=$!
+WPID=
 export WAYLAND_DISPLAY=wayland-ravana
 sleep 4
 /home/ravana/session.sh &
@@ -104,7 +95,7 @@ timeout 360 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ra
   PATH=/usr/local/bin:/usr/bin:/bin XDG_RUNTIME_DIR=/tmp/xdg-ravana \
   XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6 \
   QT_QPA_PLATFORM=wayland LANG=en_US.UTF-8 KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 \
-  KWIN_COMPOSE=Q QT_FORCE_STDERR_LOGGING=1 QT_LOGGING_RULES="kwin_*.info=true" \
+  QT_FORCE_STDERR_LOGGING=1 QT_LOGGING_RULES="kwin_*.info=true" \
   dbus-run-session -- /home/ravana/wrapper.sh > "$OUT/session-all.log" 2>&1
 grep -v "dbus-daemon" "$OUT/session-all.log" > "$OUT/session.log" || true
 rm -f "$OUT/session-all.log"

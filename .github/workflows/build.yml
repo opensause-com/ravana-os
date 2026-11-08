@@ -11,6 +11,8 @@ on:
       - '.github/workflows/build-iso.yml'
       - '.github/workflows/analyze.yml'
       - '.github/workflows/build-live-iso.yml'
+      - '.github/workflows/publish-iso-sourceforge.yml'
+      - 'scripts/**'
       - 'live/**'
       - 'Containerfile.live'
   pull_request:

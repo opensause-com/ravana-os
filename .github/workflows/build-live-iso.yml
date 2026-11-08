@@ -8,7 +8,12 @@ name: Build Ravana OS live ISO
 #   - automatically after a stable (main) image build that came from a push,
 #     then publishes a GitHub Release
 #   - weekly, to refresh the ISOs with upstream fixes (also released)
+#   - automatically after a testing image build from a push (testing ISO, no release)
 #   - manually from the Actions tab (any edition/channel, no release)
+#
+# ISOs go to SourceForge (fast mirrors, direct .iso links) once the repo variables
+# SF_PROJECT and SF_USER and the secret SF_SSH_KEY are set. They are also kept as
+# build artifacts.
 on:
   workflow_dispatch:
     inputs:
@@ -22,19 +27,35 @@ on:
         type: choice
         options: [latest, testing]
         default: latest
+      sourceforge:
+        description: Upload to SourceForge
+        type: boolean
+        default: true
   workflow_run:
     workflows: ["Build Ravana OS image"]
     types: [completed]
-    branches: [main]
+    branches: [main, testing]
   schedule:
     - cron: '0 8 * * 0'   # Sundays
 
 concurrency:
-  group: live-iso-${{ github.event_name }}-${{ inputs.image || 'all' }}-${{ inputs.channel || 'latest' }}
+  group: live-iso-${{ github.event_name }}-${{ inputs.image || 'all' }}-${{ inputs.channel || github.event.workflow_run.head_branch || 'latest' }}
   cancel-in-progress: true
 
+env:
+  CHANNEL: ${{ inputs.channel || (github.event.workflow_run.head_branch == 'testing' && 'testing') || 'latest' }}
+
 jobs:
+  meta:
+    runs-on: ubuntu-24.04
+    outputs:
+      stamp: ${{ steps.s.outputs.stamp }}
+    steps:
+      - id: s
+        run: echo "stamp=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+
   live-iso:
+    needs: meta
     # Automatic runs only after successful stable builds triggered by a push
     if: >-
       github.event_name != 'workflow_run' ||
@@ -48,7 +69,7 @@ jobs:
       matrix:
         image: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.image) || '["ravana-os","ravana-os-nvidia"]') }}
     env:
-      CHANNEL: ${{ inputs.channel || 'latest' }}
+      SF_PROJECT: ${{ vars.SF_PROJECT }}
       ISO: ${{ matrix.image }}-live.iso
     steps:
       - uses: actions/checkout@v7
@@ -108,6 +129,14 @@ jobs:
             || xorriso -osirrox on -indev "$ISO" -extract /EFI/BOOT/grub.cfg /tmp/grub.cfg 2>/dev/null || true
           grep -E "menuentry|search" /tmp/grub.cfg 2>/dev/null || true
 
+      - name: Upload to SourceForge
+        if: env.SF_PROJECT != '' && (github.event_name != 'workflow_dispatch' || inputs.sourceforge)
+        env:
+          SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+          SF_API_KEY: ${{ secrets.SF_API_KEY }}
+          SF_USER: ${{ vars.SF_USER }}
+        run: scripts/sourceforge-upload.sh "$CHANNEL" "${{ needs.meta.outputs.stamp }}" "output/$ISO"
+
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.image }}-live-iso
@@ -125,8 +154,8 @@ jobs:
           retention-days: 90
 
   release:
-    needs: live-iso
-    if: github.event_name != 'workflow_dispatch'
+    needs: [meta, live-iso]
+    if: github.event_name != 'workflow_dispatch' && github.event.workflow_run.head_branch != 'testing'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -147,10 +176,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="$(sed -n 's/^ARG IMAGE_VERSION=//p' Containerfile)"
-          DATE="$(date -u +%Y-%m-%d)"
-          TAG="v${VERSION}-$(date -u +%Y%m%d)"
+          STAMP="${{ needs.meta.outputs.stamp }}"
+          DATE="${STAMP:0:4}-${STAMP:4:2}-${STAMP:6:2}"
+          TAG="v${VERSION}-${STAMP}"
+          SF="${{ vars.SF_PROJECT }}"
+          SF_DIR="https://sourceforge.net/projects/$SF/files/releases/$VERSION-$STAMP"
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           cat checksums/*.sha256 > SHA256SUMS
+          # SourceForge files carry the version and date in their names
+          [ -z "$SF" ] || sed -Ei "s/ (ravana-os[a-z-]*)-live\.iso$/ \1-$VERSION-$STAMP-live.iso/" SHA256SUMS
           PREV="$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')"
           {
             echo "## Download"
@@ -159,10 +193,19 @@ jobs:
             echo
             echo "| Edition | Download |"
             echo "|---|---|"
-            echo "| Ravana OS (AMD / Intel) | \`ravana-os-live.iso\` from the [build page]($RUN_URL#artifacts) |"
-            echo "| Ravana OS (NVIDIA) | \`ravana-os-nvidia-live.iso\` from the [build page]($RUN_URL#artifacts) |"
-            echo
-            echo "Downloads are kept for 90 days and need a GitHub sign-in. Verify with \`SHA256SUMS\` below."
+            if [ -n "$SF" ]; then
+              for e in "ravana-os:AMD / Intel" "ravana-os-nvidia:NVIDIA"; do
+                f="${e%%:*}-$VERSION-$STAMP-live.iso"
+                echo "| Ravana OS (${e#*:}) | [$f]($SF_DIR/$f/download) |"
+              done
+              echo
+              echo "Direct downloads from SourceForge mirrors, no sign-in needed. Verify with \`SHA256SUMS\` below."
+            else
+              echo "| Ravana OS (AMD / Intel) | \`ravana-os-live.iso\` from the [build page]($RUN_URL#artifacts) |"
+              echo "| Ravana OS (NVIDIA) | \`ravana-os-nvidia-live.iso\` from the [build page]($RUN_URL#artifacts) |"
+              echo
+              echo "Downloads are kept for 90 days and need a GitHub sign-in. Verify with \`SHA256SUMS\` below."
+            fi
             echo "Want VS Code, Docker, VMs and ROCm? Open **Get Developer Tools** after installing."
             echo
             echo "Already on Ravana? Updates arrive automatically, or run \`ujust update\`."

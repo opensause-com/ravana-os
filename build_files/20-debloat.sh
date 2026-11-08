@@ -72,10 +72,9 @@ MUST_HAVE=(
     gamescope-session-steam mesa-vulkan-drivers mesa-dri-drivers
     podman distrobox flatpak NetworkManager pipewire
 )
+MUST_HAVE+=(plasma-login-manager)
 if [ "${IMAGE_FLAVOR:-main}" = dx ]; then
-    MUST_HAVE+=(code docker-ce rocm-hip rocm-opencl qemu-kvm libvirt plasma-login-manager)
-else
-    MUST_HAVE+=(sddm)
+    MUST_HAVE+=(code docker-ce rocm-hip rocm-opencl qemu-kvm libvirt)
 fi
 MISSING=()
 for p in "${MUST_HAVE[@]}"; do rpm -q "$p" >/dev/null 2>&1 || MISSING+=("$p"); done

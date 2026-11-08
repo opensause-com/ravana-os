@@ -1,7 +1,8 @@
 # Ravana OS (Fedora Atomic, KDE Plasma), two editions from one recipe:
-#   main : BASE_IMAGE=ghcr.io/ublue-os/bazzite-deck[-nvidia]:stable  gaming + desktop, Game Mode
-#   dx   : BASE_IMAGE=ghcr.io/ublue-os/bazzite-dx[-nvidia]:stable    + VS Code, Docker, VMs, ROCm
-ARG BASE_IMAGE=ghcr.io/ublue-os/bazzite-deck:stable
+# Both build on ghcr.io/ublue-os/bazzite-dx[-nvidia]:stable:
+#   IMAGE_FLAVOR=main : gaming + desktop + Game Mode; dev stack removed (build_files/12-edition.sh)
+#   IMAGE_FLAVOR=dx   : + VS Code, Docker, VMs, ROCm
+ARG BASE_IMAGE=ghcr.io/ublue-os/bazzite-dx:stable
 
 FROM scratch AS ctx
 COPY system_files /files

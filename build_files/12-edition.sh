@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Edition setup. The main edition is built on Bazzite's Deck image (for Game Mode),
-# which normally auto-boots into Game Mode like a Steam Deck. On a PC, Ravana shows
-# the login screen instead, with Desktop as the default and Game Mode one click away.
+# Edition setup. Both editions start from Bazzite DX. The main edition removes the
+# developer stack; "Get Developer Tools" switches to the Developer edition, which
+# shares the rest of the image, so only the difference is downloaded.
 set -euxo pipefail
 FLAVOR="${IMAGE_FLAVOR:-main}"
 echo "Ravana edition: $FLAVOR"
@@ -27,18 +27,32 @@ DESK
 
 [ "$FLAVOR" = main ] || exit 0
 
-ls -la /etc/sddm.conf.d/ 2>/dev/null || true
-# Deck-style auto-login into Game Mode and the handheld on-screen keyboard
-rm -f /etc/sddm.conf.d/steamos.conf \
-      /etc/sddm.conf.d/zz-steamos-autologin.conf \
-      /etc/sddm.conf.d/virtualkbd.conf
+SIZE_BEFORE=$(du -sxm /usr | cut -f1)
+DEV=(
+    # Editor
+    code
+    # Docker (Podman + Distrobox stay)
+    docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    # Virtual machines
+    qemu qemu-kvm qemu-kvm-core libvirt libvirt-daemon-kvm virt-manager virt-viewer
+    edk2-ovmf guestfs-tools libguestfs incus incus-agent
+    # ROCm GPU compute
+    rocm-hip rocm-opencl rocm-clinfo rocm-smi hipcc rocm-llvm rocm-llvm-devel
+    rocm-llvm-static rocm-llvm-libs rocm-comgr rocm-device-libs rocm-runtime
+    # Profilers and dev utilities
+    bcc bpftrace bpftop sysprof tiptop nicstat numactl flatpak-builder
+    python3-ramalama android-tools podman-machine
+)
+PRESENT=()
+for p in "${DEV[@]}"; do rpm -q "$p" >/dev/null 2>&1 && PRESENT+=("$p"); done
+echo "Removing developer stack: ${PRESENT[*]}"
+dnf5 remove -y --disablerepo='*' "${PRESENT[@]}"
 
-# First boot: preselect the Plasma desktop session (SDDM remembers the last choice after)
-mkdir -p /usr/lib/tmpfiles.d
-cat > /usr/lib/tmpfiles.d/ravana-sddm.conf <<'TMP'
-d /var/lib/sddm 0750 sddm sddm -
-f /var/lib/sddm/state.conf 0644 sddm sddm - [Last]\nSession=/usr/share/wayland-sessions/plasma.desktop\n
-TMP
+# Services/sockets that belonged to the removed tools
+for unit in docker.socket docker.service incus-workaround.service virtqemud.service \
+            bazzite-dx-groups.service; do
+    systemctl disable "$unit" 2>/dev/null || true
+done
+rm -f /etc/yum.repos.d/docker-ce.repo /etc/yum.repos.d/config.repo   # docker / vscode repos
 
-test -f /usr/share/wayland-sessions/plasma.desktop
-test -f /usr/share/wayland-sessions/gamescope-session-steam.desktop
+echo "Developer stack removed: /usr ${SIZE_BEFORE} MB -> $(du -sxm /usr | cut -f1) MB"

@@ -37,12 +37,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Ravana OS: gaming + desktop, Game Mode (Bazzite Deck base), smallest
+          # Ravana OS: gaming + desktop + Game Mode; dev stack removed (smallest).
+          # Same base as Developer, so switching editions only downloads the difference.
           - image: ravana-os
-            base: ghcr.io/ublue-os/bazzite-deck:stable
+            base: ghcr.io/ublue-os/bazzite-dx:stable
             flavor: main
           - image: ravana-os-nvidia
-            base: ghcr.io/ublue-os/bazzite-deck-nvidia:stable
+            base: ghcr.io/ublue-os/bazzite-dx-nvidia:stable
             flavor: main
           # Ravana OS Developer: + VS Code, Docker, VMs, ROCm (Bazzite DX base)
           - image: ravana-os-dx

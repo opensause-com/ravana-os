@@ -34,10 +34,11 @@ jobs:
           sudo podman pull -q "$IMAGE"
           mkdir -p shots
           sudo podman run --rm --privileged --security-opt label=disable \
-            -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" \
+            -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" -v "$PWD/.github/screenshot/capture.py:/capture.py:ro" \
             "$IMAGE" bash /run.sh
           sudo chown -R "$USER" shots
-          tail -n 40 shots/session.log || true
+          cat shots/steps.log || true
+          tail -n 60 shots/session.log || true
           grep -iE "ravana|error|qml|file:" shots/plasmashell.log | grep -v "^$" | head -60 || true
           cat shots/panels.txt || true
 

@@ -9,10 +9,18 @@ install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
 cat > /home/ravana/session.sh <<'SESSION'
 #!/usr/bin/env bash
 OUT=/shots
-log() { echo "[$(date +%T)] $*"; }
-shot() { sleep "${2:-3}"; spectacle -b -n -f -o "$OUT/$1.png" 2>/dev/null && log "shot $1" || log "FAILED shot $1"; }
+log() { echo "[$(date +%T)] $*" >> "$OUT/steps.log"; }
+shot() {
+  sleep "${2:-3}"
+  log "capturing $1"
+  if python3 /capture.py "$OUT/$1.png" >> "$OUT/steps.log" 2>&1; then log "shot $1"
+  elif spectacle -b -n -f -o "$OUT/$1.png" >> "$OUT/steps.log" 2>&1; then log "shot $1 (spectacle)"
+  else log "FAILED shot $1"; fi
+}
 send() { dbus-send --session --type=method_call --print-reply "$@" >/dev/null 2>&1; }
 
+log "session started"
+python3 -c "import dbus" >> "$OUT/steps.log" 2>&1 && log "dbus-python ok" || log "no dbus-python"
 plasmashell --no-respawn >"$OUT/plasmashell.log" 2>&1 &
 sleep 30
 shot 01-desktop 1
@@ -64,9 +72,12 @@ chmod 777 "$OUT"
 timeout 300 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ravana \
   PATH=/usr/local/bin:/usr/bin:/bin XDG_RUNTIME_DIR=/tmp/xdg-ravana \
   XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6 \
-  QT_QPA_PLATFORM=wayland LANG=en_US.UTF-8 \
+  QT_QPA_PLATFORM=wayland LANG=en_US.UTF-8 KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 \
+  QT_LOGGING_RULES="kwin_*.warning=true;kwin_core.debug=true" LIBGL_ALWAYS_SOFTWARE=1 \
   dbus-run-session -- kwin_wayland --virtual --no-lockscreen --width 1920 --height 1080 \
-  --exit-with-session /home/ravana/session.sh > "$OUT/session.log" 2>&1
+  --exit-with-session /home/ravana/session.sh > "$OUT/session-all.log" 2>&1
+grep -v "dbus-daemon" "$OUT/session-all.log" > "$OUT/session.log" || true
+rm -f "$OUT/session-all.log"
 echo "session exit: $?"
 cp /home/ravana/.config/plasma-org.kde.plasma.desktop-appletsrc "$OUT/" 2>/dev/null || true
 # Shortcut merge for existing users

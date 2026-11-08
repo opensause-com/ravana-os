@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Reset Ravana Look
+GenericName=Restore Default Appearance
+Comment=Reapply the Ravana theme, dock and top bar layout, wallpaper and colours
+Icon=ravana-os
+Exec=plasma-apply-lookandfeel --apply org.ravana.desktop --resetLayout
+Terminal=false
+Categories=Settings;
+Keywords=theme;look;reset;layout;dock;ravana;

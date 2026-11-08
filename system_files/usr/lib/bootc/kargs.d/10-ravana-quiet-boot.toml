@@ -1,0 +1,3 @@
+# Ravana OS: show only the boot animation from firmware to login
+# (no kernel/udev text, no blinking console cursor). Applied on install/update.
+kargs = ["quiet", "splash", "loglevel=3", "rd.udev.log_level=3", "rd.systemd.show_status=false", "vt.global_cursor_default=0"]

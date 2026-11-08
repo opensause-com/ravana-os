@@ -46,8 +46,12 @@ fi
 find /usr/share/doc -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
 # ---------- 2. Background services ----------
+# - NetworkManager-wait-online: makes boot wait for the network; desktops don't need it
+# - dnf-makecache / countme: background package-metadata downloads and a Fedora
+#   usage ping on a system that doesn't use dnf; wastes data and CPU
 for unit in iscsi-onboot.service iscsi-starter.service iscsid.socket iscsiuio.socket \
-            ModemManager.service; do
+            ModemManager.service NetworkManager-wait-online.service \
+            dnf-makecache.timer rpm-ostree-countme.timer; do
     systemctl disable "$unit" 2>/dev/null || true
 done
 

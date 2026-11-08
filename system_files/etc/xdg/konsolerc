@@ -1,0 +1,9 @@
+[Desktop Entry]
+DefaultProfile=Ravana.profile
+
+[KonsoleWindow]
+ShowMenuBarByDefault=false
+
+[MainWindow]
+MenuBar=Disabled
+ToolBarsMovable=Disabled

@@ -14,6 +14,8 @@ var bar = new Panel;
 bar.location = "top";
 bar.height = Math.round(gridUnit * 1.8);
 bar.floating = false;
+// Top bar: glass over the wallpaper, solid when a window is maximized
+try { bar.opacity = "adaptive"; } catch (e) {}
 
 var launcher = bar.addWidget("org.kde.plasma.kickoff");
 launcher.currentConfigGroup = ["General"];
@@ -38,6 +40,8 @@ dock.alignment = "center";
 dock.lengthMode = "fit";
 dock.floating = true;
 dock.hiding = "dodgewindows";
+// Frosted-glass dock: always translucent (KWin blurs what's behind it)
+try { dock.opacity = "translucent"; } catch (e) {}
 
 var tasks = dock.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];

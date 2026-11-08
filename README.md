@@ -84,7 +84,12 @@ and boot splash.
 
 The desktop follows a familiar layout: a top bar with the app menu, clock and tray, a
 floating dock at the bottom, window buttons on the left, genie-style minimize, translucent
-blur, and Overview (Meta+W or the top-left corner) to see all your windows.
+blur, and Overview (Meta+W or the top-left corner) to see all your windows. Panels, the
+dock, menus and the terminal are frosted glass over your wallpaper.
+
+Boot is quiet end to end: the Ravana crown animation plays from firmware to the login
+screen, then a matching splash carries you into the desktop. Changed the look and want it
+back? Open **Reset Ravana Look** from the app menu.
 
 | | Dark | Light |
 |---|---|---|

@@ -39,8 +39,12 @@ fi
 # KDE "About this System"
 ABOUT=/etc/xdg/kcm-about-distrorc
 if [ -f "$ABOUT" ]; then
-    sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=${EDITION} ${IMAGE_VERSION}|; s|^Website=.*|Website=https://github.com/ravana-os/ravana-os|" "$ABOUT"
+    sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=${EDITION}|; s|^Website=.*|Website=https://github.com/ravana-os/ravana-os|" "$ABOUT"
     grep -q '^Name=' "$ABOUT" || sed -i '/^\[General\]/a Name=Ravana OS' "$ABOUT"
+    # Show Ravana's version, not Fedora's (os-release keeps Fedora's for tools)
+    sed -i '/^Version=/d; /^UseOSReleaseVersion=/d' "$ABOUT"
+    sed -i "/^\[General\]/a Version=${IMAGE_VERSION}" "$ABOUT"
+    grep -q '^Variant=' "$ABOUT" || sed -i "/^\[General\]/a Variant=${EDITION}" "$ABOUT"
     if grep -q '^LogoPath=' "$ABOUT"; then
         sed -i 's|^LogoPath=.*|LogoPath=/usr/share/pixmaps/ravana-os.png|' "$ABOUT"
     else

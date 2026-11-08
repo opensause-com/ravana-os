@@ -17,10 +17,10 @@ setkv IMAGE_VERSION "${IMAGE_VERSION}"
 setkv DEFAULT_HOSTNAME "ravana"
 setkv ANSI_COLOR "0;38;2;210;31;60"
 setkv LOGO "ravana-os"
-setkv HOME_URL "https://github.com/opensause-com/ravana-os"
-setkv DOCUMENTATION_URL "https://github.com/opensause-com/ravana-os#readme"
-setkv SUPPORT_URL "https://github.com/opensause-com/ravana-os/discussions"
-setkv BUG_REPORT_URL "https://github.com/opensause-com/ravana-os/issues"
+setkv HOME_URL "https://github.com/ravana-os/ravana-os"
+setkv DOCUMENTATION_URL "https://github.com/ravana-os/ravana-os#readme"
+setkv SUPPORT_URL "https://github.com/ravana-os/ravana-os/discussions"
+setkv BUG_REPORT_URL "https://github.com/ravana-os/ravana-os/issues"
 # Shown in the boot menu
 BUILD="$(. "$OSR"; echo "${OSTREE_VERSION:-$FEDORA_VER}")"
 setkv BOOTLOADER_NAME "Ravana OS ${IMAGE_VERSION} (${BUILD})"
@@ -37,7 +37,7 @@ fi
 # KDE "About this System"
 ABOUT=/etc/xdg/kcm-about-distrorc
 if [ -f "$ABOUT" ]; then
-    sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=Gaming + Dev ${IMAGE_VERSION}|; s|^Website=.*|Website=https://github.com/opensause-com/ravana-os|" "$ABOUT"
+    sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=Gaming + Dev ${IMAGE_VERSION}|; s|^Website=.*|Website=https://github.com/ravana-os/ravana-os|" "$ABOUT"
     grep -q '^Name=' "$ABOUT" || sed -i '/^\[General\]/a Name=Ravana OS' "$ABOUT"
     if grep -q '^LogoPath=' "$ABOUT"; then
         sed -i 's|^LogoPath=.*|LogoPath=/usr/share/pixmaps/ravana-os.png|' "$ABOUT"

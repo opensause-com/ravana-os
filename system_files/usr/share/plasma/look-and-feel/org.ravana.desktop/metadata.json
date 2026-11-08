@@ -8,7 +8,7 @@
         "License": "GPL-2.0-or-later",
         "Name": "Ravana",
         "Version": "0.1",
-        "Website": "https://github.com/opensause-com/ravana-os"
+        "Website": "https://github.com/ravana-os/ravana-os"
     },
     "X-Plasma-APIVersion": "2"
 }

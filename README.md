@@ -7,7 +7,7 @@
 A fast, lightweight Linux OS with a console-style Game Mode, a clean developer desktop,
 and updates that can always be rolled back.
 
-[![Build Ravana OS](https://github.com/opensause-com/ravana-os/actions/workflows/build.yml/badge.svg)](https://github.com/opensause-com/ravana-os/actions/workflows/build.yml)
+[![Build Ravana OS](https://github.com/ravana-os/ravana-os/actions/workflows/build.yml/badge.svg)](https://github.com/ravana-os/ravana-os/actions/workflows/build.yml)
 
 </div>
 
@@ -29,21 +29,21 @@ and updates that can always be rolled back.
 
 | Edition | For | Image |
 |---|---|---|
-| **Ravana OS** | AMD and Intel graphics | `ghcr.io/opensause-com/ravana-os:latest` |
-| **Ravana OS NVIDIA** | NVIDIA graphics | `ghcr.io/opensause-com/ravana-os-nvidia:latest` |
+| **Ravana OS** | AMD and Intel graphics | `ghcr.io/ravana-os/ravana-os:latest` |
+| **Ravana OS NVIDIA** | NVIDIA graphics | `ghcr.io/ravana-os/ravana-os-nvidia:latest` |
 
 ## Install
 
 **Fresh install:** download the installer ISO from the
-[latest ISO build](https://github.com/opensause-com/ravana-os/actions/workflows/build-iso.yml)
+[latest ISO build](https://github.com/ravana-os/ravana-os/actions/workflows/build-iso.yml)
 (Actions → newest run → *Artifacts*), write it to a USB stick (Fedora Media Writer, Ventoy or
 `dd`), and boot from it.
 
 **Already on Bazzite or another Fedora Atomic system?** Switch with one command and reboot:
 
 ```bash
-sudo bootc switch ghcr.io/opensause-com/ravana-os:latest          # AMD / Intel
-sudo bootc switch ghcr.io/opensause-com/ravana-os-nvidia:latest   # NVIDIA
+sudo bootc switch ghcr.io/ravana-os/ravana-os:latest          # AMD / Intel
+sudo bootc switch ghcr.io/ravana-os/ravana-os-nvidia:latest   # NVIDIA
 ```
 
 ## Updates
@@ -69,8 +69,8 @@ If an update misbehaves, pick the previous version in the boot menu.
 | Testing | `:testing` | Test machines. Built from the `testing` branch |
 
 ```bash
-sudo bootc switch ghcr.io/opensause-com/ravana-os:testing   # follow testing
-sudo bootc switch ghcr.io/opensause-com/ravana-os:latest    # back to stable
+sudo bootc switch ghcr.io/ravana-os/ravana-os:testing   # follow testing
+sudo bootc switch ghcr.io/ravana-os/ravana-os:latest    # back to stable
 ```
 
 New work lands on `testing` first, then merges to `main` once it's verified.

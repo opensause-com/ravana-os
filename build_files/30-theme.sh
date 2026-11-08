@@ -47,7 +47,7 @@ $KW --file /etc/xdg/kwinrc --group ElectricBorders --key TopLeft Overview || tru
 # (Firefox is a Flatpak installed on first boot, so it is always kept.)
 LAYOUT="$LNF/contents/layouts/org.kde.plasma.desktop-layout.js"
 # VS Code's launcher name varies by packaging; use whatever the code package ships
-VSCODE_DESKTOP="$(rpm -ql code 2>/dev/null | grep -E '^/usr/share/applications/[^/]+\.desktop$' | grep -v url-handler | head -1 || true)"
+VSCODE_DESKTOP="$(rpm -ql code 2>/dev/null | grep -E '^/usr/share/applications/[^/]+\.desktop$' | grep -viE 'url-?handler' | head -1 || true)"
 echo "VS Code launcher: ${VSCODE_DESKTOP:-none}"
 if [ -n "$VSCODE_DESKTOP" ]; then
     sed -i "s|\"applications:code.desktop\"|\"applications:$(basename "$VSCODE_DESKTOP")\"|" "$LAYOUT"

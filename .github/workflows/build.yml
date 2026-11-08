@@ -10,6 +10,9 @@ on:
       - 'disk_config/**'
       - '.github/workflows/build-iso.yml'
       - '.github/workflows/analyze.yml'
+      - '.github/workflows/build-live-iso.yml'
+      - 'live/**'
+      - 'Containerfile.live'
   pull_request:
     branches: [main, testing]
   schedule:

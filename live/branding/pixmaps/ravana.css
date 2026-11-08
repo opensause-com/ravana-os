@@ -1,0 +1,18 @@
+/* Ravana OS installer theme (GTK Anaconda) */
+.logo-sidebar {
+    background-image: url('/usr/share/anaconda/pixmaps/sidebar-bg.png');
+    background-color: #121214;
+    background-size: cover;
+}
+.logo {
+    background-image: url('/usr/share/anaconda/pixmaps/sidebar-logo.png');
+    background-position: 50% 24px;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+AnacondaSpokeWindow #nav-box {
+    background-color: #121214;
+    background-image: url('/usr/share/anaconda/pixmaps/topbar-bg.png');
+    background-repeat: repeat;
+    color: #F5F5F7;
+}

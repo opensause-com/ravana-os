@@ -1,0 +1,9 @@
+# Ravana OS live ISO layer: live session (try without installing) + installer.
+# Built by .github/workflows/build-live-iso.yml, then turned into an ISO by Titanoboa.
+# Needs: podman build --cap-add sys_admin --security-opt label=disable
+ARG BASE=ghcr.io/ravana-os/ravana-os:latest
+FROM ${BASE}
+ARG RAVANA_IMAGE=ghcr.io/ravana-os/ravana-os
+ARG RAVANA_TAG=latest
+COPY live /src
+RUN RAVANA_IMAGE="${RAVANA_IMAGE}" RAVANA_TAG="${RAVANA_TAG}" /src/build.sh && rm -rf /src

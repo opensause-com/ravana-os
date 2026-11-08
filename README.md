@@ -34,12 +34,45 @@ and updates that can always be rolled back.
 
 ## Install
 
-**Fresh install:** download the installer ISO from the
-[latest ISO build](https://github.com/ravana-os/ravana-os/actions/workflows/build-iso.yml)
-(Actions → newest run → *Artifacts*), write it to a USB stick (Fedora Media Writer, Ventoy or
-`dd`), and boot from it.
+### Try it first (live USB)
 
-**Already on Bazzite or another Fedora Atomic system?** Switch with one command and reboot:
+1. Download the **live ISO** from the
+   [latest live ISO build](https://github.com/ravana-os/ravana-os/actions/workflows/build-live-iso.yml)
+   (newest run, then *Artifacts*). Pick `ravana-os-nvidia` for NVIDIA graphics.
+2. Write it to an 8 GB+ USB stick with [Fedora Media Writer](https://flathub.org/apps/org.fedoraproject.MediaWriter),
+   [Ventoy](https://www.ventoy.net) or [Rufus](https://rufus.ie) (DD mode).
+3. Boot from the USB (usually F12, F11, F8 or Esc at power-on) and choose **Try or Install Ravana OS**.
+
+Ravana runs entirely from the USB. Nothing on your computer changes until you click
+**Install Ravana OS**. Changes in the live session reset on reboot, and games or
+benchmarks won't reflect the installed experience.
+
+### Install next to Windows (dual boot)
+
+1. **In Windows first:**
+   - Back up anything important.
+   - Turn off **BitLocker** for the drive, or Ravana's installer will warn you about it.
+   - Turn off **Fast Startup** (Control Panel, Power Options, *Choose what the power buttons do*).
+   - Make free space: *Disk Management*, right-click your drive, *Shrink Volume*.
+     Give Ravana at least **80 GB**; 150 GB+ if you'll install games. A second drive is even simpler.
+2. Boot the live USB and click **Install Ravana OS**.
+3. Choose the free space (or the second drive). Don't select the Windows partition.
+4. The installer downloads Ravana (about 5.5 GB), so stay connected to the internet.
+5. Reboot. Pick **Ravana OS** or **Windows** in the boot menu, or from your PC's boot menu key.
+
+If a Windows update ever skips the Ravana boot menu, boot the live USB and run
+**Ravana OS Bootloader Restoring Tool**.
+
+### Secure Boot
+
+The live USB boots with Secure Boot on. During installation, Ravana adds the Universal Blue
+signing key used by its kernel drivers. On the first reboot a blue **MOK Management** screen
+appears: choose *Enroll MOK*, then *Continue*, enter the password **`universalblue`**, and
+reboot. You only do this once.
+
+### Already on Bazzite or another Fedora Atomic system?
+
+Switch with one command and reboot:
 
 ```bash
 sudo bootc switch ghcr.io/ravana-os/ravana-os:latest          # AMD / Intel
@@ -109,7 +142,7 @@ back? Open **Reset Ravana Look** from the app menu.
 - [x] Weekly auto-updates and a testing channel
 - [ ] Small network-installer ISO
 - [ ] Welcome app: choose Game Mode or Desktop, pick dev packs
-- [ ] Live ISO: try Ravana before installing
+- [x] Live ISO: try Ravana before installing, then install (dual boot friendly)
 
 ## Building Ravana yourself
 
@@ -121,7 +154,8 @@ Everything that makes Ravana lives in this repo:
 | `build_files/` | Build steps run inside the image (branding, tuning, theme) |
 | `system_files/` | Files shipped in the OS (configs, color schemes) |
 | `tools/` | Generators, e.g. `gen-kde-colors.py` for the color schemes |
-| `.github/workflows/` | Cloud builds: images on every push, ISO on demand |
+| `.github/workflows/` | Cloud builds: images on every push, live ISO and installer ISO on demand |
+| `live/`, `Containerfile.live` | Live USB layer: live session, installer, branding (adapted from Titanoboa) |
 | `scripts/` | Local build and VM test helpers |
 
 Pushing to `main` builds both editions in GitHub Actions. To build locally (≈7 GB download), use
@@ -129,7 +163,7 @@ Pushing to `main` builds both editions in GitHub Actions. To build locally (≈7
 
 ## Credits
 
-Ravana OS stands on the shoulders of [Bazzite](https://bazzite.gg) and
+Ravana OS stands on the shoulders of [Bazzite](https://bazzite.gg), [Titanoboa](https://github.com/ublue-os/titanoboa) and
 [Universal Blue](https://universal-blue.org), built from [Fedora](https://fedoraproject.org)
 packages. Ravana OS is an independent project and is not affiliated with or endorsed by the
 Fedora Project, Red Hat, or Universal Blue.

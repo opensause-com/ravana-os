@@ -1,0 +1,78 @@
+name: Build Ravana OS live ISO
+
+# Manual: a live USB that boots straight into Ravana (try without installing)
+# with an "Install Ravana OS" button. The installer downloads the system from
+# the registry, so the ISO stays small enough for an 8 GB USB stick.
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: Edition
+        type: choice
+        options: [ravana-os, ravana-os-nvidia]
+        default: ravana-os
+      channel:
+        description: Image channel
+        type: choice
+        options: [latest, testing]
+        default: latest
+
+jobs:
+  live-iso:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Free disk space
+        uses: ublue-os/remove-unwanted-software@v9
+
+      - name: Put container storage on the big /mnt disk
+        run: |
+          sudo mkdir -p /mnt/containers
+          printf '[storage]\ndriver = "overlay"\ngraphroot = "/mnt/containers"\nrunroot = "/run/containers/storage"\n' \
+            | sudo tee /etc/containers/storage.conf
+          df -h / /mnt
+
+      - name: Build live image
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          REPO="ghcr.io/$OWNER/${{ inputs.image }}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          sudo podman pull "$REPO:${{ inputs.channel }}"
+          sudo podman build --cap-add sys_admin --security-opt label=disable \
+            --build-arg BASE="$REPO:${{ inputs.channel }}" \
+            --build-arg RAVANA_IMAGE="$REPO" \
+            --build-arg RAVANA_TAG="${{ inputs.channel }}" \
+            -t localhost/ravana-live:latest -f Containerfile.live .
+          df -h / /mnt
+
+      - name: Build ISO (Titanoboa)
+        id: iso
+        uses: ublue-os/titanoboa@main
+        with:
+          image-ref: localhost/ravana-live:latest
+          iso-dest: ${{ github.workspace }}/output/${{ inputs.image }}-live.iso
+
+      - name: Checksum and inspect
+        run: |
+          cd output
+          ISO="${{ inputs.image }}-live.iso"
+          sha256sum "$ISO" > "$ISO.sha256"
+          ls -lh
+          sudo apt-get install -y -qq xorriso >/dev/null
+          xorriso -indev "$ISO" -pvd_info 2>/dev/null | grep -iE "volume id" || true
+          xorriso -osirrox on -indev "$ISO" -extract /boot/grub2/grub.cfg /tmp/grub.cfg 2>/dev/null \
+            || xorriso -osirrox on -indev "$ISO" -extract /EFI/BOOT/grub.cfg /tmp/grub.cfg 2>/dev/null || true
+          grep -E "menuentry|search" /tmp/grub.cfg 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.image }}-live-iso
+          path: |
+            output/${{ inputs.image }}-live.iso
+            output/${{ inputs.image }}-live.iso.sha256
+          compression-level: 0
+          retention-days: 7

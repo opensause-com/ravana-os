@@ -38,6 +38,7 @@ jobs:
             "$IMAGE" bash /run.sh
           sudo chown -R "$USER" shots
           cat shots/steps.log || true
+          tail -n 40 shots/kwin.log || true
           tail -n 60 shots/session.log || true
           grep -iE "ravana|error|qml|file:" shots/plasmashell.log | grep -v "^$" | head -60 || true
           cat shots/panels.txt || true

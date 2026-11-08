@@ -22,7 +22,7 @@ send() { dbus-send --session --type=method_call --print-reply "$@" >/dev/null 2>
 log "session started"
 python3 -c "import dbus" >> "$OUT/steps.log" 2>&1 && log "dbus-python ok" || log "no dbus-python"
 plasmashell --no-respawn >"$OUT/plasmashell.log" 2>&1 &
-sleep 30
+sleep 45
 shot 01-desktop 1
 
 send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.activateLauncherMenu
@@ -69,13 +69,34 @@ chmod +x /home/ravana/session.sh
 chown -R ravana:ravana /home/ravana
 chmod 777 "$OUT"
 
-timeout 300 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ravana \
+cat > /home/ravana/wrapper.sh <<'WRAP'
+#!/usr/bin/env bash
+OUT=/shots
+kwin_wayland --virtual --no-lockscreen --width 1920 --height 1080 --socket wayland-ravana > "$OUT/kwin.log" 2>&1 &
+KPID=$!
+export WAYLAND_DISPLAY=wayland-ravana
+sleep 4
+/home/ravana/session.sh &
+SPID=$!
+for i in $(seq 1 300); do
+  if ! kill -0 $KPID 2>/dev/null; then
+    wait $KPID; echo "[$(date +%T)] kwin exited with code $? after ${i}s" >> "$OUT/steps.log"; break
+  fi
+  if ! kill -0 $SPID 2>/dev/null; then echo "[$(date +%T)] session finished" >> "$OUT/steps.log"; break; fi
+  [ $((i % 10)) -eq 0 ] && echo "[$(date +%T)] alive ${i}s" >> "$OUT/steps.log"
+  sleep 1
+done
+kill $SPID $KPID 2>/dev/null
+WRAP
+chmod +x /home/ravana/wrapper.sh
+chown ravana:ravana /home/ravana/wrapper.sh
+
+timeout 360 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ravana \
   PATH=/usr/local/bin:/usr/bin:/bin XDG_RUNTIME_DIR=/tmp/xdg-ravana \
   XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6 \
   QT_QPA_PLATFORM=wayland LANG=en_US.UTF-8 KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 \
   KWIN_COMPOSE=Q QT_LOGGING_RULES="kwin_*.warning=true" \
-  dbus-run-session -- kwin_wayland --virtual --no-lockscreen --width 1920 --height 1080 \
-  --exit-with-session /home/ravana/session.sh > "$OUT/session-all.log" 2>&1
+  dbus-run-session -- /home/ravana/wrapper.sh > "$OUT/session-all.log" 2>&1
 grep -v "dbus-daemon" "$OUT/session-all.log" > "$OUT/session.log" || true
 rm -f "$OUT/session-all.log"
 echo "session exit: $?"

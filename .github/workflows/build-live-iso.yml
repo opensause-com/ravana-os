@@ -82,10 +82,20 @@ jobs:
         run: mkdir -p output
 
       - name: Build ISO (Titanoboa)
+        id: iso
         uses: ublue-os/titanoboa@main
         with:
           image-ref: localhost/ravana-live:latest
           iso-dest: ${{ github.workspace }}/output/${{ matrix.image }}-live.iso
+
+      # Titanoboa resolves iso-dest relative to its own folder; collect it from its output
+      - name: Collect ISO
+        run: |
+          SRC="${{ steps.iso.outputs.iso-dest }}"
+          [ -f "$SRC" ] || SRC="$(find "$GITHUB_WORKSPACE/.." -name "$ISO" -size +1G 2>/dev/null | head -1)"
+          echo "ISO at: $SRC"
+          [ "$(realpath "$SRC")" = "$(realpath -m "output/$ISO")" ] || mv "$SRC" "output/$ISO"
+          ls -lh output
 
       - name: Checksum and inspect
         run: |

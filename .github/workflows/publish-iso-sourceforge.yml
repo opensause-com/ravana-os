@@ -1,0 +1,47 @@
+name: Publish ISO to SourceForge
+
+# Sends ISOs from an earlier "Build Ravana OS live ISO" run to SourceForge without rebuilding.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Run ID of the live ISO build (the number in its URL)
+        required: true
+      channel:
+        description: Folder on SourceForge
+        type: choice
+        options: [testing, latest]
+        default: testing
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '*-live-iso'
+          merge-multiple: true
+          path: output
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check
+        run: |
+          ls -lh output
+          cd output && sha256sum -c *.sha256
+
+      - name: Upload to SourceForge
+        env:
+          SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+          SF_API_KEY: ${{ secrets.SF_API_KEY }}
+          SF_USER: ${{ vars.SF_USER }}
+          SF_PROJECT: ${{ vars.SF_PROJECT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          STAMP="$(gh api "repos/${{ github.repository }}/actions/runs/${{ inputs.run_id }}" --jq '.created_at[0:10]' | tr -d -)"
+          scripts/sourceforge-upload.sh "${{ inputs.channel }}" "$STAMP" output/*-live.iso

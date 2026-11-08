@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Runs inside the Ravana image: starts a headless Plasma session for a fresh user
+# and screenshots the desktop, Launchpad, Spotlight, the Ravana menu and a window.
+set -uo pipefail
+OUT=/shots
+useradd -m -s /bin/bash ravana 2>/dev/null || true
+install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
+
+cat > /home/ravana/session.sh <<'SESSION'
+#!/usr/bin/env bash
+OUT=/shots
+log() { echo "[$(date +%T)] $*"; }
+shot() { sleep "${2:-3}"; spectacle -b -n -f -o "$OUT/$1.png" 2>/dev/null && log "shot $1" || log "FAILED shot $1"; }
+send() { dbus-send --session --type=method_call --print-reply "$@" >/dev/null 2>&1; }
+
+plasmashell --no-respawn >"$OUT/plasmashell.log" 2>&1 &
+sleep 30
+shot 01-desktop 1
+
+send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.activateLauncherMenu
+shot 02-launchpad
+send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.activateLauncherMenu
+sleep 2
+
+krunner >/dev/null 2>&1 &
+sleep 4
+send --dest=org.kde.krunner /App org.kde.krunner.App.query string:"sys"
+shot 03-spotlight 4
+send --dest=org.kde.krunner /App org.kde.krunner.App.toggleDisplay
+sleep 2
+
+# Ravana menu: give it a shortcut, then trigger it
+send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript string:'
+var p = panels(); for (var i = 0; i < p.length; i++) { var w = p[i].widgets("org.ravana.menu"); if (w.length) { w[0].globalShortcut = "Meta+Ctrl+F12"; print("menu widget " + w[0].id); } }'
+sleep 2
+for a in $(seq 1 60); do
+  send --dest=org.kde.kglobalaccel /component/plasmashell org.kde.kglobalaccel.Component.invokeShortcut string:"activate widget $a"
+done
+shot 04-ravana-menu
+send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript string:'print(JSON.stringify(panels().map(function(p){return {loc:p.location,len:p.lengthMode,h:p.height,widgets:p.widgets().map(function(w){return w.type})}})))' 
+dbus-send --session --type=method_call --print-reply --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript string:'print(JSON.stringify(panels().map(function(p){return {loc:p.location,len:p.lengthMode,h:p.height,widgets:p.widgets().map(function(w){return w.type})}})))' > "$OUT/panels.txt" 2>&1
+
+dolphin /usr/share >/dev/null 2>&1 &
+sleep 6
+shot 05-window 2
+systemsettings >/dev/null 2>&1 &
+shot 06-settings 8
+kinfocenter >/dev/null 2>&1 &
+shot 07-about 8
+log done
+SESSION
+chmod +x /home/ravana/session.sh
+chown -R ravana:ravana /home/ravana
+chmod 777 "$OUT"
+
+timeout 300 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ravana \
+  PATH=/usr/local/bin:/usr/bin:/bin XDG_RUNTIME_DIR=/tmp/xdg-ravana \
+  XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6 \
+  QT_QPA_PLATFORM=wayland LANG=en_US.UTF-8 \
+  dbus-run-session -- kwin_wayland --virtual --no-lockscreen --width 1920 --height 1080 \
+  --exit-with-session /home/ravana/session.sh > "$OUT/session.log" 2>&1
+echo "session exit: $?"
+cp /home/ravana/.config/plasma-org.kde.plasma.desktop-appletsrc "$OUT/" 2>/dev/null || true
+ls -la "$OUT"

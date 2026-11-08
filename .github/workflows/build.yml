@@ -2,7 +2,7 @@ name: Build Ravana OS image
 
 on:
   push:
-    branches: [main]
+    branches: [main, testing]   # main -> :latest (stable), testing -> :testing
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
@@ -11,7 +11,7 @@ on:
       - '.github/workflows/build-iso.yml'
       - '.github/workflows/analyze.yml'
   pull_request:
-    branches: [main]
+    branches: [main, testing]
   schedule:
     - cron: '30 6 * * *'   # daily, picks up Bazzite / Fedora updates
   workflow_dispatch:
@@ -47,7 +47,12 @@ jobs:
       - name: Prepare tags
         run: |
           echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> "$GITHUB_ENV"
-          echo "TAGS=latest $(date -u +%Y%m%d) $(date -u +%Y%m%d)-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          D=$(date -u +%Y%m%d); S=${GITHUB_SHA::7}
+          if [ "$GITHUB_REF_NAME" = testing ]; then
+            echo "TAGS=testing testing-$D testing-$D-$S" >> "$GITHUB_ENV"   # test machines
+          else
+            echo "TAGS=latest $D $D-$S" >> "$GITHUB_ENV"                     # everyone
+          fi
 
       - name: Build image
         run: |

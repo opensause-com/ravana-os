@@ -46,6 +46,33 @@ sudo bootc switch ghcr.io/opensause-com/ravana-os:latest          # AMD / Intel
 sudo bootc switch ghcr.io/opensause-com/ravana-os-nvidia:latest   # NVIDIA
 ```
 
+## Updates
+
+Ravana updates itself. Once a week (Sunday morning, or at the next boot) it downloads only
+what changed and applies it on reboot. Your apps, files and settings stay. Update right away:
+
+```bash
+ujust update                 # system, Flatpaks and Distrobox containers
+sudo bootc upgrade           # just the system image; reboot to apply
+bootc status                 # current and staged versions
+```
+
+If an update misbehaves, pick the previous version in the boot menu.
+
+### Channels
+
+| Channel | Image tag | Who it's for |
+|---|---|---|
+| Stable | `:latest` | Everyone. Built from `main`, plus a daily rebuild with upstream fixes |
+| Testing | `:testing` | Test machines. Built from the `testing` branch |
+
+```bash
+sudo bootc switch ghcr.io/opensause-com/ravana-os:testing   # follow testing
+sudo bootc switch ghcr.io/opensause-com/ravana-os:latest    # back to stable
+```
+
+New work lands on `testing` first, then merges to `main` once it's verified.
+
 ## Look & feel
 
 Ravana's identity is **crimson red on near-black or white**: red marks focus, selection and
@@ -71,7 +98,9 @@ blur, and Overview (Meta+W or the top-left corner) to see all your windows.
 - [x] Ravana logo, wallpapers, boot splash and boot menu name
 - [x] macOS-style desktop: top bar with global menu, floating dock, genie minimize, blur, Overview
 - [ ] Login screen theme
-- [ ] Debloat pass (measured) and small network-installer ISO
+- [x] Debloat pass, measured: ROCm compiler libs, non-x86 emulators, Deck-only daemons, docs
+- [x] Weekly auto-updates and a testing channel
+- [ ] Small network-installer ISO
 - [ ] Welcome app: choose Game Mode or Desktop, pick dev packs
 - [ ] Live ISO: try Ravana before installing
 

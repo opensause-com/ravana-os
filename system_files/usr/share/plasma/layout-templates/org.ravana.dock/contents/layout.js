@@ -1,16 +1,17 @@
 // Ravana dock (macOS-style): Launchpad | apps | Trash. Floating glass, centered, sized to its icons.
 var dock = new Panel;
 dock.location = "bottom";
-dock.height = Math.round(gridUnit * 3.4);
+dock.height = Math.round(gridUnit * 3.9);
 dock.alignment = "center";
 dock.lengthMode = "fit";
 dock.floating = true;
 dock.hiding = "none";
 try { dock.opacity = "translucent"; } catch (e) {}
 
-var launchpad = dock.addWidget("org.kde.plasma.kickerdash");
+var launchpad = dock.addWidget("org.ravana.launchpad");   // macOS-style app grid
 launchpad.currentConfigGroup = ["General"];
 launchpad.writeConfig("icon", "ravana-launchpad");
+launchpad.writeConfig("alphaSort", "true");
 launchpad.writeConfig("showRecentApps", "false");
 launchpad.writeConfig("showRecentDocs", "false");
 launchpad.globalShortcut = "Alt+F1";

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+<g id="normal-topleft" transform="translate(0,0)"><rect width="12" height="12" fill="none"/><path d="M0,12 A12,12 0 0 1 12,0 L12,12 Z" fill="#ffffff" fill-opacity="0.050"/></g>
+<g id="normal-topright" transform="translate(16,0)"><rect width="12" height="12" fill="none"/><path d="M0,0 A12,12 0 0 1 12,12 L0,12 Z" fill="#ffffff" fill-opacity="0.050"/></g>
+<g id="normal-bottomleft" transform="translate(0,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 L12,12 A12,12 0 0 1 0,0 Z" fill="#ffffff" fill-opacity="0.050"/></g>
+<g id="normal-bottomright" transform="translate(16,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 A12,12 0 0 1 0,12 Z" fill="#ffffff" fill-opacity="0.050"/></g>
+<rect id="normal-top" x="12" y="0" width="4" height="12" fill="#ffffff" fill-opacity="0.050"/>
+<rect id="normal-bottom" x="12" y="16" width="4" height="12" fill="#ffffff" fill-opacity="0.050"/>
+<rect id="normal-left" x="0" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.050"/>
+<rect id="normal-right" x="16" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.050"/>
+<rect id="normal-center" x="12" y="12" width="4" height="4" fill="#ffffff" fill-opacity="0.050"/>
+<g id="focus-topleft" transform="translate(60,0)"><rect width="12" height="12" fill="none"/><path d="M0,12 A12,12 0 0 1 12,0 L12,12 Z" fill="#ffffff" fill-opacity="0.130"/></g>
+<g id="focus-topright" transform="translate(76,0)"><rect width="12" height="12" fill="none"/><path d="M0,0 A12,12 0 0 1 12,12 L0,12 Z" fill="#ffffff" fill-opacity="0.130"/></g>
+<g id="focus-bottomleft" transform="translate(60,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 L12,12 A12,12 0 0 1 0,0 Z" fill="#ffffff" fill-opacity="0.130"/></g>
+<g id="focus-bottomright" transform="translate(76,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 A12,12 0 0 1 0,12 Z" fill="#ffffff" fill-opacity="0.130"/></g>
+<rect id="focus-top" x="72" y="0" width="4" height="12" fill="#ffffff" fill-opacity="0.130"/>
+<rect id="focus-bottom" x="72" y="16" width="4" height="12" fill="#ffffff" fill-opacity="0.130"/>
+<rect id="focus-left" x="60" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.130"/>
+<rect id="focus-right" x="76" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.130"/>
+<rect id="focus-center" x="72" y="12" width="4" height="4" fill="#ffffff" fill-opacity="0.130"/>
+<g id="hover-topleft" transform="translate(120,0)"><rect width="12" height="12" fill="none"/><path d="M0,12 A12,12 0 0 1 12,0 L12,12 Z" fill="#ffffff" fill-opacity="0.180"/></g>
+<g id="hover-topright" transform="translate(136,0)"><rect width="12" height="12" fill="none"/><path d="M0,0 A12,12 0 0 1 12,12 L0,12 Z" fill="#ffffff" fill-opacity="0.180"/></g>
+<g id="hover-bottomleft" transform="translate(120,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 L12,12 A12,12 0 0 1 0,0 Z" fill="#ffffff" fill-opacity="0.180"/></g>
+<g id="hover-bottomright" transform="translate(136,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 A12,12 0 0 1 0,12 Z" fill="#ffffff" fill-opacity="0.180"/></g>
+<rect id="hover-top" x="132" y="0" width="4" height="12" fill="#ffffff" fill-opacity="0.180"/>
+<rect id="hover-bottom" x="132" y="16" width="4" height="12" fill="#ffffff" fill-opacity="0.180"/>
+<rect id="hover-left" x="120" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.180"/>
+<rect id="hover-right" x="136" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.180"/>
+<rect id="hover-center" x="132" y="12" width="4" height="4" fill="#ffffff" fill-opacity="0.180"/>
+<g id="attention-topleft" transform="translate(180,0)"><rect width="12" height="12" fill="none"/><path d="M0,12 A12,12 0 0 1 12,0 L12,12 Z" fill="#d21f3c" fill-opacity="0.450"/></g>
+<g id="attention-topright" transform="translate(196,0)"><rect width="12" height="12" fill="none"/><path d="M0,0 A12,12 0 0 1 12,12 L0,12 Z" fill="#d21f3c" fill-opacity="0.450"/></g>
+<g id="attention-bottomleft" transform="translate(180,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 L12,12 A12,12 0 0 1 0,0 Z" fill="#d21f3c" fill-opacity="0.450"/></g>
+<g id="attention-bottomright" transform="translate(196,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 A12,12 0 0 1 0,12 Z" fill="#d21f3c" fill-opacity="0.450"/></g>
+<rect id="attention-top" x="192" y="0" width="4" height="12" fill="#d21f3c" fill-opacity="0.450"/>
+<rect id="attention-bottom" x="192" y="16" width="4" height="12" fill="#d21f3c" fill-opacity="0.450"/>
+<rect id="attention-left" x="180" y="12" width="12" height="4" fill="#d21f3c" fill-opacity="0.450"/>
+<rect id="attention-right" x="196" y="12" width="12" height="4" fill="#d21f3c" fill-opacity="0.450"/>
+<rect id="attention-center" x="192" y="12" width="4" height="4" fill="#d21f3c" fill-opacity="0.450"/>
+<g id="minimized-topleft" transform="translate(240,0)"><rect width="12" height="12" fill="none"/><path d="M0,12 A12,12 0 0 1 12,0 L12,12 Z" fill="#ffffff" fill-opacity="0.030"/></g>
+<g id="minimized-topright" transform="translate(256,0)"><rect width="12" height="12" fill="none"/><path d="M0,0 A12,12 0 0 1 12,12 L0,12 Z" fill="#ffffff" fill-opacity="0.030"/></g>
+<g id="minimized-bottomleft" transform="translate(240,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 L12,12 A12,12 0 0 1 0,0 Z" fill="#ffffff" fill-opacity="0.030"/></g>
+<g id="minimized-bottomright" transform="translate(256,16)"><rect width="12" height="12" fill="none"/><path d="M0,0 L12,0 A12,12 0 0 1 0,12 Z" fill="#ffffff" fill-opacity="0.030"/></g>
+<rect id="minimized-top" x="252" y="0" width="4" height="12" fill="#ffffff" fill-opacity="0.030"/>
+<rect id="minimized-bottom" x="252" y="16" width="4" height="12" fill="#ffffff" fill-opacity="0.030"/>
+<rect id="minimized-left" x="240" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.030"/>
+<rect id="minimized-right" x="256" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.030"/>
+<rect id="minimized-center" x="252" y="12" width="4" height="4" fill="#ffffff" fill-opacity="0.030"/>
+</svg>

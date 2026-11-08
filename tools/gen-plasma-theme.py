@@ -69,6 +69,27 @@ def frame(prefix: str, R: int, alpha: float, ox: int = 0, oy: int = 0) -> str:
     return "\n".join(g)
 
 
+def soft(prefix: str, R: int, color: str, alpha: float, ox: int, oy: int, rim: float = 0.0) -> str:
+    """Rounded translucent fill (dock highlights): nine-slice, no outline."""
+    a, E = R, 4
+    f = f'fill="{color}" fill-opacity="{alpha:.3f}"'
+    g = []
+    corners = {
+        "topleft": (0, 0, f"M0,{a} A{a},{a} 0 0 1 {a},0 L{a},{a} Z"),
+        "topright": (a + E, 0, f"M0,0 A{a},{a} 0 0 1 {a},{a} L0,{a} Z"),
+        "bottomleft": (0, a + E, f"M0,0 L{a},0 L{a},{a} A{a},{a} 0 0 1 0,0 Z"),
+        "bottomright": (a + E, a + E, f"M0,0 L{a},0 A{a},{a} 0 0 1 0,{a} Z"),
+    }
+    for n, (x, y, d) in corners.items():
+        g.append(f'<g id="{prefix}-{n}" transform="translate({ox + x},{oy + y})"><rect width="{a}" height="{a}" fill="none"/><path d="{d}" {f}/></g>')
+    for n, x, y, w, h in (("top", a, 0, E, a), ("bottom", a, a + E, E, a), ("left", 0, a, a, E),
+                          ("right", a + E, a, a, E), ("center", a, a, E, E)):
+        g.append(f'<rect id="{prefix}-{n}" x="{ox + x}" y="{oy + y}" width="{w}" height="{h}" {f}/>')
+    if rim:
+        g.append(f'<rect id="{prefix}-hint-top-margin" x="{ox + 60}" y="{oy}" width="4" height="4" fill="none"/>')
+    return "\n".join(g)
+
+
 def mask(R: int, ox: int, oy: int) -> str:
     """Blur/contrast region: same rounded shape, opaque."""
     a, E = R, 4
@@ -151,6 +172,15 @@ if __name__ == "__main__":
         write(f"{sub}widgets/tooltip.svg", svg(
             frame("", TIP_R, min(1.0, a + 0.2)) + "\n" + mask(TIP_R, 0, 60) + "\n" + shadow(14, 0, 140, 0.35) + "\n"
             + hints({"top": 7, "bottom": 7, "left": 10, "right": 10}, 400)))
+    # Dock: soft rounded glass behind open (normal) and focused apps instead of a solid block
+    tasks = "\n".join([
+        soft("normal", 12, "#ffffff", 0.05, 0, 0),
+        soft("focus", 12, "#ffffff", 0.13, 60, 0),
+        soft("hover", 12, "#ffffff", 0.18, 120, 0),
+        soft("attention", 12, "#d21f3c", 0.45, 180, 0),
+        soft("minimized", 12, "#ffffff", 0.03, 240, 0),
+    ])
+    write("widgets/tasks.svg", svg(tasks))
     write("metadata.json", """{
     "KPackageStructure": "Plasma/Theme",
     "KPlugin": {

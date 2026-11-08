@@ -90,7 +90,7 @@ fi
 for t in org.ravana.menubar org.ravana.dock; do
     test -f "/usr/share/plasma/layout-templates/$t/contents/layout.js"
 done
-for w in org.ravana.menu org.ravana.search; do
+for w in org.ravana.menu org.ravana.search org.ravana.appname org.ravana.launchpad; do
     test -f "/usr/share/plasma/plasmoids/$w/contents/ui/main.qml"
 done
 

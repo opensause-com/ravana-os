@@ -215,5 +215,8 @@ Pushing to `main` builds both editions in GitHub Actions. To build locally (≈7
 
 Ravana OS stands on the shoulders of [Bazzite](https://bazzite.gg), [Titanoboa](https://github.com/ublue-os/titanoboa) and
 [Universal Blue](https://universal-blue.org), built from [Fedora](https://fedoraproject.org)
-packages. Ravana OS is an independent project and is not affiliated with or endorsed by the
+packages. The look builds on [KDE Plasma](https://kde.org/plasma-desktop/) (Ravana Launchpad
+is based on KDE's kicker dashboard), [Kvantum](https://github.com/tsujan/Kvantum) and its KvMojave
+theme, [Colloid icons](https://github.com/vinceliuice/Colloid-icon-theme) and
+[keyd](https://github.com/rvaiya/keyd). Ravana OS is an independent project and is not affiliated with or endorsed by the
 Fedora Project, Red Hat, or Universal Blue.

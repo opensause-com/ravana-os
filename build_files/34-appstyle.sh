@@ -10,6 +10,13 @@ test -f "$SRC/KvMojave.kvconfig"
 install -d "$DST"
 cp "$SRC/KvMojave.svg" "$DST/RavanaGlass.svg"
 cp "$SRC/KvMojave.kvconfig" "$DST/RavanaGlass.kvconfig"
+# KvMojave's blue accents -> Ravana red at the same lightness
+sed -i -e 's/#245fc4/#b81a33/gI' -e 's/#2664d0/#c41c37/gI' -e 's/#286adc/#d21f3c/gI' \
+       -e 's/#295e9f/#9e1e33/gI' -e 's/#3273c3/#c3283f/gI' -e 's/#31a7e8/#e8455c/gI' \
+       -e 's/#3daee9/#ec4a60/gI' -e 's/#436e99/#99303f/gI' -e 's/#4478ac/#ac3445/gI' \
+       -e 's/#81c0ff/#ff8a99/gI' -e 's/#000356/#350008/gI' -e 's/#b74aff/#ff5a66/gI' \
+       "$DST/RavanaGlass.svg" "$DST/RavanaGlass.kvconfig"
+! grep -qiE '#(245fc4|2664d0|286adc|295e9f|3273c3|3daee9)' "$DST/RavanaGlass.svg"
 
 python3 - "$DST/RavanaGlass.kvconfig" <<'PY'
 import re, sys
@@ -53,6 +60,13 @@ want = {
         "link.color": "#ff5a66",
         "link.visited.color": "#d48ad8",
         "progress.indicator.text.color": "#ffffff",
+        "inactive.window.color": "#1b1b1e",
+        "inactive.base.color": "#151518",
+        "inactive.alt.base.color": "#1e1e22",
+        "inactive.text.color": "#e4e4e8",
+        "inactive.window.text.color": "#e4e4e8",
+        "inactive.highlight.text.color": "#ffffff",
+        "tooltip.base.color": "#1e1e22",
     },
 }
 out, section, seen = [], None, {}

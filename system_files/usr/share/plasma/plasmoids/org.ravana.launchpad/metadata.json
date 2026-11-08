@@ -1,0 +1,18 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            { "Name": "Eike Hein", "Email": "hein@kde.org" },
+            { "Name": "Ravana OS" }
+        ],
+        "Category": "Application Launchers",
+        "Description": "Full-screen grid of all your apps with search, like Launchpad",
+        "Icon": "ravana-launchpad",
+        "Id": "org.ravana.launchpad",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana Launchpad",
+        "Version": "1.0"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": ["org.kde.plasma.launchermenu"]
+}

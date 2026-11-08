@@ -70,9 +70,13 @@ hide_autostart geoclue-demo-agent.desktop
 MUST_HAVE=(
     kernel-core plasma-workspace plasma-desktop kwin steam
     gamescope-session-steam mesa-vulkan-drivers mesa-dri-drivers
-    code docker-ce podman distrobox flatpak NetworkManager pipewire
-    rocm-hip rocm-opencl qemu-kvm libvirt plasma-login-manager
+    podman distrobox flatpak NetworkManager pipewire
 )
+if [ "${IMAGE_FLAVOR:-main}" = dx ]; then
+    MUST_HAVE+=(code docker-ce rocm-hip rocm-opencl qemu-kvm libvirt plasma-login-manager)
+else
+    MUST_HAVE+=(sddm)
+fi
 MISSING=()
 for p in "${MUST_HAVE[@]}"; do rpm -q "$p" >/dev/null 2>&1 || MISSING+=("$p"); done
 if [ ${#MISSING[@]} -gt 0 ]; then
@@ -81,7 +85,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
 fi
 test -f /usr/share/wayland-sessions/gamescope-session-steam.desktop
 command -v gamescope   # Game Mode compositor (package name varies)
-command -v hipcc       # ROCm HIP toolchain
+if [ "${IMAGE_FLAVOR:-main}" = dx ]; then command -v hipcc; fi   # ROCm HIP toolchain
 test -f /usr/share/wayland-sessions/plasma.desktop
 if [ -n "$SESSION_SWITCH" ]; then test -x "$SESSION_SWITCH"; fi
 

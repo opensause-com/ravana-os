@@ -17,20 +17,31 @@ and updates that can always be rolled back.
 
 - **Game Mode.** Boot straight into a controller-friendly, console-style Steam experience with no
   desktop running in the background, so your games get the RAM and GPU.
-- **Dev Mode.** A polished KDE Plasma desktop with VS Code, Docker, Podman, Distrobox,
-  Homebrew, QEMU/KVM and GPU compute (ROCm / CUDA) ready on first boot.
+- **Dev Mode.** A polished KDE Plasma desktop with Podman, Distrobox and Homebrew built in,
+  and VS Code, Docker, VMs and GPU compute one click away with **Get Developer Tools**.
 - **Light by design.** Background indexing and other idle services are off by default.
 - **Unbreakable updates.** Every update is a complete, tested system image. If one misbehaves,
   pick the previous version in the boot menu and you're back in seconds.
-- **Every GPU.** Separate editions for AMD / Intel and NVIDIA, with drivers built in.
+- **Every GPU.** Builds for AMD / Intel and NVIDIA, with drivers built in.
+- **Small download.** The default edition stays lean; add the developer stack only if you want it.
 - **Small updates.** Only the parts that changed are downloaded.
 
 ## Editions
 
-| Edition | For | Image |
+| Edition | What's inside | Image |
 |---|---|---|
-| **Ravana OS** | AMD and Intel graphics | `ghcr.io/ravana-os/ravana-os:latest` |
-| **Ravana OS NVIDIA** | NVIDIA graphics | `ghcr.io/ravana-os/ravana-os-nvidia:latest` |
+| **Ravana OS** | Gaming, Game Mode, KDE desktop, Podman, Distrobox, Homebrew, Bazaar app store | `ghcr.io/ravana-os/ravana-os` |
+| **Ravana OS Developer** | Everything above + VS Code, Docker, virtual machines (QEMU/KVM), ROCm GPU compute, profilers | `ghcr.io/ravana-os/ravana-os-dx` |
+
+NVIDIA graphics: add `-nvidia` (`ravana-os-nvidia`, `ravana-os-dx-nvidia`).
+
+Start small and add only what you need:
+
+- **Apps:** the **Bazaar** app store (Discord, Spotify, OBS, Blender, launchers...)
+- **CLI tools:** `brew install node go rust kubectl`
+- **Linux environments:** **DistroShelf** for Ubuntu, Arch or Fedora containers
+- **The full dev stack:** open **Get Developer Tools** from the app menu. It switches your
+  system to Ravana OS Developer in one step (and **Remove Developer Tools** switches back).
 
 ## Install
 

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Switch between Ravana OS and Ravana OS Developer (adds/removes VS Code, Docker,
+# VMs, ROCm). An atomic, signature-checked image switch: your files, apps and
+# settings stay, and the previous version remains in the boot menu.
+set -uo pipefail
+
+current="$(bootc status --format=json 2>/dev/null | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+img = ((d.get("status") or {}).get("booted") or {}).get("image") or {}
+print((img.get("image") or {}).get("image", ""))')"
+if [ -z "$current" ]; then
+    kdialog --title "Ravana Developer Tools" --error "Couldn't read the current system image."
+    exit 1
+fi
+
+repo="${current%:*}"; tag="${current##*:}"
+[ "$repo" = "$current" ] && tag=latest
+name="${repo##*/}"; base="${repo%/*}"
+
+if [[ "$name" == *-dx* ]]; then
+    target_name="${name/-dx/}"
+    title="Remove Developer Tools"
+    text="Switch to <b>Ravana OS</b> without VS Code, Docker, virtual machines and ROCm?<br><br>Your files, apps and settings stay. Containers and VMs you created stay on disk.<br>The previous version stays in the boot menu."
+else
+    target_name="${name/ravana-os/ravana-os-dx}"
+    title="Get Developer Tools"
+    text="Add <b>VS Code, Docker, virtual machines (QEMU/KVM) and ROCm GPU compute</b> by switching to Ravana OS Developer?<br><br>Downloads roughly 1–3 GB, then applies on restart.<br>Your files, apps and settings stay, and you can switch back any time."
+fi
+target="$base/$target_name:$tag"
+
+kdialog --title "$title" --yes-label "Continue" --no-label "Cancel" --yesno "$text" || exit 0
+
+if konsole --hide-menubar -e bash -c "echo 'Switching to $target'; echo; pkexec bootc switch --enforce-container-sigpolicy '$target'; echo \$? > /tmp/ravana-edition-switch.rc; echo; read -rp 'Press Enter to close'"; \
+   [ "$(cat /tmp/ravana-edition-switch.rc 2>/dev/null)" = 0 ]; then
+    kdialog --title "$title" --yes-label "Restart now" --no-label "Later" \
+        --yesno "Ready. Restart to start using the new edition." && systemctl reboot
+else
+    kdialog --title "$title" --error "The switch didn't finish. Check your internet connection and try again."
+fi

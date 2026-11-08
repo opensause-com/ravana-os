@@ -37,10 +37,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Ravana OS: gaming + desktop, Game Mode (Bazzite Deck base), smallest
           - image: ravana-os
-            base: ghcr.io/ublue-os/bazzite-dx:stable
+            base: ghcr.io/ublue-os/bazzite-deck:stable
+            flavor: main
           - image: ravana-os-nvidia
+            base: ghcr.io/ublue-os/bazzite-deck-nvidia:stable
+            flavor: main
+          # Ravana OS Developer: + VS Code, Docker, VMs, ROCm (Bazzite DX base)
+          - image: ravana-os-dx
+            base: ghcr.io/ublue-os/bazzite-dx:stable
+            flavor: dx
+          - image: ravana-os-dx-nvidia
             base: ghcr.io/ublue-os/bazzite-dx-nvidia:stable
+            flavor: dx
     steps:
       - uses: actions/checkout@v7
 
@@ -65,6 +75,7 @@ jobs:
             --build-arg BASE_IMAGE=${{ matrix.base }} \
             --build-arg IMAGE_NAME=${{ matrix.image }} \
             --build-arg IMAGE_VENDOR=${{ github.repository_owner }} \
+            --build-arg IMAGE_FLAVOR=${{ matrix.flavor }} \
             --label org.opencontainers.image.source=https://github.com/${{ github.repository }} \
             --label org.opencontainers.image.version="$(date -u +%Y%m%d)-${GITHUB_SHA::7}" \
             -t localhost/${{ matrix.image }}:latest -f Containerfile .

@@ -7,7 +7,7 @@ on:
       image:
         description: Image to analyze
         type: choice
-        options: [ravana-os, ravana-os-nvidia]
+        options: [ravana-os, ravana-os-nvidia, ravana-os-dx, ravana-os-dx-nvidia]
         default: ravana-os
 
 jobs:

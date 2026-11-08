@@ -83,6 +83,22 @@ if [ -f /etc/plasmalogin.conf ]; then
     grep -A3 '^\[Greeter' /etc/plasmalogin.conf
 fi
 
+# --- Login screen (SDDM, main edition): Ravana wallpaper, font and cursor ---
+if [ -d /usr/share/sddm/themes/breeze ]; then
+    cat > /usr/share/sddm/themes/breeze/theme.conf.user <<'SDDM'
+[General]
+type=image
+background=/usr/share/wallpapers/Ravana/contents/images/3840x2160.png
+SDDM
+    mkdir -p /etc/sddm.conf.d
+    cat > /etc/sddm.conf.d/10-ravana.conf <<'SDDM'
+[Theme]
+Current=breeze
+CursorTheme=breeze_cursors
+Font=Inter,10
+SDDM
+fi
+
 # --- Wallpaper on the lock screen too ---
 $KW --file /etc/xdg/kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General \
     --key Image "file:///usr/share/wallpapers/Ravana/"

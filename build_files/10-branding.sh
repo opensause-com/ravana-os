@@ -3,6 +3,8 @@
 # upstream ujust recipes and update tooling keep working.
 set -euxo pipefail
 : "${IMAGE_NAME:?}" "${IMAGE_VENDOR:?}" "${IMAGE_VERSION:?}"
+FLAVOR="${IMAGE_FLAVOR:-main}"
+if [ "$FLAVOR" = dx ]; then EDITION="Gaming + Developer"; else EDITION="Gaming"; fi
 
 OSR=/usr/lib/os-release
 FEDORA_VER="$(. "$OSR"; echo "$VERSION_ID")"
@@ -11,7 +13,7 @@ setkv() { # setkv KEY VALUE  -> replace or append in os-release
 }
 setkv NAME        "Ravana OS"
 setkv PRETTY_NAME "Ravana OS ${IMAGE_VERSION}"
-setkv VARIANT     "Gaming + Dev"
+setkv VARIANT     "$EDITION"
 setkv VARIANT_ID  "${IMAGE_NAME}"
 setkv IMAGE_VERSION "${IMAGE_VERSION}"
 setkv DEFAULT_HOSTNAME "ravana"
@@ -37,7 +39,7 @@ fi
 # KDE "About this System"
 ABOUT=/etc/xdg/kcm-about-distrorc
 if [ -f "$ABOUT" ]; then
-    sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=Gaming + Dev ${IMAGE_VERSION}|; s|^Website=.*|Website=https://github.com/ravana-os/ravana-os|" "$ABOUT"
+    sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=${EDITION} ${IMAGE_VERSION}|; s|^Website=.*|Website=https://github.com/ravana-os/ravana-os|" "$ABOUT"
     grep -q '^Name=' "$ABOUT" || sed -i '/^\[General\]/a Name=Ravana OS' "$ABOUT"
     if grep -q '^LogoPath=' "$ABOUT"; then
         sed -i 's|^LogoPath=.*|LogoPath=/usr/share/pixmaps/ravana-os.png|' "$ABOUT"

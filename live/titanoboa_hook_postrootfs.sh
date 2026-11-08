@@ -284,6 +284,7 @@ EOF
         ublue-user-setup.service; do
         systemctl --global disable $s
     done
+    true  # units missing from this image are fine
 )
 
 # Add bootloader restoring script

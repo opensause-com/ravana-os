@@ -9,6 +9,11 @@ on:
         type: choice
         options: [ravana-os, ravana-os-nvidia]
         default: ravana-os
+      channel:
+        description: Image channel to install
+        type: choice
+        options: [latest, testing]
+        default: latest
 
 jobs:
   iso:
@@ -25,8 +30,8 @@ jobs:
       - name: Prepare config
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER,,}"
-          echo "IMAGE_REF=ghcr.io/$OWNER/${{ inputs.image }}:latest" >> "$GITHUB_ENV"
-          sed "s|@IMAGE_REF@|ghcr.io/$OWNER/${{ inputs.image }}:latest|" disk_config/iso.toml > /tmp/iso.toml
+          echo "IMAGE_REF=ghcr.io/$OWNER/${{ inputs.image }}:${{ inputs.channel }}" >> "$GITHUB_ENV"
+          sed "s|@IMAGE_REF@|ghcr.io/$OWNER/${{ inputs.image }}:${{ inputs.channel }}|" disk_config/iso.toml > /tmp/iso.toml
           cat /tmp/iso.toml
 
       - name: Build ISO

@@ -19,4 +19,3 @@ clock.writeConfig("showDate", "true");
 clock.writeConfig("dateFormat", "custom");
 clock.writeConfig("customDateFormat", "ddd d MMM");
 clock.writeConfig("dateDisplayFormat", "BesideTime");
-clock.writeConfig("use24hFormat", "1");

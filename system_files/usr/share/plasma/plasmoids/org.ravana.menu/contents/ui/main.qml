@@ -13,7 +13,7 @@ import org.kde.kirigami as Kirigami
 PlasmoidItem {
     id: root
 
-    preferredRepresentation: compactRepresentation
+    preferredRepresentation: fullRepresentation
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
     toolTipMainText: i18n("Ravana menu")
     toolTipSubText: i18n("About, settings, sleep, restart and shut down")
@@ -29,21 +29,27 @@ PlasmoidItem {
     }
 
     function openMenu() {
-        menu.visualParent = compactItem
+        menu.visualParent = button
         menu.openRelative()
     }
 
     Plasmoid.onActivated: openMenu()
 
-    property Item compactItem: null
+    // Size hints on the root item, like KDE's own panel buttons
+    readonly property int buttonSize: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.largeSpacing
+    Layout.minimumWidth: buttonSize
+    Layout.preferredWidth: buttonSize
+    Layout.maximumWidth: buttonSize
+    Layout.minimumHeight: Kirigami.Units.iconSizes.smallMedium
+    Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
 
-    compactRepresentation: MouseArea {
+    MouseArea {
         id: button
-        Component.onCompleted: root.compactItem = button
-        Layout.minimumWidth: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.largeSpacing
-        Layout.maximumWidth: Layout.minimumWidth
+        anchors.fill: parent
         hoverEnabled: true
         onClicked: root.openMenu()
+        Accessible.name: i18n("Ravana menu")
+        Accessible.role: Accessible.ButtonMenu
 
         Rectangle {
             anchors.fill: parent

@@ -12,7 +12,7 @@ import org.kde.kirigami as Kirigami
 PlasmoidItem {
     id: root
 
-    preferredRepresentation: compactRepresentation
+    preferredRepresentation: fullRepresentation
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
     toolTipMainText: i18n("Search")
     toolTipSubText: i18n("Apps, files, settings and more (Meta+Space)")
@@ -30,12 +30,20 @@ PlasmoidItem {
 
     Plasmoid.onActivated: toggle()
 
-    compactRepresentation: MouseArea {
+    readonly property int buttonSize: Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
+    Layout.minimumWidth: buttonSize
+    Layout.preferredWidth: buttonSize
+    Layout.maximumWidth: buttonSize
+    Layout.minimumHeight: Kirigami.Units.iconSizes.small
+    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+
+    MouseArea {
         id: button
-        Layout.minimumWidth: Kirigami.Units.iconSizes.small + Kirigami.Units.largeSpacing
-        Layout.maximumWidth: Layout.minimumWidth
+        anchors.fill: parent
         hoverEnabled: true
         onClicked: root.toggle()
+        Accessible.name: i18n("Search")
+        Accessible.role: Accessible.Button
 
         Rectangle {
             anchors.fill: parent
@@ -51,7 +59,7 @@ PlasmoidItem {
             width: Kirigami.Units.iconSizes.small
             height: width
             source: "search-symbolic"
-            fallback: "search"
+            fallback: "system-search"
         }
     }
 }

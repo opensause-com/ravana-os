@@ -92,7 +92,7 @@ for w in org.ravana.menu org.ravana.search; do
 done
 
 # --- Dock: keep only launchers whose apps exist in this image ---
-# (Firefox is a Flatpak installed on first boot, so it is always kept.)
+# (The browser slot is "preferred://browser": whatever browser the user has.)
 LAYOUT=/usr/share/plasma/layout-templates/org.ravana.dock/contents/layout.js
 # VS Code's launcher name varies by packaging; use whatever the code package ships
 VSCODE_DESKTOP="$(rpm -ql code 2>/dev/null | grep -E '^/usr/share/applications/[^/]+\.desktop$' | grep -viE 'url-?handler' | head -1 || true)"

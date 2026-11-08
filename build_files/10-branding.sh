@@ -30,8 +30,8 @@ INFO=/usr/share/ublue-os/image-info.json
 if [ -f "$INFO" ]; then
     sed -i 's|"image-name": [^,]*|"image-name": "'"$IMAGE_NAME"'"|' "$INFO"
     sed -i 's|"image-vendor": [^,]*|"image-vendor": "'"$IMAGE_VENDOR"'"|' "$INFO"
-    # Unsigned until cosign signing is set up in CI
-    sed -i 's|"image-ref": [^,]*|"image-ref": "ostree-unverified-registry:ghcr.io/'"$IMAGE_VENDOR/$IMAGE_NAME"'"|' "$INFO"
+    # Signed with the Ravana key (see 35-signing.sh)
+    sed -i 's|"image-ref": [^,]*|"image-ref": "ostree-image-signed:docker://ghcr.io/'"$IMAGE_VENDOR/$IMAGE_NAME"'"|' "$INFO"
 fi
 
 # KDE "About this System"

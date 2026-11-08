@@ -175,8 +175,8 @@ EOF
 # Signed Images
 cat <<EOF >>/usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %post --erroronfail --log=/tmp/anacoda_custom_logs/bootc-switch.log
-# Updates come from the Ravana registry (images are not cosign-signed yet)
-sed -i 's|container-image-reference=.*|container-image-reference=ostree-unverified-registry:$imageref:$imagetag|' /ostree/deploy/default/deploy/*.origin
+# Updates come from the Ravana registry and must carry the Ravana signature
+sed -i 's|container-image-reference=.*|container-image-reference=ostree-image-signed:docker://$imageref:$imagetag|' /ostree/deploy/default/deploy/*.origin
 %end
 EOF
 

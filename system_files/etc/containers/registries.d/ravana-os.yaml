@@ -1,0 +1,4 @@
+# Ravana OS images carry cosign (sigstore) signatures next to the image.
+docker:
+  ghcr.io/ravana-os:
+    use-sigstore-attachments: true

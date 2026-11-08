@@ -72,11 +72,16 @@ reboot. You only do this once.
 
 ### Already on Bazzite or another Fedora Atomic system?
 
-Switch with one command and reboot:
+Switch in two steps. The first boot of Ravana installs its signing key; the second step
+turns on signature checking for all future updates.
 
 ```bash
-sudo bootc switch ghcr.io/ravana-os/ravana-os:latest          # AMD / Intel
-sudo bootc switch ghcr.io/ravana-os/ravana-os-nvidia:latest   # NVIDIA
+sudo bootc switch ghcr.io/ravana-os/ravana-os:latest      # use ravana-os-nvidia for NVIDIA
+systemctl reboot
+```
+
+```bash
+sudo bootc switch --enforce-container-sigpolicy ghcr.io/ravana-os/ravana-os:latest
 ```
 
 ## Updates
@@ -107,6 +112,16 @@ sudo bootc switch ghcr.io/ravana-os/ravana-os:latest    # back to stable
 ```
 
 New work lands on `testing` first, then merges to `main` once it's verified.
+
+## Security
+
+Every Ravana OS image is signed with [cosign](https://github.com/sigstore/cosign) in CI, and
+installed systems only accept updates carrying that signature. Verify an image yourself:
+
+```bash
+cosign verify --key https://raw.githubusercontent.com/ravana-os/ravana-os/main/cosign.pub \
+  ghcr.io/ravana-os/ravana-os:latest
+```
 
 ## Look & feel
 
@@ -151,6 +166,7 @@ Everything that makes Ravana lives in this repo:
 | Path | What it is |
 |---|---|
 | `Containerfile` | The OS definition |
+| `cosign.pub` | Public key that verifies every Ravana image |
 | `build_files/` | Build steps run inside the image (branding, tuning, theme) |
 | `system_files/` | Files shipped in the OS (configs, color schemes) |
 | `tools/` | Generators, e.g. `gen-kde-colors.py` for the color schemes |

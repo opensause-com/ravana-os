@@ -41,8 +41,9 @@ jobs:
           sudo podman build -t localhost/ravana-iso-src:latest --build-arg BASE="$IMAGE_REF" -f - . <<'CF'
           ARG BASE
           FROM ${BASE}
-          COPY disk_config/fedora-base.repo /etc/yum.repos.d/fedora-base.repo
-          RUN ls /etc/pki/rpm-gpg/ | grep -i fedora
+          COPY disk_config/fedora-base.repo /var/tmp/fedora-base.repo
+          COPY disk_config/add-fedora-repos.sh /var/tmp/add-fedora-repos.sh
+          RUN bash /var/tmp/add-fedora-repos.sh
           CF
           sudo podman run --rm --privileged --pull=newer \
             --security-opt label=type:unconfined_t \

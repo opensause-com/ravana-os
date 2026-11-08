@@ -1,57 +1,92 @@
+<div align="center">
+
 # Ravana OS
 
-A lightweight gaming + developer OS. Ravana OS is a custom [bootc](https://containers.github.io/bootc/)
-image layered on **Bazzite DX** (Fedora Atomic, KDE Plasma 6), so it inherits Bazzite's gaming
-stack (Steam, Proton, gamescope, MangoHud, GameMode, NVIDIA/AMD/Intel drivers, gaming kernel)
-and its dev tooling (VS Code, Podman/Docker, Distrobox), then adds Ravana branding and lower idle RAM.
+**Built for gamers who code, and coders who game.**
 
-The whole OS is defined by the files in this repo. Updates are atomic, and the previous
-version stays selectable in the boot menu if one goes wrong.
+A fast, lightweight Linux OS with a console-style Game Mode, a clean developer desktop,
+and updates that can always be rolled back.
 
-## Layout
+[![Build Ravana OS](https://github.com/opensause-com/ravana-os/actions/workflows/build.yml/badge.svg)](https://github.com/opensause-com/ravana-os/actions/workflows/build.yml)
 
-| Path | Purpose |
+</div>
+
+---
+
+## Why Ravana
+
+- **Game Mode.** Boot straight into a controller-friendly, console-style Steam experience with no
+  desktop running in the background, so your games get the RAM and GPU.
+- **Dev Mode.** A polished KDE Plasma desktop with VS Code, Docker, Podman, Distrobox,
+  Homebrew, QEMU/KVM and GPU compute (ROCm / CUDA) ready on first boot.
+- **Light by design.** Background indexing and other idle services are off by default.
+- **Unbreakable updates.** Every update is a complete, tested system image. If one misbehaves,
+  pick the previous version in the boot menu and you're back in seconds.
+- **Every GPU.** Separate editions for AMD / Intel and NVIDIA, with drivers built in.
+- **Small updates.** Only the parts that changed are downloaded.
+
+## Editions
+
+| Edition | For | Image |
+|---|---|---|
+| **Ravana OS** | AMD and Intel graphics | `ghcr.io/opensause-com/ravana-os:latest` |
+| **Ravana OS NVIDIA** | NVIDIA graphics | `ghcr.io/opensause-com/ravana-os-nvidia:latest` |
+
+## Install
+
+**Fresh install:** download the installer ISO from the
+[latest ISO build](https://github.com/opensause-com/ravana-os/actions/workflows/build-iso.yml)
+(Actions → newest run → *Artifacts*), write it to a USB stick (Fedora Media Writer, Ventoy or
+`dd`), and boot from it.
+
+**Already on Bazzite or another Fedora Atomic system?** Switch with one command and reboot:
+
+```bash
+sudo bootc switch ghcr.io/opensause-com/ravana-os:latest          # AMD / Intel
+sudo bootc switch ghcr.io/opensause-com/ravana-os-nvidia:latest   # NVIDIA
+```
+
+## Look & feel
+
+Ravana's identity is **crimson red on near-black or white**: red marks focus, selection and
+action, while surfaces stay calm for long gaming and coding sessions. *Ravana Dark* and
+*Ravana Light* color schemes ship by default.
+
+| | Dark | Light |
+|---|---|---|
+| Ravana Red (accent) | `#D21F3C` | `#D21F3C` |
+| Background | `#121214` | `#F4F4F5` |
+| Text | `#F5F5F7` | `#18181B` |
+| Links | `#FF5A66` | `#C8102E` |
+
+## Roadmap
+
+- [x] Gaming + dev base, AMD/Intel and NVIDIA editions, automatic cloud builds
+- [x] Ravana branding and color schemes
+- [ ] Boot splash, boot menu and login screen theme
+- [ ] Ravana wallpapers and logo
+- [ ] Welcome app: choose Game Mode or Desktop, pick dev packs
+- [ ] Live ISO: try Ravana before installing
+
+## Building Ravana yourself
+
+Everything that makes Ravana lives in this repo:
+
+| Path | What it is |
 |---|---|
-| `Containerfile` | The OS definition: `FROM` Bazzite DX + Ravana build steps |
-| `build_files/NN-*.sh` | Build scripts run inside the image, in numeric order |
-| `system_files/` | Files copied over `/` in the image (configs, branding) |
-| `scripts/` | Host-side helpers: build image, build ISO/VM disk, run VM |
-| `config/qcow2-test.toml` | Test-only VM login (`ravana` / `ravana`), not used by the ISO |
+| `Containerfile` | The OS definition |
+| `build_files/` | Build steps run inside the image (branding, tuning, theme) |
+| `system_files/` | Files shipped in the OS (configs, color schemes) |
+| `tools/` | Generators, e.g. `gen-kde-colors.py` for the color schemes |
+| `.github/workflows/` | Cloud builds: images on every push, ISO on demand |
+| `scripts/` | Local build and VM test helpers |
 
-## Cloud builds (GitHub Actions)
+Pushing to `main` builds both editions in GitHub Actions. To build locally (≈7 GB download), use
+`scripts/build-image.sh`, then `sudo scripts/build-disk.sh iso`.
 
-- `.github/workflows/build.yml` builds `ravana-os` (AMD/Intel) and `ravana-os-nvidia` on every
-  push to `main` and daily. It pushes them to `ghcr.io/<owner>/`.
-- `.github/workflows/build-iso.yml` is manual (Actions tab → *Run workflow*). It produces an
-  installer ISO as a downloadable artifact, kept for 7 days.
+## Credits
 
-## Local build
-
-Needs `podman` (and `qemu-system-x86` + OVMF to test). Pulling the base the first time is ~7 GB.
-
-```bash
-scripts/build-image.sh               # AMD / Intel GPU
-GPU=nvidia scripts/build-image.sh    # NVIDIA GPU
-```
-
-Make something bootable (needs sudo; bootc-image-builder runs rootful):
-
-```bash
-sudo scripts/build-disk.sh qcow2     # VM disk for testing
-sudo scripts/build-disk.sh iso       # installer ISO
-```
-
-Test in QEMU:
-
-```bash
-scripts/run-vm.sh                    # boot the qcow2
-scripts/run-vm.sh iso                # run the installer ISO
-```
-
-## Switching an existing Bazzite / Fedora Atomic PC to Ravana
-
-Once the image is pushed to a registry (e.g. GHCR via CI):
-
-```bash
-sudo bootc switch ghcr.io/<you>/ravana-os:latest
-```
+Ravana OS stands on the shoulders of [Bazzite](https://bazzite.gg) and
+[Universal Blue](https://universal-blue.org), built from [Fedora](https://fedoraproject.org)
+packages. Ravana OS is an independent project and is not affiliated with or endorsed by the
+Fedora Project, Red Hat, or Universal Blue.

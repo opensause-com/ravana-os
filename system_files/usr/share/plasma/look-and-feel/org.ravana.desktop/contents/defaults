@@ -27,5 +27,6 @@ ButtonsOnRight=
 [plasmarc][Theme]
 name=default
 
-[KSplash]
-Theme=org.kde.breeze.desktop
+[ksplashrc][KSplash]
+Engine=KSplashQML
+Theme=org.ravana.desktop

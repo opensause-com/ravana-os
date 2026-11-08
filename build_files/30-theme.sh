@@ -68,6 +68,21 @@ sed -n '/launchers/,/join/p' "$LAYOUT"
 
 grep -A6 '^\[KDE\]' /etc/xdg/kdeglobals
 
+# --- Login splash (login -> desktop) ---
+$KW --file /etc/xdg/ksplashrc --group KSplash --key Engine KSplashQML
+$KW --file /etc/xdg/ksplashrc --group KSplash --key Theme org.ravana.desktop
+test -f "$LNF/contents/splash/Splash.qml"
+
+# --- Login screen (Plasma Login Manager): Ravana wallpaper + clock ---
+# The greeter also uses the system-wide Ravana Dark colours, Inter and Papirus.
+if [ -f /etc/plasmalogin.conf ]; then
+    $KW --file /etc/plasmalogin.conf --group Greeter --key WallpaperPluginId org.kde.image
+    $KW --file /etc/plasmalogin.conf --group Greeter --key ShowClock true
+    $KW --file /etc/plasmalogin.conf --group Greeter --group Wallpaper --group org.kde.image --group General \
+        --key Image "file:///usr/share/wallpapers/Ravana/"
+    grep -A3 '^\[Greeter' /etc/plasmalogin.conf
+fi
+
 # --- Wallpaper on the lock screen too ---
 $KW --file /etc/xdg/kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General \
     --key Image "file:///usr/share/wallpapers/Ravana/"

@@ -34,17 +34,23 @@ jobs:
           mkdir -p output
           echo "${{ secrets.GITHUB_TOKEN }}" | sudo podman login ghcr.io -u "${{ github.actor }}" --password-stdin
           sudo podman pull "$IMAGE_REF"
-          echo "::group::Image repos (bootc-image-builder depsolves the installer from these)"
-          sudo podman run --rm --entrypoint bash "$IMAGE_REF" -c \
-            'cat /usr/lib/os-release; for f in /etc/yum.repos.d/*.repo; do echo "== $f"; grep -E "^\[|^enabled|^(baseurl|metalink)" "$f"; done'
-          echo "::endgroup::"
+          # Bazzite ships without the Fedora base repos, but bootc-image-builder
+          # depsolves the installer (grub, anaconda, ...) from the image's repos.
+          # Add them in a throwaway layer used only as the ISO payload; the
+          # kickstart switches installed systems to the real image afterwards.
+          sudo podman build -t localhost/ravana-iso-src:latest --build-arg BASE="$IMAGE_REF" -f - . <<'CF'
+          ARG BASE
+          FROM ${BASE}
+          COPY disk_config/fedora-base.repo /etc/yum.repos.d/fedora-base.repo
+          RUN ls /etc/pki/rpm-gpg/ | grep -i fedora
+          CF
           sudo podman run --rm --privileged --pull=newer \
             --security-opt label=type:unconfined_t \
             -v "$PWD/output:/output" \
             -v /tmp/iso.toml:/config.toml:ro \
             -v /var/lib/containers/storage:/var/lib/containers/storage \
             quay.io/centos-bootc/bootc-image-builder:latest \
-            --type anaconda-iso --rootfs btrfs --use-librepo=True "$IMAGE_REF"
+            --type anaconda-iso --rootfs btrfs --use-librepo=True localhost/ravana-iso-src:latest
           sudo chown -R "$(id -u):$(id -g)" output
           mv output/bootiso/install.iso "output/${{ inputs.image }}.iso"
           (cd output && sha256sum "${{ inputs.image }}.iso" > "${{ inputs.image }}.iso.sha256")

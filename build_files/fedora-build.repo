@@ -1,0 +1,15 @@
+# Enabled only while building Ravana OS (Bazzite ships without Fedora's base
+# repos). Removed again by 999-cleanup.sh, so it is not in the final OS.
+[ravana-build-fedora]
+name=Fedora $releasever - $basearch (Ravana build)
+metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch
+enabled=1
+gpgcheck=1
+gpgkey=file:///usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-$releasever-primary
+
+[ravana-build-updates]
+name=Fedora $releasever - $basearch - Updates (Ravana build)
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f$releasever&arch=$basearch
+enabled=1
+gpgcheck=1
+gpgkey=file:///usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-$releasever-primary

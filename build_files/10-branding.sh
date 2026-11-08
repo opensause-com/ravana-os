@@ -10,11 +10,20 @@ setkv() { # setkv KEY VALUE  -> replace or append in os-release
     if grep -q "^$1=" "$OSR"; then sed -i "s|^$1=.*|$1=\"$2\"|" "$OSR"; else echo "$1=\"$2\"" >> "$OSR"; fi
 }
 setkv NAME        "Ravana OS"
-setkv PRETTY_NAME "Ravana OS ${IMAGE_VERSION} (Fedora ${FEDORA_VER}, Bazzite DX)"
+setkv PRETTY_NAME "Ravana OS ${IMAGE_VERSION}"
 setkv VARIANT     "Gaming + Dev"
 setkv VARIANT_ID  "${IMAGE_NAME}"
 setkv IMAGE_VERSION "${IMAGE_VERSION}"
 setkv DEFAULT_HOSTNAME "ravana"
+setkv ANSI_COLOR "0;38;2;210;31;60"
+setkv LOGO "ravana-logo"
+setkv HOME_URL "https://github.com/opensause-com/ravana-os"
+setkv DOCUMENTATION_URL "https://github.com/opensause-com/ravana-os#readme"
+setkv SUPPORT_URL "https://github.com/opensause-com/ravana-os/discussions"
+setkv BUG_REPORT_URL "https://github.com/opensause-com/ravana-os/issues"
+# Shown in the boot menu
+BUILD="$(. "$OSR"; echo "${OSTREE_VERSION:-$FEDORA_VER}")"
+setkv BOOTLOADER_NAME "Ravana OS ${IMAGE_VERSION} (${BUILD})"
 
 # Image metadata read by Universal Blue tools (ujust, brh)
 INFO=/usr/share/ublue-os/image-info.json
@@ -28,6 +37,12 @@ fi
 # KDE "About this System"
 ABOUT=/etc/xdg/kcm-about-distrorc
 if [ -f "$ABOUT" ]; then
-    sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=Gaming + Dev ${IMAGE_VERSION}|" "$ABOUT"
+    sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=Gaming + Dev ${IMAGE_VERSION}|; s|^Website=.*|Website=https://github.com/opensause-com/ravana-os|" "$ABOUT"
     grep -q '^Name=' "$ABOUT" || sed -i '/^\[General\]/a Name=Ravana OS' "$ABOUT"
+    if grep -q '^LogoPath=' "$ABOUT"; then
+        sed -i 's|^LogoPath=.*|LogoPath=/usr/share/pixmaps/ravana-logo.png|' "$ABOUT"
+    else
+        sed -i '/^\[General\]/a LogoPath=/usr/share/pixmaps/ravana-logo.png' "$ABOUT"
+    fi
+    cat "$ABOUT"
 fi

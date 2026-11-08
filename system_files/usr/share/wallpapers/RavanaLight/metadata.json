@@ -1,0 +1,8 @@
+{
+  "KPlugin": {
+    "Authors": [{"Name": "Ravana OS"}],
+    "Id": "RavanaLight",
+    "License": "CC-BY-SA-4.0",
+    "Name": "Ravana Light"
+  }
+}

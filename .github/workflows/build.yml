@@ -3,7 +3,13 @@ name: Build Ravana OS image
 on:
   push:
     branches: [main]
-    paths-ignore: ['**/*.md', 'docs/**']
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'tools/**'
+      - 'disk_config/**'
+      - '.github/workflows/build-iso.yml'
+      - '.github/workflows/analyze.yml'
   pull_request:
     branches: [main]
   schedule:

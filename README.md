@@ -50,7 +50,12 @@ sudo bootc switch ghcr.io/opensause-com/ravana-os-nvidia:latest   # NVIDIA
 
 Ravana's identity is **crimson red on near-black or white**: red marks focus, selection and
 action, while surfaces stay calm for long gaming and coding sessions. *Ravana Dark* and
-*Ravana Light* color schemes ship by default.
+*Ravana Light* color schemes ship by default, with the Ravana crown logo, wallpapers
+and boot splash.
+
+The desktop follows a familiar layout: a top bar with the app menu, clock and tray, a
+floating dock at the bottom, window buttons on the left, genie-style minimize, translucent
+blur, and Overview (Meta+W or the top-left corner) to see all your windows.
 
 | | Dark | Light |
 |---|---|---|
@@ -63,8 +68,10 @@ action, while surfaces stay calm for long gaming and coding sessions. *Ravana Da
 
 - [x] Gaming + dev base, AMD/Intel and NVIDIA editions, automatic cloud builds
 - [x] Ravana branding and color schemes
-- [ ] Boot splash, boot menu and login screen theme
-- [ ] Ravana wallpapers and logo
+- [x] Ravana logo, wallpapers, boot splash and boot menu name
+- [x] macOS-style desktop: top bar with global menu, floating dock, genie minimize, blur, Overview
+- [ ] Login screen theme
+- [ ] Debloat pass (measured) and small network-installer ISO
 - [ ] Welcome app: choose Game Mode or Desktop, pick dev packs
 - [ ] Live ISO: try Ravana before installing
 

@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "Plasma/LookAndFeel",
+    "KPlugin": {
+        "Authors": [{ "Name": "Ravana OS" }],
+        "Category": "",
+        "Description": "Ravana OS desktop: top bar, floating dock, crimson accents",
+        "Id": "org.ravana.desktop",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana",
+        "Version": "0.1",
+        "Website": "https://github.com/opensause-com/ravana-os"
+    },
+    "X-Plasma-APIVersion": "2"
+}

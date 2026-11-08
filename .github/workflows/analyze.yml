@@ -1,0 +1,60 @@
+name: Analyze image size and services
+
+# Manual: measures what takes space and what starts at boot, for debloating.
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: Image to analyze
+        type: choice
+        options: [ravana-os, ravana-os-nvidia]
+        default: ravana-os
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: ublue-os/remove-unwanted-software@v9
+
+      - name: Pull image
+        run: |
+          echo "IMG=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${{ inputs.image }}:latest" >> "$GITHUB_ENV"
+          sudo podman pull "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${{ inputs.image }}:latest"
+
+      - name: Report
+        run: |
+          sudo podman image inspect "$IMG" --format 'Uncompressed size: {{.Size}} bytes'
+          sudo podman run --rm --entrypoint bash "$IMG" -c '
+            set -u
+            echo "### Package count: $(rpm -qa | wc -l)"
+            echo "### Top 80 packages by installed size (MB)"
+            rpm -qa --qf "%{SIZE} %{NAME}\n" | sort -rn | head -80 | awk "{printf \"%8.1f  %s\n\", \$1/1048576, \$2}"
+            echo "### Size by top-level /usr directory"
+            du -xsh /usr/* 2>/dev/null | sort -rh | head -20
+            echo "### Biggest /usr/share and /usr/lib subdirs"
+            du -xsh /usr/share/* /usr/lib/* /usr/lib64/* 2>/dev/null | sort -rh | head -40
+            echo "### Docs, man pages, locales"
+            du -xsh /usr/share/doc /usr/share/man /usr/share/locale /usr/share/help 2>/dev/null
+            echo "### Firmware and kernel modules"
+            du -xsh /usr/lib/firmware /usr/lib/modules 2>/dev/null
+            echo "### Enabled system services"
+            systemctl list-unit-files --state=enabled --no-legend --no-pager | awk "{print \$1}"
+            echo "### Enabled user services"
+            systemctl --global list-unit-files --state=enabled --no-legend --no-pager | awk "{print \$1}"
+            echo "### Desktop autostart entries"
+            ls /etc/xdg/autostart/
+            echo "### Wayland/X sessions"
+            ls /usr/share/wayland-sessions/ /usr/share/xsessions/ 2>/dev/null
+            echo "### Handheld / Deck packages"
+            rpm -qa | grep -iE "jupiter|steamdeck|hhd|steamos|handheld|galileo|powerbuttond|inputplumber" | sort
+            echo "### Files still mentioning Bazzite (branding leftovers)"
+            grep -rIil bazzite /etc /usr/share/ublue-os /usr/share/applications /usr/share/plymouth \
+              /usr/share/sddm /usr/share/plasma /usr/share/fastfetch /usr/libexec /usr/bin 2>/dev/null | head -150
+            echo "### Plymouth theme"
+            plymouth-set-default-theme 2>/dev/null || true
+            echo "### Flatpaks preinstalled list"
+            ls /usr/share/ublue-os/ 2>/dev/null; cat /usr/share/ublue-os/flatpaks* /etc/ublue-os/*flatpak* 2>/dev/null | head -60
+          '

@@ -47,9 +47,8 @@ Start small and add only what you need:
 
 ### Try it first (live USB)
 
-1. Download the **live ISO** from the
-   [latest live ISO build](https://github.com/ravana-os/ravana-os/actions/workflows/build-live-iso.yml)
-   (newest run, then *Artifacts*). Pick `ravana-os-nvidia` for NVIDIA graphics.
+1. Download the **live ISO** from the [latest release](https://github.com/ravana-os/ravana-os/releases/latest)
+   (pick `ravana-os-nvidia-live.iso` for NVIDIA graphics) and check it against `SHA256SUMS`.
 2. Write it to an 8 GB+ USB stick with [Fedora Media Writer](https://flathub.org/apps/org.fedoraproject.MediaWriter),
    [Ventoy](https://www.ventoy.net) or [Rufus](https://rufus.ie) (DD mode).
 3. Boot from the USB (usually F12, F11, F8 or Esc at power-on) and choose **Try or Install Ravana OS**.
@@ -166,6 +165,7 @@ back? Open **Reset Ravana Look** from the app menu.
 - [ ] Login screen theme
 - [x] Debloat pass, measured: ROCm compiler libs, non-x86 emulators, Deck-only daemons, docs
 - [x] Weekly auto-updates and a testing channel
+- [x] Signed images; automatic live ISOs and GitHub Releases from stable builds
 - [ ] Small network-installer ISO
 - [ ] Welcome app: choose Game Mode or Desktop, pick dev packs
 - [x] Live ISO: try Ravana before installing, then install (dual boot friendly)

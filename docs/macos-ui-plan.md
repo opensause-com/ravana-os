@@ -31,11 +31,46 @@ How each macOS mechanism maps to Ravana (KDE Plasma 6 underneath).
 | macOS | Ravana | Status |
 |---|---|---|
 | Close / minimize / zoom on the left | Buttons on the left | Done |
-| Red / yellow / green "traffic lights" | Coloured round buttons | Next (needs a window decoration theme) |
+| Red / yellow / green "traffic lights" | Ravana window frame (`tools/gen-window-decoration.py`): dark rounded title bar, coloured round buttons, glyphs on hover | Done |
 | Mission Control | Overview: Meta+W or four-finger swipe up | Done |
 | Spaces | Virtual desktops (Ctrl+Meta+Left/Right) | Done |
 | Hot corners | Off by default, like macOS | Done |
 | Rounded corners, soft shadows | Breeze shadows; rounded corners need a KWin effect | Later (optional, GPU cost) |
+
+## Keyboard: ⌘ Cmd = Windows key
+
+Only Windows-key combinations change; Ctrl and Alt behave as usual (Windows habits and games keep working).
+Turn off with `sudo systemctl disable --now keyd`.
+
+| Shortcut | Does |
+|---|---|
+| ⌘C ⌘V ⌘X ⌘Z ⇧⌘Z | Copy, paste (terminals too), cut, undo, redo |
+| ⌘A ⌘S ⌘F ⌘G ⌘P ⌘O ⌘N ⌘T ⌘W ⌘Q | Select all, save, find, find next, print, open, new, new tab, close, quit |
+| ⌘R ⌘L ⌘D ⌘J ⌘, | Reload, address bar, bookmark, downloads, preferences |
+| ⌘1…⌘9, ⇧⌘[ ⇧⌘] | Go to tab, previous/next tab |
+| ⌘[ ⌘] | Back, forward |
+| ⌘← ⌘→ ⌘↑ ⌘↓ (add ⇧ to select) | Line start/end, document start/end |
+| ⌘+ ⌘- ⌘0 | Zoom in, out, reset |
+| ⌘Space | Spotlight search |
+| ⌘Tab, ⇧⌘Tab | Switch apps |
+| ⌘` | Switch windows of the current app |
+| ⌘H, ⌘M | Hide, minimize |
+| ⌃⌘F | Full screen |
+| ⌥⌘Esc | Force quit (click a window) |
+| ⌃⌘Q, ⇧⌘Q | Lock screen, log out |
+| ⇧⌘3, ⇧⌘4, ⇧⌘5 | Screenshot: full screen, area, screenshot tool |
+| ⌃⌘Space or ⌘. | Emoji picker |
+| ⌥⌘Space | New file manager window |
+| ⌃↑, ⌃↓ | Mission Control, app windows |
+| ⌃⌘← ⌃⌘→ | Previous/next desktop (Space) |
+| ⌥⌘← ⌥⌘→ ⌥⌘↑ | Tile left/right, maximize |
+| Windows key alone | Launchpad |
+
+## Files (Finder → Dolphin)
+
+- Sidebar with favourites and devices, icon view at 64 px, double-click to open, no zoom slider or path text.
+- Menus in the top bar, toolbar with back/forward, view modes, search.
+- Not available yet: spacebar Quick Look (Dolphin's information panel, F11, shows previews).
 
 ## Power on, power off
 
@@ -50,6 +85,8 @@ How each macOS mechanism maps to Ravana (KDE Plasma 6 underneath).
 
 ## Look
 
+- Ravana's own crown, wallpaper, icons and fonts; Apple's logo, SF fonts and icons are Apple property and are not used.
+- Translucent menu bar, dock, menus (82 % opaque, blurred), Spotlight and Launchpad.
 - Dark only: Ravana Dark colours, Ravana wallpaper (light variant removed).
 - Inter for UI, JetBrains Mono for code, Papirus icons.
 - Installer in Ravana crimson.

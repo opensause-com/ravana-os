@@ -125,8 +125,27 @@ New work lands on `testing` first, then merges to `main` once it's verified.
 
 ## Security
 
-Every Ravana OS image is signed with [cosign](https://github.com/sigstore/cosign) in CI, and
-installed systems only accept updates carrying that signature. Verify an image yourself:
+| Layer | What Ravana does |
+|---|---|
+| Read-only system | `/usr` can't be changed by apps or malware; updates replace the whole system image |
+| Signed updates | Every image is signed with [cosign](https://github.com/sigstore/cosign); installed systems refuse unsigned or tampered updates |
+| Rollback | A bad update is one reboot away from the previous version |
+| Secure Boot | Works out of the box |
+| SELinux | Enforcing, confines system services |
+| Sandboxed apps | Store apps are Flatpaks with their own permissions |
+| Firewall | Incoming connections blocked; only DHCPv6, local discovery (mDNS) and Steam Remote Play allowed |
+| No remote login | SSH and remote printer discovery off unless you turn them on |
+| Kernel hardening | Hidden kernel pointers and logs, restricted debugging (ptrace), no unprivileged eBPF, no kexec, network spoofing/redirect protection |
+| Network privacy | Random Wi-Fi address while scanning, a different address per network, IPv6 privacy addresses, encrypted DNS when the server supports it |
+| Password guessing | Account locks for 2 minutes after 10 wrong passwords |
+| Screen lock | Locks after 10 minutes and on wake from sleep |
+| Firmware | BIOS and device firmware updates through fwupd |
+| No telemetry | Nothing is sent home |
+
+Everything above is chosen so Steam, Proton anti-cheat, Docker, VMs and dev tools keep working.
+Turn on disk encryption in the installer's storage step for protection if the PC is stolen.
+
+Verify an image yourself:
 
 ```bash
 cosign verify --key https://raw.githubusercontent.com/ravana-os/ravana-os/main/cosign.pub \
@@ -135,26 +154,30 @@ cosign verify --key https://raw.githubusercontent.com/ravana-os/ravana-os/main/c
 
 ## Look & feel
 
-Ravana's identity is **crimson red on near-black or white**: red marks focus, selection and
-action, while surfaces stay calm for long gaming and coding sessions. *Ravana Dark* and
-*Ravana Light* color schemes ship by default, with the Ravana crown logo, wallpapers
-and boot splash.
+Ravana's identity is **crimson red on near-black**: red marks focus, selection and action,
+while surfaces stay calm for long gaming and coding sessions.
 
-The desktop follows a familiar layout: a top bar with the app menu, clock and tray, a
-floating dock at the bottom, window buttons on the left, genie-style minimize, translucent
-blur, and Overview (Meta+W or the top-left corner) to see all your windows. Panels, the
-dock, menus and the terminal are frosted glass over your wallpaper.
+The desktop works like a Mac:
+
+- **Menu bar:** the Ravana crown menu (About, System Settings, App Store, Force Quit, Sleep,
+  Restart, Shut Down, Lock, Log Out), the app's menus, status icons, Spotlight search, clock
+- **Dock:** floating glass, Launchpad first and Trash last
+- **Windows:** red, yellow and green buttons on the left, genie minimize, Mission Control (⌃↑)
+- **Keyboard:** ⌘ is the Windows key: ⌘C, ⌘V, ⌘Q, ⌘Tab, ⌘Space, ⇧⌘4 and the rest
+  ([full list](docs/macos-ui-plan.md))
+- **Glass:** translucent, blurred menu bar, dock, menus, Spotlight and Launchpad
 
 Boot is quiet end to end: the Ravana crown animation plays from firmware to the login
-screen, then a matching splash carries you into the desktop. Changed the look and want it
-back? Open **Reset Ravana Look** from the app menu.
+screen, then a matching splash carries you into the desktop. After an update that changes
+the look, Ravana asks once whether to apply it. **Reset Ravana Look** in the app menu brings
+it back any time.
 
-| | Dark | Light |
-|---|---|---|
-| Ravana Red (accent) | `#D21F3C` | `#D21F3C` |
-| Background | `#121214` | `#F4F4F5` |
-| Text | `#F5F5F7` | `#18181B` |
-| Links | `#FF5A66` | `#C8102E` |
+| | Colour |
+|---|---|
+| Ravana Red (accent) | `#D21F3C` |
+| Background | `#121214` |
+| Text | `#F5F5F7` |
+| Links | `#FF5A66` |
 
 ## Roadmap
 

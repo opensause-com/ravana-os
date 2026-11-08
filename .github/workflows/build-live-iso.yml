@@ -49,6 +49,9 @@ jobs:
             -t localhost/ravana-live:latest -f Containerfile.live .
           df -h / /mnt
 
+      - name: Prepare output folder
+        run: mkdir -p output
+
       - name: Build ISO (Titanoboa)
         id: iso
         uses: ublue-os/titanoboa@main

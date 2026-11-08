@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# "Update Ravana OS" menu entry: run the full update now and show the result.
+echo -e "\e[1;38;2;210;31;60mRavana OS update\e[0m"
+echo "Updating the system, Flatpak apps and Distrobox containers..."
+echo
+if ujust update; then
+    echo
+    if bootc status --format=json 2>/dev/null | grep -q '"staged": *{'; then
+        echo -e "\e[1mA new Ravana OS version is ready. Restart to start using it.\e[0m"
+    else
+        echo -e "\e[1mRavana OS is up to date.\e[0m"
+    fi
+else
+    echo
+    echo "The update didn't finish. Check your connection and try again."
+fi
+echo
+read -rp "Press Enter to close"

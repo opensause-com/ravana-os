@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Update Ravana OS
+GenericName=System Update
+Comment=Download the latest Ravana OS, app and container updates now
+Icon=ravana-os
+Exec=konsole --hide-menubar -e /usr/libexec/ravana-update
+Terminal=false
+Categories=System;
+Keywords=update;upgrade;system;ravana;

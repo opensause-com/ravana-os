@@ -49,7 +49,9 @@ sudo bootc switch ghcr.io/opensause-com/ravana-os-nvidia:latest   # NVIDIA
 ## Updates
 
 Ravana updates itself. Once a week (Sunday morning, or at the next boot) it downloads only
-what changed and applies it on reboot. Your apps, files and settings stay. Update right away:
+what changed and applies it on reboot. Your apps, files and settings stay.
+
+Don't want to wait? Open **Update Ravana OS** from the app menu, or run:
 
 ```bash
 ujust update                 # system, Flatpaks and Distrobox containers

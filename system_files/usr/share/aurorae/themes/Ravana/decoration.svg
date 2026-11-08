@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+<defs>
+  <linearGradient id="decoration-gl" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0.303"/>
+  </linearGradient>
+  <linearGradient id="decoration-gr" x1="1" y1="0" x2="0" y2="0">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0.303"/>
+  </linearGradient>
+  <linearGradient id="decoration-gt" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0.165"/>
+  </linearGradient>
+  <linearGradient id="decoration-gb" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#000" stop-opacity="0.413"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="decoration-gtl" cx="36" cy="26" r="36" gradientUnits="userSpaceOnUse">
+    <stop offset="0.333" stop-color="#000" stop-opacity="0.248"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="decoration-gtr" cx="0" cy="26" r="36" gradientUnits="userSpaceOnUse">
+    <stop offset="0.333" stop-color="#000" stop-opacity="0.248"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="decoration-gbl" cx="24" cy="0" r="34" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#000" stop-opacity="0.358"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="decoration-gbr" cx="12" cy="0" r="34" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#000" stop-opacity="0.358"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<g id="decoration-topleft" transform="translate(0,0)"><rect width="36" height="26" fill="none"/><rect width="36" height="26" fill="url(#decoration-gtl)"/><path d="M24,26 L24,26 A12,12 0 0 1 36,14 L36,14 L36,26 Z" fill="#0e0e10"/><path d="M24.5,26 L24.5,26 A11.5,11.5 0 0 1 36,14.5 L36,14.5" fill="none" stroke="#fff" stroke-opacity="0.1"/></g>
+<g id="decoration-top" transform="translate(100,0)"><rect width="10" height="26" fill="none"/><rect width="10" height="14" fill="url(#decoration-gt)"/><rect y="14" width="10" height="12" fill="#0e0e10"/><rect y="14" width="10" height="1" fill="#fff" fill-opacity="0.1"/></g>
+<g id="decoration-topright" transform="translate(200,0)"><rect width="36" height="26" fill="none"/><rect width="36" height="26" fill="url(#decoration-gtr)"/><path d="M0,26 L0,14 A12,12 0 0 1 12,26 L12,26 Z" fill="#0e0e10"/><path d="M0,14.5 A11.5,11.5 0 0 1 11.5,26 L11.5,26" fill="none" stroke="#fff" stroke-opacity="0.1"/></g>
+<g id="decoration-left" transform="translate(0,100)"><rect width="36" height="10" fill="none"/><rect width="24" height="10" fill="url(#decoration-gl)"/><rect x="24" width="12" height="10" fill="#0e0e10"/></g>
+<g id="decoration-center" transform="translate(100,100)"><rect width="10" height="10" fill="none"/><rect width="10" height="10" fill="#0e0e10"/></g>
+<g id="decoration-right" transform="translate(200,100)"><rect width="36" height="10" fill="none"/><rect width="12" height="10" fill="#0e0e10"/><rect x="12" width="24" height="10" fill="url(#decoration-gr)"/></g>
+<g id="decoration-bottomleft" transform="translate(0,200)"><rect width="36" height="34" fill="none"/><rect width="24" height="34" fill="url(#decoration-gbl)"/><rect x="24" width="12" height="34" fill="url(#decoration-gb)"/></g>
+<g id="decoration-bottom" transform="translate(100,200)"><rect width="10" height="34" fill="none"/><rect width="10" height="34" fill="url(#decoration-gb)"/></g>
+<g id="decoration-bottomright" transform="translate(200,200)"><rect width="36" height="34" fill="none"/><rect width="12" height="34" fill="url(#decoration-gb)"/><rect x="12" width="24" height="34" fill="url(#decoration-gbr)"/></g>
+<defs>
+  <linearGradient id="decoration-inactive-gl" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0.165"/>
+  </linearGradient>
+  <linearGradient id="decoration-inactive-gr" x1="1" y1="0" x2="0" y2="0">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0.165"/>
+  </linearGradient>
+  <linearGradient id="decoration-inactive-gt" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#000" stop-opacity="0"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0.090"/>
+  </linearGradient>
+  <linearGradient id="decoration-inactive-gb" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#000" stop-opacity="0.225"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="decoration-inactive-gtl" cx="36" cy="26" r="36" gradientUnits="userSpaceOnUse">
+    <stop offset="0.333" stop-color="#000" stop-opacity="0.135"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="decoration-inactive-gtr" cx="0" cy="26" r="36" gradientUnits="userSpaceOnUse">
+    <stop offset="0.333" stop-color="#000" stop-opacity="0.135"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="decoration-inactive-gbl" cx="24" cy="0" r="34" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#000" stop-opacity="0.195"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="decoration-inactive-gbr" cx="12" cy="0" r="34" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#000" stop-opacity="0.195"/>
+    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<g id="decoration-inactive-topleft" transform="translate(0,0)"><rect width="36" height="26" fill="none"/><rect width="36" height="26" fill="url(#decoration-inactive-gtl)"/><path d="M24,26 L24,26 A12,12 0 0 1 36,14 L36,14 L36,26 Z" fill="#151518"/><path d="M24.5,26 L24.5,26 A11.5,11.5 0 0 1 36,14.5 L36,14.5" fill="none" stroke="#fff" stroke-opacity="0.05"/></g>
+<g id="decoration-inactive-top" transform="translate(100,0)"><rect width="10" height="26" fill="none"/><rect width="10" height="14" fill="url(#decoration-inactive-gt)"/><rect y="14" width="10" height="12" fill="#151518"/><rect y="14" width="10" height="1" fill="#fff" fill-opacity="0.05"/></g>
+<g id="decoration-inactive-topright" transform="translate(200,0)"><rect width="36" height="26" fill="none"/><rect width="36" height="26" fill="url(#decoration-inactive-gtr)"/><path d="M0,26 L0,14 A12,12 0 0 1 12,26 L12,26 Z" fill="#151518"/><path d="M0,14.5 A11.5,11.5 0 0 1 11.5,26 L11.5,26" fill="none" stroke="#fff" stroke-opacity="0.05"/></g>
+<g id="decoration-inactive-left" transform="translate(0,100)"><rect width="36" height="10" fill="none"/><rect width="24" height="10" fill="url(#decoration-inactive-gl)"/><rect x="24" width="12" height="10" fill="#151518"/></g>
+<g id="decoration-inactive-center" transform="translate(100,100)"><rect width="10" height="10" fill="none"/><rect width="10" height="10" fill="#151518"/></g>
+<g id="decoration-inactive-right" transform="translate(200,100)"><rect width="36" height="10" fill="none"/><rect width="12" height="10" fill="#151518"/><rect x="12" width="24" height="10" fill="url(#decoration-inactive-gr)"/></g>
+<g id="decoration-inactive-bottomleft" transform="translate(0,200)"><rect width="36" height="34" fill="none"/><rect width="24" height="34" fill="url(#decoration-inactive-gbl)"/><rect x="24" width="12" height="34" fill="url(#decoration-inactive-gb)"/></g>
+<g id="decoration-inactive-bottom" transform="translate(100,200)"><rect width="10" height="34" fill="none"/><rect width="10" height="34" fill="url(#decoration-inactive-gb)"/></g>
+<g id="decoration-inactive-bottomright" transform="translate(200,200)"><rect width="36" height="34" fill="none"/><rect width="12" height="34" fill="url(#decoration-inactive-gb)"/><rect x="12" width="24" height="34" fill="url(#decoration-inactive-gbr)"/></g>
+</svg>

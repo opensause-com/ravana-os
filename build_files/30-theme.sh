@@ -19,7 +19,10 @@ $KW --file /etc/xdg/kdeglobals --group General --key ColorScheme RavanaDark
 $KW --file /etc/xdg/kdeglobals --group General --key font "Inter,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
 $KW --file /etc/xdg/kdeglobals --group General --key menuFont "Inter,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
 $KW --file /etc/xdg/kdeglobals --group General --key fixed "JetBrains Mono,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
-$KW --file /etc/xdg/kdeglobals --group Icons --key Theme Papirus-Dark
+$KW --file /etc/xdg/kdeglobals --group Icons --key Theme Colloid-Red-Dark
+# Ravana Glass: frosted menu bar, dock and popups (system_files/.../desktoptheme/ravana-glass)
+test -f /usr/share/plasma/desktoptheme/ravana-glass/metadata.json
+$KW --file /etc/xdg/plasmarc --group Theme --key name ravana-glass
 # Apps read the actual colours from kdeglobals' [Colors:*] groups, not from the
 # scheme name, so copy Ravana Dark's colour groups in (replacing the base image's).
 python3 - /usr/share/color-schemes/RavanaDark.colors /etc/xdg/kdeglobals <<'PY'

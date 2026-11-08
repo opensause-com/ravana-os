@@ -1,0 +1,13 @@
+{
+    "KPackageStructure": "Plasma/Theme",
+    "KPlugin": {
+        "Authors": [{ "Name": "Ravana OS" }],
+        "Description": "Frosted glass menu bar, dock and popups for Ravana OS",
+        "Id": "ravana-glass",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana Glass",
+        "Version": "1.0",
+        "Website": "https://github.com/ravana-os/ravana-os"
+    },
+    "X-Plasma-API": "5.0"
+}

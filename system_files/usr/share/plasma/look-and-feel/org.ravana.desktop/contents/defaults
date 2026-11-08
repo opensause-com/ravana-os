@@ -10,7 +10,7 @@ fixed=JetBrains Mono,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
 activeFont=Inter,10,-1,5,600,0,0,0,0,0,0,0,0,0,0,1
 
 [kdeglobals][Icons]
-Theme=Papirus-Dark
+Theme=Colloid-Red-Dark
 
 [kdeglobals][KDE]
 widgetStyle=Breeze
@@ -25,7 +25,7 @@ ButtonsOnLeft=XIA
 ButtonsOnRight=
 
 [plasmarc][Theme]
-name=default
+name=ravana-glass
 
 [ksplashrc][KSplash]
 Engine=KSplashQML

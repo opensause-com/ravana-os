@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Ravana look updates for existing users, like "what's new" after a macOS update.
+#   --login : at login, if this Ravana version brings a new desktop look, ask once:
+#             Apply New Look / Keep Mine / Not Now
+#   --now   : apply it now (the "Reset Ravana Look" app)
+# Applying rebuilds the menu bar and dock (pinned apps kept), re-applies the Ravana
+# theme, and sets the Mac keyboard shortcuts (active from the next login).
+set -uo pipefail
+
+LOOK=/usr/share/ravana/look
+VERSION="$(cat "$LOOK/version")"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/ravana"
+MARKER="$STATE/look-version"
+APPLETS="${XDG_CONFIG_HOME:-$HOME/.config}/plasma-org.kde.plasma.desktop-appletsrc"
+mkdir -p "$STATE"
+
+apply() {
+    plasma-apply-lookandfeel --apply org.ravana.desktop >/dev/null 2>&1 || true
+    dbus-send --session --print-reply --type=method_call --dest=org.kde.plasmashell \
+        /PlasmaShell org.kde.PlasmaShell.evaluateScript "string:$(cat "$LOOK/apply-layout.js")" >/dev/null
+    touch "$STATE/apply-shortcuts"          # merged before the desktop starts next login
+    echo "$VERSION" > "$MARKER"
+}
+
+case "${1:---login}" in
+--now)
+    kdialog --title "Ravana OS" --icon ravana-os --yes-label "Apply" --no-label "Cancel" --yesno \
+"<b>Reset to the Ravana look?</b><br><br>Rebuilds the menu bar and dock, and restores the Ravana theme,
+window style and Mac shortcuts. Your pinned dock apps, files and settings stay." || exit 0
+    apply
+    kdialog --title "Ravana OS" --icon ravana-os --msgbox \
+"Done. The Mac keyboard shortcuts switch on the next time you log in." &
+    ;;
+--login)
+    [ "$(cat "$MARKER" 2>/dev/null)" = "$VERSION" ] && exit 0
+    # New accounts already start with the current look
+    if [ ! -f "$MARKER" ] && { [ ! -s "$APPLETS" ] || grep -q 'org.ravana.menu' "$APPLETS"; }; then
+        echo "$VERSION" > "$MARKER"
+        exit 0
+    fi
+    sleep 6   # let the desktop finish loading
+    kdialog --title "Ravana OS" --icon ravana-os \
+        --yes-label "Apply New Look" --no-label "Keep Mine" --cancel-label "Not Now" --yesnocancel \
+"<b>Ravana OS has a new desktop look</b><br><br>
+• Menu bar with the Ravana menu (About, Sleep, Restart, Shut Down…) and Spotlight search<br>
+• Glass dock with Launchpad and Trash<br>
+• Red, yellow and green window buttons<br>
+• Mac keyboard shortcuts: ⌘ is the Windows key<br><br>
+Your pinned dock apps, wallpaper, files and settings stay.<br>
+You can apply it later from <i>Reset Ravana Look</i>."
+    case $? in
+        0) apply
+           kdialog --title "Ravana OS" --icon ravana-os --passivepopup \
+               "New look applied. Mac shortcuts switch on at your next login." 8 ;;
+        1) echo "$VERSION" > "$MARKER" ;;   # keep mine: don't ask again for this version
+        *) ;;                               # not now: ask at next login
+    esac
+    ;;
+esac

@@ -1,0 +1,13 @@
+{
+    "KPackageStructure": "Plasma/LayoutTemplate",
+    "KPlugin": {
+        "Authors": [{ "Name": "Ravana OS" }],
+        "Description": "Floating glass dock: Launchpad, apps and Trash",
+        "Id": "org.ravana.dock",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana Dock",
+        "Version": "2"
+    },
+    "X-Plasma-ContainmentCategories": ["panel"],
+    "X-Plasma-Shell": "org.kde.plasma.desktop"
+}

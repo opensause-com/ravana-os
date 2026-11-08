@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Merge Ravana's Mac-style desktop shortcuts into the user's kglobalshortcutsrc.
+# Runs before the desktop starts (plasma-workspace/env), so nothing overwrites it.
+set -uo pipefail
+SRC=/etc/skel/.config/kglobalshortcutsrc
+KW="$(command -v kwriteconfig6)" || exit 0
+groups=()
+while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+        ''|'#'*) continue ;;
+        '['*)
+            groups=()
+            rest="$line"
+            while [[ "$rest" =~ ^\[([^]]*)\](.*)$ ]]; do
+                groups+=(--group "${BASH_REMATCH[1]}")
+                rest="${BASH_REMATCH[2]}"
+            done ;;
+        *=*)
+            "$KW" --file kglobalshortcutsrc "${groups[@]}" --key "${line%%=*}" "${line#*=}" ;;
+    esac
+done < "$SRC"

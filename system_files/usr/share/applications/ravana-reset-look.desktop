@@ -2,9 +2,9 @@
 Type=Application
 Name=Reset Ravana Look
 GenericName=Restore Default Appearance
-Comment=Reapply the Ravana theme, dock and top bar layout, wallpaper and colours
+Comment=Bring back the Ravana menu bar, dock, theme, window style and Mac shortcuts
 Icon=ravana-os
-Exec=plasma-apply-lookandfeel --apply org.ravana.desktop --resetLayout
+Exec=/usr/libexec/ravana-look-update --now
 Terminal=false
 Categories=Settings;
 Keywords=theme;look;reset;layout;dock;ravana;

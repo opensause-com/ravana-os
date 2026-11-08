@@ -1,0 +1,13 @@
+{
+    "KPackageStructure": "Plasma/LayoutTemplate",
+    "KPlugin": {
+        "Authors": [{ "Name": "Ravana OS" }],
+        "Description": "Top bar: Ravana menu, app menus, status icons, search and clock",
+        "Id": "org.ravana.menubar",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana Menu Bar",
+        "Version": "2"
+    },
+    "X-Plasma-ContainmentCategories": ["panel"],
+    "X-Plasma-Shell": "org.kde.plasma.desktop"
+}

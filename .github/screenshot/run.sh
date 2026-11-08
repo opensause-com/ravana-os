@@ -47,6 +47,14 @@ systemsettings >/dev/null 2>&1 &
 shot 06-settings 8
 kinfocenter >/dev/null 2>&1 &
 shot 07-about 8
+
+# Registered desktop shortcuts (are the Mac ones active?)
+dbus-send --session --print-reply --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.allShortcutInfos > "$OUT/shortcuts-kwin.txt" 2>&1
+dbus-send --session --print-reply --dest=org.kde.kglobalaccel /component/org_kde_spectacle_desktop org.kde.kglobalaccel.Component.allShortcutInfos > "$OUT/shortcuts-spectacle.txt" 2>&1
+
+# Simulate an existing user taking the look update (rebuild bars, keep pins)
+dbus-send --session --print-reply --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "string:$(cat /usr/share/ravana/look/apply-layout.js)" > "$OUT/look-update.txt" 2>&1
+shot 08-after-look-update 6
 log done
 SESSION
 chmod +x /home/ravana/session.sh
@@ -61,4 +69,11 @@ timeout 300 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ra
   --exit-with-session /home/ravana/session.sh > "$OUT/session.log" 2>&1
 echo "session exit: $?"
 cp /home/ravana/.config/plasma-org.kde.plasma.desktop-appletsrc "$OUT/" 2>/dev/null || true
+# Shortcut merge for existing users
+mkdir -p /tmp/sctest/.config
+HOME=/tmp/sctest XDG_CONFIG_HOME=/tmp/sctest/.config /usr/libexec/ravana-apply-shortcuts
+cp /tmp/sctest/.config/kglobalshortcutsrc "$OUT/shortcuts-merged.txt" 2>/dev/null || echo "merge produced nothing" > "$OUT/shortcuts-merged.txt"
+# Window decoration + keyd sanity
+grep -A6 kdecoration2 /etc/xdg/kwinrc > "$OUT/decoration.txt" 2>&1
+keyd check /etc/keyd/default.conf > "$OUT/keyd-check.txt" 2>&1
 ls -la "$OUT"

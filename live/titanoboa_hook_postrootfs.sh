@@ -586,11 +586,11 @@ fi
 # Let only browser/installer in the task-bar/dock
 if [[ $desktop_env == kde ]]; then
     sed -i 's|tasks.writeConfig("launchers", \[|tasks.writeConfig("launchers", [\n    "applications:liveinst.desktop",|' \
-        /usr/share/plasma/look-and-feel/org.ravana.desktop/contents/layouts/org.kde.plasma.desktop-layout.js
+        /usr/share/plasma/layout-templates/org.ravana.dock/contents/layout.js
     # Live session uses the Firefox RPM (it also hosts the installer UI)
     sed -i 's|"applications:org.mozilla.firefox.desktop"|"applications:firefox.desktop"|' \
-        /usr/share/plasma/look-and-feel/org.ravana.desktop/contents/layouts/org.kde.plasma.desktop-layout.js
-    grep -n 'liveinst\|firefox' /usr/share/plasma/look-and-feel/org.ravana.desktop/contents/layouts/org.kde.plasma.desktop-layout.js
+        /usr/share/plasma/layout-templates/org.ravana.dock/contents/layout.js
+    grep -n 'liveinst\|firefox' /usr/share/plasma/layout-templates/org.ravana.dock/contents/layout.js
     # Plasma Login Manager: log the live user straight in
     kwriteconfig6 --file /etc/plasmalogin.conf --group Autologin --key User liveuser
     kwriteconfig6 --file /etc/plasmalogin.conf --group Autologin --key Session plasma.desktop

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Ravana look update
+Exec=/usr/libexec/ravana-look-update --login
+OnlyShowIn=KDE;
+X-KDE-autostart-phase=2
+NoDisplay=true

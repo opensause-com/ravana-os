@@ -73,7 +73,7 @@ timeout 300 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ra
   PATH=/usr/local/bin:/usr/bin:/bin XDG_RUNTIME_DIR=/tmp/xdg-ravana \
   XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6 \
   QT_QPA_PLATFORM=wayland LANG=en_US.UTF-8 KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 \
-  QT_LOGGING_RULES="kwin_*.warning=true;kwin_core.debug=true" LIBGL_ALWAYS_SOFTWARE=1 \
+  KWIN_COMPOSE=Q QT_LOGGING_RULES="kwin_*.warning=true" \
   dbus-run-session -- kwin_wayland --virtual --no-lockscreen --width 1920 --height 1080 \
   --exit-with-session /home/ravana/session.sh > "$OUT/session-all.log" 2>&1
 grep -v "dbus-daemon" "$OUT/session-all.log" > "$OUT/session.log" || true

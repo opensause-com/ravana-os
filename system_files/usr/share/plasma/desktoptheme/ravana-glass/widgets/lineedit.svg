@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+<g id="base-topleft" transform="translate(0,0)"><rect width="11" height="11" fill="none"/><path d="M0,11 A11,11 0 0 1 11,0 L11,11 Z" fill="#ffffff" fill-opacity="0.090"/></g>
+<g id="base-topright" transform="translate(15,0)"><rect width="11" height="11" fill="none"/><path d="M0,0 A11,11 0 0 1 11,11 L0,11 Z" fill="#ffffff" fill-opacity="0.090"/></g>
+<g id="base-bottomleft" transform="translate(0,15)"><rect width="11" height="11" fill="none"/><path d="M0,0 L11,0 L11,11 A11,11 0 0 1 0,0 Z" fill="#ffffff" fill-opacity="0.090"/></g>
+<g id="base-bottomright" transform="translate(15,15)"><rect width="11" height="11" fill="none"/><path d="M0,0 L11,0 A11,11 0 0 1 0,11 Z" fill="#ffffff" fill-opacity="0.090"/></g>
+<rect id="base-top" x="11" y="0" width="4" height="11" fill="#ffffff" fill-opacity="0.090"/>
+<rect id="base-bottom" x="11" y="15" width="4" height="11" fill="#ffffff" fill-opacity="0.090"/>
+<rect id="base-left" x="0" y="11" width="11" height="4" fill="#ffffff" fill-opacity="0.090"/>
+<rect id="base-right" x="15" y="11" width="11" height="4" fill="#ffffff" fill-opacity="0.090"/>
+<rect id="base-center" x="11" y="11" width="4" height="4" fill="#ffffff" fill-opacity="0.090"/>
+<g id="hover-topleft" transform="translate(60,0)"><rect width="11" height="11" fill="none"/><path d="M0,11 A11,11 0 0 1 11,0 L11,11 Z" fill="#ffffff" fill-opacity="0.060"/></g>
+<g id="hover-topright" transform="translate(75,0)"><rect width="11" height="11" fill="none"/><path d="M0,0 A11,11 0 0 1 11,11 L0,11 Z" fill="#ffffff" fill-opacity="0.060"/></g>
+<g id="hover-bottomleft" transform="translate(60,15)"><rect width="11" height="11" fill="none"/><path d="M0,0 L11,0 L11,11 A11,11 0 0 1 0,0 Z" fill="#ffffff" fill-opacity="0.060"/></g>
+<g id="hover-bottomright" transform="translate(75,15)"><rect width="11" height="11" fill="none"/><path d="M0,0 L11,0 A11,11 0 0 1 0,11 Z" fill="#ffffff" fill-opacity="0.060"/></g>
+<rect id="hover-top" x="71" y="0" width="4" height="11" fill="#ffffff" fill-opacity="0.060"/>
+<rect id="hover-bottom" x="71" y="15" width="4" height="11" fill="#ffffff" fill-opacity="0.060"/>
+<rect id="hover-left" x="60" y="11" width="11" height="4" fill="#ffffff" fill-opacity="0.060"/>
+<rect id="hover-right" x="75" y="11" width="11" height="4" fill="#ffffff" fill-opacity="0.060"/>
+<rect id="hover-center" x="71" y="11" width="4" height="4" fill="#ffffff" fill-opacity="0.060"/>
+<g id="focus-topleft" transform="translate(120,0)"><rect width="11" height="11" fill="none"/><path d="M0,11 A11,11 0 0 1 11,0 L11,11 Z" fill="#d21f3c" fill-opacity="0.350"/></g>
+<g id="focus-topright" transform="translate(135,0)"><rect width="11" height="11" fill="none"/><path d="M0,0 A11,11 0 0 1 11,11 L0,11 Z" fill="#d21f3c" fill-opacity="0.350"/></g>
+<g id="focus-bottomleft" transform="translate(120,15)"><rect width="11" height="11" fill="none"/><path d="M0,0 L11,0 L11,11 A11,11 0 0 1 0,0 Z" fill="#d21f3c" fill-opacity="0.350"/></g>
+<g id="focus-bottomright" transform="translate(135,15)"><rect width="11" height="11" fill="none"/><path d="M0,0 L11,0 A11,11 0 0 1 0,11 Z" fill="#d21f3c" fill-opacity="0.350"/></g>
+<rect id="focus-top" x="131" y="0" width="4" height="11" fill="#d21f3c" fill-opacity="0.350"/>
+<rect id="focus-bottom" x="131" y="15" width="4" height="11" fill="#d21f3c" fill-opacity="0.350"/>
+<rect id="focus-left" x="120" y="11" width="11" height="4" fill="#d21f3c" fill-opacity="0.350"/>
+<rect id="focus-right" x="135" y="11" width="11" height="4" fill="#d21f3c" fill-opacity="0.350"/>
+<rect id="focus-center" x="131" y="11" width="4" height="4" fill="#d21f3c" fill-opacity="0.350"/>
+<rect id="hint-top-margin" x="300" y="0" width="6" height="6" fill="none"/>
+<rect id="hint-bottom-margin" x="300" y="10" width="6" height="6" fill="none"/>
+<rect id="hint-left-margin" x="300" y="20" width="10" height="10" fill="none"/>
+<rect id="hint-right-margin" x="300" y="40" width="10" height="10" fill="none"/>
+</svg>

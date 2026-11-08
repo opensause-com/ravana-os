@@ -17,6 +17,13 @@ sed -i -e 's/#245fc4/#b81a33/gI' -e 's/#2664d0/#c41c37/gI' -e 's/#286adc/#d21f3c
        -e 's/#81c0ff/#ff8a99/gI' -e 's/#000356/#350008/gI' -e 's/#b74aff/#ff5a66/gI' \
        "$DST/RavanaGlass.svg" "$DST/RavanaGlass.kvconfig"
 ! grep -qiE '#(245fc4|2664d0|286adc|295e9f|3273c3|3daee9)' "$DST/RavanaGlass.svg"
+# Light-grey selections read badly with white text: selected items use Ravana red
+# (like macOS uses the accent colour), toggled/pressed toolbar buttons a dark grey.
+sed -i -e '/id="itemview-toggled/ s/#\(9e9ea0\|b1b1b3\|c3c3c6\)/#a51d34/gI' \
+       -e '/id="itemview-pressed/ s/#\(9e9ea0\|b1b1b3\|c3c3c6\)/#c3283f/gI' \
+       -e '/id="tbutton-\(toggled\|pressed\)/ s/#\(9e9ea0\|b1b1b3\|c3c3c6\)/#3d3d44/gI' \
+       "$DST/RavanaGlass.svg"
+grep -c 'a51d34' "$DST/RavanaGlass.svg"
 
 python3 - "$DST/RavanaGlass.kvconfig" <<'PY'
 import re, sys

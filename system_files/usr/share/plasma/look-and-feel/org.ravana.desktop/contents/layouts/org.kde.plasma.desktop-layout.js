@@ -17,7 +17,7 @@ bar.floating = false;
 
 var launcher = bar.addWidget("org.kde.plasma.kickoff");
 launcher.currentConfigGroup = ["General"];
-launcher.writeConfig("icon", "ravana-logo-symbolic");
+launcher.writeConfig("icon", "ravana-logo");
 
 bar.addWidget("org.kde.plasma.appmenu");
 bar.addWidget("org.kde.plasma.panelspacer");

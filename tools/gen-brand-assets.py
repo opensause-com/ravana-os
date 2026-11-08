@@ -12,47 +12,66 @@ ROOT = Path(__file__).resolve().parent.parent / "system_files"
 RED, RED_DEEP, WHITE = (210, 31, 60), (165, 14, 37), (255, 255, 255)
 NIGHT, PAPER = (12, 12, 14), (246, 246, 247)
 
-# Crown mark on a 512 grid: five points (Ravana, the king) over a solid band.
-CROWN = [(104, 352), (104, 196), (180, 268), (256, 132), (332, 268), (408, 196), (408, 352)]
-BAND = (104, 372, 408, 412)
-TILE_R = 112  # tile corner radius on the 512 grid
+SOURCE = Path(__file__).resolve().parent.parent / "assets/logo-source.jpg"
+SOURCE_BG = (21, 21, 23)  # flat background colour of the source artwork
 
 
-def logo_svg() -> str:
-    pts = " ".join(f"{x},{y}" for x, y in CROWN)
-    x0, y0, x1, y1 = BAND
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <title>Ravana OS</title>
-  <rect width="512" height="512" rx="{TILE_R}" fill="#D21F3C"/>
-  <polygon points="{pts}" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="16" stroke-linejoin="round"/>
-  <rect x="{x0}" y="{y0}" width="{x1 - x0}" height="{y1 - y0}" rx="12" fill="#FFFFFF"/>
-</svg>
-"""
+def _extract_crown() -> Image.Image:
+    """Cut the crown out of the source artwork: background -> transparent.
+
+    Only pixels brighter than the background become opaque (the dark outlines
+    between shards stay see-through), with a soft ramp for anti-aliased edges.
+    Colours are un-premultiplied so edges stay clean on any background.
+    """
+    src = Image.open(SOURCE).convert("RGB")
+    out = Image.new("RGBA", src.size)
+    sp, op = src.load(), out.load()
+    bgm = max(SOURCE_BG)
+    for y in range(src.height):
+        for x in range(src.width):
+            c = sp[x, y]
+            a = min(1.0, max(0.0, (max(c) - bgm - 6) / 50))
+            if a <= 0:
+                op[x, y] = (0, 0, 0, 0)
+                continue
+            rgb = tuple(min(255, max(0, round((ci - b * (1 - a)) / a))) for ci, b in zip(c, SOURCE_BG))
+            op[x, y] = rgb + (round(a * 255),)
+    box = out.getbbox()
+    crown = out.crop(box)
+    side = max(crown.size)
+    pad = round(side * 0.06)
+    sq = Image.new("RGBA", (side + 2 * pad, side + 2 * pad), (0, 0, 0, 0))
+    sq.paste(crown, ((sq.width - crown.width) // 2, (sq.height - crown.height) // 2), crown)
+    return sq
 
 
-def symbolic_svg() -> str:
-    """Single-color crown for panels/menus (KDE recolors -symbolic icons)."""
-    pts = " ".join(f"{x * 16 / 512:.2f},{y * 16 / 512:.2f}" for x, y in CROWN)
-    x0, y0, x1, y1 = (v * 16 / 512 for v in BAND)
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
-  <polygon points="{pts}" fill="#232629" stroke="#232629" stroke-width="0.6" stroke-linejoin="round" class="ColorScheme-Text"/>
-  <rect x="{x0:.2f}" y="{y0:.2f}" width="{x1 - x0:.2f}" height="{y1 - y0:.2f}" rx="0.4" fill="#232629" class="ColorScheme-Text"/>
-</svg>
-"""
+_CROWN = None
 
 
-def logo_png(size: int, tile=True) -> Image.Image:
-    s = 4  # supersample for smooth edges
-    big = Image.new("RGBA", (512 * s, 512 * s), (0, 0, 0, 0))
-    d = ImageDraw.Draw(big)
-    if tile:
-        d.rounded_rectangle((0, 0, 512 * s - 1, 512 * s - 1), radius=TILE_R * s, fill=RED + (255,))
-    fg = WHITE if tile else RED
-    d.polygon([(x * s, y * s) for x, y in CROWN], fill=fg + (255,))
-    d.line([(x * s, y * s) for x, y in CROWN] + [(CROWN[0][0] * s, CROWN[0][1] * s)],
-           fill=fg + (255,), width=16 * s, joint="curve")
-    d.rounded_rectangle([v * s for v in BAND], radius=12 * s, fill=fg + (255,))
+def crown(size: int) -> Image.Image:
+    """Transparent square crown mark."""
+    global _CROWN
+    if _CROWN is None:
+        _CROWN = _extract_crown()
+    return _CROWN.resize((size, size), Image.LANCZOS)
+
+
+def tile(size: int) -> Image.Image:
+    """App-icon style: crown on a near-black rounded tile (like the artwork)."""
+    s = 4
+    big = Image.new("RGBA", (size * s, size * s), (0, 0, 0, 0))
+    ImageDraw.Draw(big).rounded_rectangle((0, 0, size * s - 1, size * s - 1),
+                                          radius=round(size * s * 0.22), fill=(18, 18, 20, 255))
+    c = crown(round(size * s * 0.92))
+    big.paste(c, ((big.width - c.width) // 2, (big.height - c.height) // 2), c)
     return big.resize((size, size), Image.LANCZOS)
+
+
+def silhouette(size: int, colour) -> Image.Image:
+    c = crown(size)
+    mono = Image.new("RGBA", c.size, colour + (255,))
+    mono.putalpha(c.getchannel("A"))
+    return mono
 
 
 def wallpaper(w: int, h: int, dark: bool) -> Image.Image:
@@ -69,7 +88,7 @@ def wallpaper(w: int, h: int, dark: bool) -> Image.Image:
     img = Image.composite(tint, small, glow.point(lambda v: int(v * (0.55 if dark else 0.5))))
     img = img.resize((w, h), Image.BICUBIC)
     # crown watermark, bottom-right, very subtle
-    mark = logo_png(int(h * 0.09), tile=False)
+    mark = silhouette(int(h * 0.12), WHITE if dark else RED)
     alpha = mark.getchannel("A").point(lambda v: int(v * (0.10 if dark else 0.08)))
     col = Image.new("RGB", mark.size, WHITE if dark else RED)
     img.paste(col, (w - mark.width - int(h * 0.06), h - mark.height - int(h * 0.06)), alpha)
@@ -87,12 +106,15 @@ def write(rel: str, data) -> None:
 
 
 if __name__ == "__main__":
-    write("usr/share/icons/hicolor/scalable/apps/ravana-logo.svg", logo_svg())
-    write("usr/share/icons/hicolor/scalable/apps/ravana-logo-symbolic.svg", symbolic_svg())
-    for px in (48, 128, 256):
-        write(f"usr/share/icons/hicolor/{px}x{px}/apps/ravana-logo.png", logo_png(px))
-    write("usr/share/pixmaps/ravana-logo.png", logo_png(256))
-    write("usr/share/ravana/plymouth-watermark.png", logo_png(160))
+    for old in ("usr/share/icons/hicolor/scalable/apps/ravana-logo.svg",
+                "usr/share/icons/hicolor/scalable/apps/ravana-logo-symbolic.svg"):
+        (ROOT / old).unlink(missing_ok=True)
+    for px in (16, 22, 24, 32, 48, 64, 128, 256, 512):
+        write(f"usr/share/icons/hicolor/{px}x{px}/apps/ravana-logo.png", crown(px))
+        write(f"usr/share/icons/hicolor/{px}x{px}/apps/ravana-os.png", tile(px))
+    write("usr/share/pixmaps/ravana-logo.png", crown(256))
+    write("usr/share/pixmaps/ravana-os.png", tile(256))
+    write("usr/share/ravana/plymouth-watermark.png", crown(220))
     for name, dark in (("Ravana", True), ("RavanaLight", False)):
         base = f"usr/share/wallpapers/{name}"
         write(f"{base}/contents/images/3840x2160.png", wallpaper(3840, 2160, dark))

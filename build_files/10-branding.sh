@@ -16,7 +16,7 @@ setkv VARIANT_ID  "${IMAGE_NAME}"
 setkv IMAGE_VERSION "${IMAGE_VERSION}"
 setkv DEFAULT_HOSTNAME "ravana"
 setkv ANSI_COLOR "0;38;2;210;31;60"
-setkv LOGO "ravana-logo"
+setkv LOGO "ravana-os"
 setkv HOME_URL "https://github.com/opensause-com/ravana-os"
 setkv DOCUMENTATION_URL "https://github.com/opensause-com/ravana-os#readme"
 setkv SUPPORT_URL "https://github.com/opensause-com/ravana-os/discussions"
@@ -40,9 +40,9 @@ if [ -f "$ABOUT" ]; then
     sed -i "s|^Name=.*|Name=Ravana OS|; s|^Variant=.*|Variant=Gaming + Dev ${IMAGE_VERSION}|; s|^Website=.*|Website=https://github.com/opensause-com/ravana-os|" "$ABOUT"
     grep -q '^Name=' "$ABOUT" || sed -i '/^\[General\]/a Name=Ravana OS' "$ABOUT"
     if grep -q '^LogoPath=' "$ABOUT"; then
-        sed -i 's|^LogoPath=.*|LogoPath=/usr/share/pixmaps/ravana-logo.png|' "$ABOUT"
+        sed -i 's|^LogoPath=.*|LogoPath=/usr/share/pixmaps/ravana-os.png|' "$ABOUT"
     else
-        sed -i '/^\[General\]/a LogoPath=/usr/share/pixmaps/ravana-logo.png' "$ABOUT"
+        sed -i '/^\[General\]/a LogoPath=/usr/share/pixmaps/ravana-os.png' "$ABOUT"
     fi
     cat "$ABOUT"
 fi

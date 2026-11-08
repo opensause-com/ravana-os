@@ -34,7 +34,7 @@ jobs:
           sudo podman pull -q "$IMAGE"
           mkdir -p shots
           sudo podman run --rm --privileged --security-opt label=disable \
-            -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" -v "$PWD/.github/screenshot/capture.py:/capture.py:ro" \
+            -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" -v "$PWD/.github/screenshot/capture.py:/capture.py:ro" -v "$PWD/build_files/fedora-build.repo:/fedora-build.repo:ro" \
             "$IMAGE" bash /run.sh
           sudo chown -R "$USER" shots
           cat shots/steps.log || true

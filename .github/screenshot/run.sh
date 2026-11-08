@@ -3,6 +3,10 @@
 # and screenshots the desktop, Launchpad, Spotlight, the Ravana menu and a window.
 set -uo pipefail
 OUT=/shots
+# Weston: tiny headless outer display whose screenshot tool needs no GPU.
+cp /fedora-build.repo /etc/yum.repos.d/ravana-shot.repo
+dnf5 -y -q install --setopt=install_weak_deps=False --repo=ravana-build-fedora --repo=ravana-build-updates weston >/dev/null 2>&1 \
+  && echo "weston installed" || echo "weston install FAILED"
 useradd -m -s /bin/bash ravana 2>/dev/null || true
 install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
 
@@ -13,9 +17,8 @@ log() { echo "[$(date +%T)] $*" >> "$OUT/steps.log"; }
 shot() {
   sleep "${2:-3}"
   log "capturing $1"
-  if python3 /capture.py "$OUT/$1.png" >> "$OUT/steps.log" 2>&1; then log "shot $1"
-  elif spectacle -b -n -f -o "$OUT/$1.png" >> "$OUT/steps.log" 2>&1; then log "shot $1 (spectacle)"
-  else log "FAILED shot $1"; fi
+  ( cd /tmp/wshots && rm -f wayland-screenshot*.png && WAYLAND_DISPLAY=wayland-weston weston-screenshooter >> "$OUT/steps.log" 2>&1 \
+    && mv wayland-screenshot*.png "$OUT/$1.png" ) && log "shot $1" || log "FAILED shot $1"
 }
 send() { dbus-send --session --type=method_call --print-reply "$@" >/dev/null 2>&1; }
 
@@ -72,7 +75,12 @@ chmod 777 "$OUT"
 cat > /home/ravana/wrapper.sh <<'WRAP'
 #!/usr/bin/env bash
 OUT=/shots
-kwin_wayland --virtual --no-lockscreen --width 1920 --height 1080 --socket wayland-ravana > "$OUT/kwin.log" 2>&1 &
+mkdir -p /tmp/wshots
+weston --backend=headless --renderer=pixman --width=1920 --height=1080 --debug --socket=wayland-weston --idle-time=0 > "$OUT/weston.log" 2>&1 &
+WPID=$!
+sleep 3
+# KWin runs nested as a full-size window inside Weston
+WAYLAND_DISPLAY=wayland-weston kwin_wayland --wayland-display=wayland-weston --no-lockscreen --width 1920 --height 1080 --socket wayland-ravana > "$OUT/kwin.log" 2>&1 &
 KPID=$!
 export WAYLAND_DISPLAY=wayland-ravana
 sleep 4
@@ -86,7 +94,7 @@ for i in $(seq 1 300); do
   [ $((i % 10)) -eq 0 ] && echo "[$(date +%T)] alive ${i}s" >> "$OUT/steps.log"
   sleep 1
 done
-kill $SPID $KPID 2>/dev/null
+kill $SPID $KPID $WPID 2>/dev/null
 WRAP
 chmod +x /home/ravana/wrapper.sh
 chown ravana:ravana /home/ravana/wrapper.sh

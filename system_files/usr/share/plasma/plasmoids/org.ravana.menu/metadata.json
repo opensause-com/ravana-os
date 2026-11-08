@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [{ "Name": "Ravana OS" }],
+        "Category": "Application Launchers",
+        "Description": "System menu: about, settings, app store, sleep, restart, shut down, lock and log out",
+        "Icon": "ravana-logo",
+        "Id": "org.ravana.menu",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana Menu",
+        "Version": "1.0"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

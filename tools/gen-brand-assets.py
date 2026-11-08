@@ -115,7 +115,7 @@ if __name__ == "__main__":
     write("usr/share/pixmaps/ravana-logo.png", crown(256))
     write("usr/share/pixmaps/ravana-os.png", tile(256))
     write("usr/share/ravana/plymouth-watermark.png", crown(220))
-    for name, dark in (("Ravana", True), ("RavanaLight", False)):
+    for name, dark in (("Ravana", True),):
         base = f"usr/share/wallpapers/{name}"
         write(f"{base}/contents/images/3840x2160.png", wallpaper(3840, 2160, dark))
         write(f"{base}/contents/screenshot.png", wallpaper(3840, 2160, dark).resize((400, 225), Image.LANCZOS))

@@ -30,3 +30,6 @@ name=default
 [ksplashrc][KSplash]
 Engine=KSplashQML
 Theme=org.ravana.desktop
+
+[Wallpaper]
+Image=Ravana

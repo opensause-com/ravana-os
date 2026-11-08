@@ -13,12 +13,14 @@ on:
       - '.github/workflows/build-live-iso.yml'
       - '.github/workflows/publish-iso-sourceforge.yml'
       - 'scripts/**'
+      - '.github/screenshot/**'
+      - '.github/workflows/screenshot.yml'
       - 'live/**'
       - 'Containerfile.live'
   pull_request:
     branches: [main, testing]
   schedule:
-    - cron: '30 6 * * *'   # daily, picks up Bazzite / Fedora updates
+    - cron: '30 6 * * 6'   # weekly (Saturday): stable gets one tested update a week
   workflow_dispatch:
 
 env:

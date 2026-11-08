@@ -84,6 +84,50 @@ for f in /usr/share/applications/liveinst.desktop /usr/share/applications/anacon
 done
 gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || :
 
+# Installer (Anaconda Web UI) in Ravana colours: crimson actions, readable contrast
+WEBUI=/usr/share/cockpit/anaconda-webui
+if [ -d "$WEBUI" ]; then
+    for css in "$WEBUI"/*.css; do
+        [ -f "$css" ] || continue
+        cat >>"$css" <<'CSS'
+/* Ravana OS */
+:root, .pf-v6-theme-dark, .pf-v5-theme-dark {
+  --pf-t--global--color--brand--default: #d7263d;
+  --pf-t--global--color--brand--hover: #e8435a;
+  --pf-t--global--color--brand--clicked: #b51d31;
+  --pf-t--global--text--color--on-brand--default: #ffffff;
+  --pf-t--global--text--color--on-brand--hover: #ffffff;
+  --pf-t--global--text--color--on-brand--clicked: #ffffff;
+  --pf-t--global--text--color--link--default: #ff7a8a;
+  --pf-t--global--text--color--link--hover: #ff9aa6;
+  --pf-t--global--border--color--clicked: #d7263d;
+  --pf-t--global--icon--color--brand--default: #d7263d;
+  --pf-v5-global--primary-color--100: #d7263d;
+  --pf-v5-global--primary-color--200: #b51d31;
+  --pf-v5-global--link--Color: #ff7a8a;
+}
+.pf-v6-c-button.pf-m-primary, .pf-v5-c-button.pf-m-primary {
+  background-color: #d7263d; color: #ffffff;
+}
+.pf-v6-c-button.pf-m-primary:hover, .pf-v5-c-button.pf-m-primary:hover {
+  background-color: #e8435a; color: #ffffff;
+}
+.pf-v6-c-button.pf-m-secondary, .pf-v5-c-button.pf-m-secondary {
+  color: #ffffff; border-color: rgba(255,255,255,.35); background-color: transparent;
+}
+.pf-v6-c-button:disabled, .pf-v6-c-button.pf-m-disabled,
+.pf-v5-c-button:disabled, .pf-v5-c-button.pf-m-disabled {
+  background-color: rgba(255,255,255,.08); color: rgba(255,255,255,.45);
+}
+.pf-v6-c-masthead, .pf-v5-c-masthead {
+  background: linear-gradient(90deg, #1b1b1f, #2a0d13);
+}
+.pf-v6-c-masthead *, .pf-v5-c-masthead * { color: #ffffff; }
+CSS
+        echo "Ravana styling added to $css"
+    done
+fi
+
 # Secureboot Key Fetch
 mkdir -p /usr/share/ublue-os
 curl -Lo /usr/share/ublue-os/sb_pubkey.der "$sbkey"

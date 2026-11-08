@@ -39,9 +39,22 @@ $KW --file /etc/xdg/kwinrc --group Plugins --key overviewEnabled true       # Mi
 $KW --file /etc/xdg/kwinrc --group Plugins --key wobblywindowsEnabled false
 $KW --file /etc/xdg/kwinrc --group Effect-blur --key BlurStrength 10
 $KW --file /etc/xdg/kwinrc --group Effect-blur --key NoiseStrength 0
-# Top-left hot corner opens Overview, like macOS Mission Control corners
-$KW --file /etc/xdg/kwinrc --group Effect-overview --key BorderActivate 9 || true
-$KW --file /etc/xdg/kwinrc --group ElectricBorders --key TopLeft Overview || true
+# No hot corners (macOS default): the top-left corner is the Ravana menu.
+# Mission Control = Overview: Meta+W, or swipe up with four fingers.
+
+# --- Spotlight: KRunner centered on screen, on Meta+Space as well ---
+$KW --file /etc/xdg/krunnerrc --group General --key FreeFloating true
+$KW --file /etc/xdg/krunnerrc --group General --key ActivateWhenTypingOnDesktop true
+KRUNNER_DESKTOP=/usr/share/applications/org.kde.krunner.desktop
+if [ -f "$KRUNNER_DESKTOP" ]; then
+    sed -i 's/^X-KDE-Shortcuts=.*/X-KDE-Shortcuts=Meta+Space,Alt+Space,Alt+F2,Search/' "$KRUNNER_DESKTOP"
+    grep '^X-KDE-Shortcuts' "$KRUNNER_DESKTOP"
+fi
+
+# --- Ravana top-bar widgets (menu + search) must be installed ---
+for w in org.ravana.menu org.ravana.search; do
+    test -f "/usr/share/plasma/plasmoids/$w/contents/ui/main.qml"
+done
 
 # --- Dock: keep only launchers whose apps exist in this image ---
 # (Firefox is a Flatpak installed on first boot, so it is always kept.)
@@ -98,6 +111,25 @@ CursorTheme=breeze_cursors
 Font=Inter,10
 SDDM
 fi
+
+# --- Wallpapers: Ravana only (Plasma's built-in default falls back to it too) ---
+find /usr/share/wallpapers -mindepth 1 -maxdepth 1 ! -name 'Ravana*' -print -exec rm -rf {} +
+ln -sfn Ravana /usr/share/wallpapers/Next
+if [ -d /usr/share/backgrounds ]; then
+    for f in default default-dark; do
+        rm -f /usr/share/backgrounds/$f.{jxl,png,jpg,xml}
+        ln -sf /usr/share/wallpapers/Ravana/contents/images/3840x2160.png /usr/share/backgrounds/$f.png
+    done
+fi
+ls -la /usr/share/wallpapers
+
+# --- Desktop stays clean: no "Return to Gaming Mode" icon on it ---
+# (Gaming Mode itself stays available from the app menu.)
+grep -rl -i 'Return to Gaming Mode' /etc/skel 2>/dev/null | while read -r f; do
+    echo "Removing desktop icon: $f"
+    rm -f "$f"
+done
+grep -rl -i 'Return to Gaming Mode' /usr/share/applications /usr/share/ublue-os 2>/dev/null || true
 
 # --- Wallpaper on the lock screen too ---
 $KW --file /etc/xdg/kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General \

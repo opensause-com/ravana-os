@@ -1,5 +1,7 @@
-// Ravana OS default desktop: top bar + floating centered dock (macOS-style).
-// Runs once for new users (and when "Use desktop layout from theme" is applied).
+// Ravana OS default desktop, modelled on macOS:
+//   menu bar (top):  Ravana menu | app menu ..... status icons | search | clock
+//   dock (bottom):   Launchpad | apps | Trash
+// Runs once for new users (and from "Reset desktop look").
 
 // ---- Wallpaper ----
 var ds = desktops();
@@ -9,21 +11,21 @@ for (var i = 0; i < ds.length; i++) {
     ds[i].writeConfig("Image", "file:///usr/share/wallpapers/Ravana/");
 }
 
-// ---- Top bar: launcher, global app menu, ... , tray, clock ----
+// ---- Menu bar ----
 var bar = new Panel;
 bar.location = "top";
-bar.height = Math.round(gridUnit * 1.8);
+bar.height = Math.round(gridUnit * 1.6);
 bar.floating = false;
-// Top bar: glass over the wallpaper, solid when a window is maximized
+// Glass over the wallpaper, solid when a window is maximized
 try { bar.opacity = "adaptive"; } catch (e) {}
 
-var launcher = bar.addWidget("org.kde.plasma.kickoff");
-launcher.currentConfigGroup = ["General"];
-launcher.writeConfig("icon", "ravana-logo");
-
-bar.addWidget("org.kde.plasma.appmenu");
+bar.addWidget("org.ravana.menu");                 // Apple-menu equivalent
+bar.addWidget("org.kde.plasma.appmenu");          // the focused app's menus
 bar.addWidget("org.kde.plasma.panelspacer");
-bar.addWidget("org.kde.plasma.systemtray");
+
+var tray = bar.addWidget("org.kde.plasma.systemtray");
+
+bar.addWidget("org.ravana.search");               // Spotlight (KRunner)
 
 var clock = bar.addWidget("org.kde.plasma.digitalclock");
 clock.currentConfigGroup = ["Appearance"];
@@ -32,16 +34,23 @@ clock.writeConfig("dateFormat", "custom");
 clock.writeConfig("customDateFormat", "ddd d MMM");
 clock.writeConfig("dateDisplayFormat", "BesideTime");
 
-// ---- Dock: floating, centered, sized to its icons, dodges windows ----
+// ---- Dock: floating, centered, sized to its icons ----
 var dock = new Panel;
 dock.location = "bottom";
-dock.height = Math.round(gridUnit * 3.2);
+dock.height = Math.round(gridUnit * 3.4);
 dock.alignment = "center";
 dock.lengthMode = "fit";
 dock.floating = true;
-dock.hiding = "dodgewindows";
-// Frosted-glass dock: always translucent (KWin blurs what's behind it)
+dock.hiding = "none";
 try { dock.opacity = "translucent"; } catch (e) {}
+
+// Launchpad: full-screen app grid (also on the Meta key)
+var launchpad = dock.addWidget("org.kde.plasma.kickerdash");
+launchpad.currentConfigGroup = ["General"];
+launchpad.writeConfig("icon", "ravana-launchpad");
+launchpad.writeConfig("showRecentApps", "false");
+launchpad.writeConfig("showRecentDocs", "false");
+launchpad.globalShortcut = "Alt+F1";
 
 var tasks = dock.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
@@ -56,6 +65,8 @@ tasks.writeConfig("launchers", [
 ].join(","));
 tasks.writeConfig("indicateAudioStreams", "true");
 tasks.writeConfig("iconSpacing", "1");
+tasks.writeConfig("maxStripes", "1");
+tasks.writeConfig("groupedTaskVisualization", "1");   // click a stack: show its windows
 
 dock.addWidget("org.kde.plasma.marginsseparator");
 dock.addWidget("org.kde.plasma.trash");

@@ -20,6 +20,38 @@ $KW --file /etc/xdg/kdeglobals --group General --key font "Inter,10,-1,5,400,0,0
 $KW --file /etc/xdg/kdeglobals --group General --key menuFont "Inter,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
 $KW --file /etc/xdg/kdeglobals --group General --key fixed "JetBrains Mono,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
 $KW --file /etc/xdg/kdeglobals --group Icons --key Theme Papirus-Dark
+# Apps read the actual colours from kdeglobals' [Colors:*] groups, not from the
+# scheme name, so copy Ravana Dark's colour groups in (replacing the base image's).
+python3 - /usr/share/color-schemes/RavanaDark.colors /etc/xdg/kdeglobals <<'PY'
+import re, sys
+def sections(path):
+    out, cur = [], None
+    for line in open(path, encoding="utf-8").read().splitlines():
+        if line.startswith("["):
+            cur = [line, []]
+            out.append(cur)
+        elif cur is not None:
+            cur[1].append(line)
+        elif line.strip():
+            out.append([None, [line]])
+    return out
+colour = re.compile(r"^\[(Colors:|ColorEffects:|WM\])")
+scheme, globs = sections(sys.argv[1]), sections(sys.argv[2])
+keep = [s for s in globs if not (s[0] and colour.match(s[0]))]
+add = [s for s in scheme if s[0] and colour.match(s[0])]
+with open(sys.argv[2], "w", encoding="utf-8") as f:
+    for head, body in keep + add:
+        if head:
+            f.write(head + "\n")
+        for line in body:
+            if line.strip():
+                f.write(line + "\n")
+        f.write("\n")
+print("kdeglobals colour groups:", [s[0] for s in add])
+PY
+grep -A2 '^\[Colors:View\]' /etc/xdg/kdeglobals
+$KW --file /etc/xdg/kdeglobals --group KDE --key contrast 4
+$KW --file /etc/xdg/kdeglobals --group General --key AccentColor "210,31,60"
 # Old Vapor (Steam Deck) global theme default must not win over ours
 sed -i '/^LookAndFeelPackage=com.valve.vapor.desktop$/d' /etc/xdg/kdeglobals
 

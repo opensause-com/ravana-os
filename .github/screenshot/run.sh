@@ -22,6 +22,9 @@ send() { dbus-send --session --type=method_call --print-reply "$@" >/dev/null 2>
 
 log "session started"
 python3 -c "import dbus" >> "$OUT/steps.log" 2>&1 && log "dbus-python ok" || log "no dbus-python"
+for d in /usr/libexec/kactivitymanagerd /usr/lib64/libexec/kactivitymanagerd; do [ -x "$d" ] && { "$d" >/dev/null 2>&1 & break; }; done
+/usr/bin/kded6 >/dev/null 2>&1 &
+sleep 2
 plasmashell --no-respawn >"$OUT/plasmashell.log" 2>&1 &
 sleep 45
 shot 01-desktop 1

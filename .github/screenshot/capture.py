@@ -19,14 +19,14 @@ with os.fdopen(r, "rb") as f:
             break
         data += chunk
 width, height, stride = int(meta["width"]), int(meta["height"]), int(meta["stride"])
-# QImage ARGB32 / RGB32 on little endian: bytes are B, G, R, A
+# KWin hands back RGBA bytes
 rows = []
 for y in range(height):
     row = data[y * stride: y * stride + width * 4]
     rgb = bytearray(width * 3)
-    rgb[0::3] = row[2::4]
+    rgb[0::3] = row[0::4]
     rgb[1::3] = row[1::4]
-    rgb[2::3] = row[0::4]
+    rgb[2::3] = row[2::4]
     rows.append(b"\x00" + bytes(rgb))
 raw = b"".join(rows)
 

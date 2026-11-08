@@ -32,10 +32,10 @@ How each macOS mechanism maps to Ravana (KDE Plasma 6 underneath).
 |---|---|---|
 | Close / minimize / zoom on the left | Buttons on the left | Done |
 | Red / yellow / green "traffic lights" | Ravana window frame (`tools/gen-window-decoration.py`): dark rounded title bar, coloured round buttons, glyphs on hover | Done |
-| Mission Control | Overview: Meta+W or four-finger swipe up | Done |
+| Mission Control | Overview: Ctrl+Up or four-finger swipe up | Done |
 | Spaces | Virtual desktops (Ctrl+Meta+Left/Right) | Done |
 | Hot corners | Off by default, like macOS | Done |
-| Rounded corners, soft shadows | Breeze shadows; rounded corners need a KWin effect | Later (optional, GPU cost) |
+| Rounded corners, soft shadows | Rounded title bar and soft shadow; rounded bottom corners need a KWin effect | Later (optional, GPU cost) |
 
 ## Keyboard: ⌘ Cmd = Windows key
 
@@ -94,7 +94,7 @@ Turn off with `sudo systemctl disable --now keyd`.
 ## Performance rules
 
 - Only GPU-cheap effects: blur, magic lamp, overview. No wobbly windows.
-- No file indexing (Baloo off), no extra background daemons.
+- No file indexing (Baloo off). The only added service is keyd (a few hundred KB of RAM).
 - Custom widgets are plain QML with no background services.
 
 ## Updates (stability)

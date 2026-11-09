@@ -13,6 +13,7 @@ Item {
     property bool launching: false
     signal clicked()
     signal middleClicked()
+    signal rightClicked()
 
     readonly property real s: host.scaleFor(mapToItem(host.contentItem, width / 2, 0).x)
     width: host.cell * (1 + (s - 1) * 0.85)
@@ -48,7 +49,7 @@ Item {
     }
 
     Rectangle {   // name bubble
-        visible: mouse.containsMouse && it.label.length > 0
+        visible: mouse.containsMouse && it.label.length > 0 && !(host.menuOpen || false)
         anchors.horizontalCenter: icon.horizontalCenter
         anchors.bottom: icon.top
         anchors.bottomMargin: 10
@@ -72,7 +73,9 @@ Item {
         id: mouse
         anchors.fill: parent
         hoverEnabled: true
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        onClicked: m => m.button === Qt.MiddleButton ? it.middleClicked() : it.clicked()
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+        onClicked: m => m.button === Qt.MiddleButton ? it.middleClicked()
+                      : m.button === Qt.RightButton ? it.rightClicked() : it.clicked()
+        onPressAndHold: it.rightClicked()
     }
 }

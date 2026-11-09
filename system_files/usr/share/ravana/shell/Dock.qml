@@ -53,13 +53,72 @@ PanelWindow {
         hideActivatedLaunchers: true
         filterByActivity: true
         activity: activities.currentActivity
-        launcherList: [
-            "applications:org.kde.dolphin.desktop",
-            "preferred://browser",
-            "applications:steam.desktop",
-            "applications:org.kde.konsole.desktop",
-            "applications:systemsettings.desktop"
-        ]
+        launcherList: dock.defaultPins
+        // Keep in Dock / Remove from Dock are remembered per user
+        onLauncherListChanged: if (dock.pinsLoaded) pinsFile.setText(JSON.stringify(launcherList))
+    }
+
+    readonly property var defaultPins: [
+        "applications:org.kde.dolphin.desktop",
+        "preferred://browser",
+        "applications:steam.desktop",
+        "applications:org.kde.konsole.desktop",
+        "applications:systemsettings.desktop"
+    ]
+    property bool pinsLoaded: false
+    FileView {
+        id: pinsFile
+        path: Quickshell.env("HOME") + "/.config/ravana-dock.json"
+        blockLoading: true
+        printErrors: false
+    }
+    Component.onCompleted: {
+        try {
+            const saved = JSON.parse(pinsFile.text());
+            if (Array.isArray(saved)) tasks.launcherList = saved;
+        } catch (e) {}
+        dock.pinsLoaded = true;
+    }
+
+    // ---- right-click menu ----
+    property bool menuOpen: dockMenu.visible
+    property int menuIndex: -1
+    function openMenu(item, index) {
+        const i = tasks.makeModelIndex(index);
+        const launcher = tasks.data(i, TaskManager.AbstractTasksModel.LauncherUrlWithoutIcon);
+        const pinned = launcher && tasks.launcherPosition(launcher) >= 0;
+        const open = !tasks.data(i, TaskManager.AbstractTasksModel.IsLauncher);
+        const e = [];
+        e.push({ label: open ? qsTr("New Window") : qsTr("Open"), action: "new" });
+        if (open) e.push({ label: qsTr("Show All Windows"), action: "windows" });
+        e.push({ separator: true });
+        if (launcher) e.push({ label: qsTr("Keep in Dock"), action: pinned ? "unpin" : "pin", checked: pinned });
+        if (open) { e.push({ separator: true }); e.push({ label: qsTr("Quit"), action: "quit" }); }
+        dock.menuIndex = index;
+        dockMenu.entries = e;
+        dockMenu.anchorItem = item;
+        dockMenu.visible = true;
+    }
+    DockMenu {
+        id: dockMenu
+        visible: false
+        onChosen: action => {
+            const i = tasks.makeModelIndex(dock.menuIndex);
+            const launcher = tasks.data(i, TaskManager.AbstractTasksModel.LauncherUrlWithoutIcon);
+            if (action === "new") tasks.requestNewInstance(i);
+            else if (action === "windows") tasks.requestActivate(i);
+            else if (action === "pin") tasks.requestAddLauncher(launcher);
+            else if (action === "unpin") tasks.requestRemoveLauncher(launcher);
+            else if (action === "quit") tasks.requestClose(i);
+        }
+    }
+    // `qs ipc -p /usr/share/ravana/shell call dock menu 0` (screenshots/tests)
+    IpcHandler {
+        target: "dock"; enabled: dock.screen === Quickshell.screens[0]
+        function menu(index: int): void {
+            for (const c of row.children) if (c.taskIndex === index) { dock.openMenu(c, index); return; }
+        }
+        function close(): void { dockMenu.visible = false; }
     }
 
     function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }
@@ -104,8 +163,10 @@ PanelWindow {
         Repeater {
             model: tasks
             DockIcon {
+                id: dockItem
                 required property int index
                 required property var model
+                readonly property int taskIndex: index
                 host: dock
                 iconSource: model.decoration
                 label: model.display || model.AppName || ""
@@ -113,6 +174,7 @@ PanelWindow {
                 launching: model.IsStartup || model.IsDemandingAttention
                 onClicked: tasks.requestActivate(tasks.makeModelIndex(index))
                 onMiddleClicked: tasks.requestNewInstance(tasks.makeModelIndex(index))
+                onRightClicked: dock.openMenu(dockItem, index)
             }
         }
 

@@ -23,6 +23,7 @@ PanelWindow {
     function toggle() {
         if (visible) { hide(); return; }
         search.text = "";
+        pages.currentIndex = 0;
         visible = true; shown = 1;
         search.forceActiveFocus();
     }
@@ -94,6 +95,9 @@ PanelWindow {
                 font.family: R.Theme.fontFamily
                 font.pixelSize: 15
                 selectByMouse: true
+                onTextChanged: pages.currentIndex = 0
+                Keys.onLeftPressed: e => { if (!search.text) pages.decrementCurrentIndex(); else e.accepted = false; }
+                Keys.onRightPressed: e => { if (!search.text) pages.incrementCurrentIndex(); else e.accepted = false; }
                 Keys.onEscapePressed: search.text ? search.text = "" : pad.hide()
                 Keys.onReturnPressed: if (pad.apps.length) { pad.apps[0].execute(); pad.hide(); }
                 Text {
@@ -106,52 +110,106 @@ PanelWindow {
             }
         }
 
-        GridView {
-            id: grid
-            readonly property int columns: Math.max(4, Math.min(7, Math.floor((pad.width - 160) / 150)))
+        // Pages of apps: swipe / scroll / ← → between them, dots below
+        Item {
+            id: area
             anchors.top: pill.bottom
-            anchors.topMargin: 48
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 60
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: columns * 150
-            cellWidth: 150; cellHeight: 140
+            anchors.topMargin: 44
+            anchors.bottom: dots.top
+            anchors.bottomMargin: 18
+            anchors.left: parent.left
+            anchors.right: parent.right
+            readonly property int columns: Math.max(4, Math.min(7, Math.floor((pad.width - 160) / 150)))
+            readonly property int rows: Math.max(2, Math.min(5, Math.floor(height / 140)))
+            readonly property int perPage: columns * rows
+            readonly property int pageCount: Math.max(1, Math.ceil(pad.apps.length / perPage))
+        }
+        ListView {
+            id: pages
+            anchors.fill: area
+            orientation: ListView.Horizontal
+            snapMode: ListView.SnapOneItem
+            highlightRangeMode: ListView.StrictlyEnforceRange
+            highlightMoveDuration: R.Theme.normal * 2
+            boundsBehavior: Flickable.StopAtBounds
             clip: true
-            model: pad.apps
-            delegate: MouseArea {
-                id: cellMouse
-                required property var modelData
-                width: 150; height: 140
-                hoverEnabled: true
-                onClicked: { modelData.execute(); pad.hide(); }
+            model: area.pageCount
+            Keys.onLeftPressed: decrementCurrentIndex()
+            Keys.onRightPressed: incrementCurrentIndex()
+            WheelHandler {
+                property real acc: 0
+                onWheel: e => {
+                    acc += (Math.abs(e.angleDelta.x) > Math.abs(e.angleDelta.y) ? -e.angleDelta.x : -e.angleDelta.y);
+                    if (acc > 120) { pages.incrementCurrentIndex(); acc = 0; }
+                    else if (acc < -120) { pages.decrementCurrentIndex(); acc = 0; }
+                }
+            }
+            delegate: Item {
+                id: page
+                required property int index
+                width: pages.width; height: pages.height
+                Grid {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    columns: area.columns
+                    Repeater {
+                        model: pad.apps.slice(page.index * area.perPage, (page.index + 1) * area.perPage)
+                        delegate: MouseArea {
+                            id: cellMouse
+                            required property var modelData
+                            width: 150; height: 140
+                            hoverEnabled: true
+                            onClicked: { modelData.execute(); pad.hide(); }
+                            Rectangle {
+                                anchors.fill: parent; anchors.margins: 6
+                                radius: R.Theme.radiusLarge
+                                color: Qt.rgba(1, 1, 1, 0.10)
+                                opacity: cellMouse.containsMouse ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: R.Theme.fast } }
+                            }
+                            R.AppIcon {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: 14
+                                size: 84
+                                source: cellMouse.modelData.icon
+                                scale: cellMouse.pressed ? 0.92 : 1
+                                Behavior on scale { NumberAnimation { duration: 90 } }
+                            }
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: 106
+                                width: 136
+                                horizontalAlignment: Text.AlignHCenter
+                                text: cellMouse.modelData.name
+                                elide: Text.ElideRight
+                                color: "white"
+                                style: Text.Raised
+                                styleColor: Qt.rgba(0, 0, 0, 0.35)
+                                font.family: R.Theme.fontFamily
+                                font.pixelSize: 13
+                                renderType: Text.NativeRendering
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Row {
+            id: dots
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 46
+            spacing: 10
+            visible: area.pageCount > 1
+            Repeater {
+                model: area.pageCount
                 Rectangle {
-                    anchors.fill: parent; anchors.margins: 6
-                    radius: R.Theme.radiusLarge
-                    color: Qt.rgba(1, 1, 1, 0.10)
-                    opacity: cellMouse.containsMouse ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: R.Theme.fast } }
-                }
-                R.AppIcon {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: 14
-                    size: 84
-                    source: cellMouse.modelData.icon
-                    scale: cellMouse.pressed ? 0.92 : 1
-                    Behavior on scale { NumberAnimation { duration: 90 } }
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    y: 106
-                    width: 136
-                    horizontalAlignment: Text.AlignHCenter
-                    text: cellMouse.modelData.name
-                    elide: Text.ElideRight
+                    required property int index
+                    width: 8; height: 8; radius: 4
                     color: "white"
-                    style: Text.Raised
-                    styleColor: Qt.rgba(0, 0, 0, 0.35)
-                    font.family: R.Theme.fontFamily
-                    font.pixelSize: 13
-                    renderType: Text.NativeRendering
+                    opacity: index === pages.currentIndex ? 0.95 : 0.35
+                    Behavior on opacity { NumberAnimation { duration: R.Theme.fast } }
+                    MouseArea { anchors.fill: parent; anchors.margins: -4; onClicked: pages.currentIndex = parent.index }
                 }
             }
         }

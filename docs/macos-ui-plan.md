@@ -24,7 +24,7 @@ How each macOS mechanism maps to Ravana (KDE Plasma 6 underneath).
 | Running indicator dots, click to focus/minimize | Task manager indicators | Done |
 | Trash at the end, after a divider | Trash after a separator | Done |
 | Magnification on hover | Not available in Plasma's dock | Not planned |
-| Genie minimize | Magic Lamp | Done |
+| Genie minimize | Ravana's own **Ember** minimize instead (shrink and fade into the dock icon) | Done |
 
 ## Windows
 
@@ -90,6 +90,15 @@ Turn off with `sudo systemctl disable --now keyd`.
 - Dark only: Ravana Dark colours, Ravana wallpaper (light variant removed).
 - Inter for UI, JetBrains Mono for code, Papirus icons.
 - Installer in Ravana crimson.
+
+## Motion: Ravana's own
+
+The look follows macOS; the motion is Ravana's:
+
+- **Rise** (open/close): windows rise into place from 95 % with a fast ease-out and sink away on close
+- **Ember** (minimize): windows shrink and fade into their dock icon on a smooth S-curve, no genie warp
+- **Pulse** (dock): a launching app breathes gently with a red ember dot, instead of bouncing
+- Boot crown animation, login splash, hover lift in the dock
 
 ## Performance rules
 

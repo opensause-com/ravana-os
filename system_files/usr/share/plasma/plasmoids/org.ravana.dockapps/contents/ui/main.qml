@@ -3,7 +3,7 @@
  * - pinned apps and open apps share one row (an open app takes its pin's place)
  * - a small dot under every open app, none under pinned-only apps
  * - icons lift slightly under the pointer; the app's name appears above it
- * - launching apps bounce until their window appears
+ * - launching apps pulse (Ravana motion) with a red ember dot until their window appears
  * - right-click: New Window, Keep in Dock / Remove from Dock, Quit
  * - a thin divider at the end separates apps from Trash, like macOS
  * Built on KDE's task model (org.kde.taskmanager), the same one Plasma's task manager uses.
@@ -97,20 +97,24 @@ PlasmoidItem {
                     scale: task.hovered ? 1.12 : 1.0
                     transformOrigin: Item.Bottom
                     property real lift: task.hovered ? root.iconSize * 0.08 : 0
-                    property real bounce: 0
-                    transform: Translate { y: -icon.bounce }
+                    // Ravana pulse: a launching (or attention-seeking) app breathes gently
+                    property real pulse: 0
+                    transform: Scale {
+                        origin.x: icon.width / 2
+                        origin.y: icon.height
+                        xScale: 1 + icon.pulse * 0.07
+                        yScale: 1 + icon.pulse * 0.07
+                    }
 
                     Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
                     Behavior on lift { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
 
-                    // Launching apps bounce, like macOS
-                    SequentialAnimation on bounce {
+                    SequentialAnimation on pulse {
                         running: task.model.IsStartup || task.model.IsDemandingAttention
                         loops: Animation.Infinite
                         alwaysRunToEnd: true
-                        NumberAnimation { to: root.iconSize * 0.35; duration: 260; easing.type: Easing.OutQuad }
-                        NumberAnimation { to: 0; duration: 260; easing.type: Easing.InQuad }
-                        PauseAnimation { duration: 120 }
+                        NumberAnimation { to: 1; duration: 420; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 0; duration: 420; easing.type: Easing.InOutSine }
                     }
                 }
 
@@ -122,8 +126,8 @@ PlasmoidItem {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: Math.max(1, Math.round(root.dotSpace / 2 - height / 2) + 1)
-                    color: task.model.IsDemandingAttention ? "#ff5a66" : Kirigami.Theme.textColor
-                    opacity: task.running ? 0.85 : 0
+                    color: (task.model.IsStartup || task.model.IsDemandingAttention) ? "#ff3d55" : Kirigami.Theme.textColor
+                    opacity: task.running || task.model.IsStartup ? (task.model.IsStartup ? 0.6 + icon.pulse * 0.4 : 0.85) : 0
                     Behavior on opacity { NumberAnimation { duration: 200 } }
                 }
 

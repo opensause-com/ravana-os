@@ -1,0 +1,15 @@
+{
+    "KPackageStructure": "KWin/Effect",
+    "KPlugin": {
+        "Authors": [{ "Name": "Ravana OS" }],
+        "Category": "Appearance",
+        "Description": "Ravana motion: minimized windows shrink and fade into their dock icon",
+        "EnabledByDefault": false,
+        "Id": "ravana_ember",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana Ember"
+    },
+    "X-KDE-Ordering": 60,
+    "X-KWin-Exclusive-Category": "minimize",
+    "X-Plasma-API": "javascript"
+}

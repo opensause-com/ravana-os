@@ -65,9 +65,14 @@ $KW --file /etc/xdg/kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XIA
 $KW --file /etc/xdg/kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ""
 
 # --- Animations and effects (GPU-cheap, no RAM cost) ---
-$KW --file /etc/xdg/kwinrc --group Plugins --key magiclampEnabled true      # genie minimize
-$KW --file /etc/xdg/kwinrc --group Plugins --key squashEnabled false
-$KW --file /etc/xdg/kwinrc --group Plugins --key kwin4_effect_squashEnabled false
+# Ravana's own motion (usr/share/kwin/effects): Rise for open/close, Ember for minimize
+test -f /usr/share/kwin/effects/ravana_rise/contents/code/main.js
+test -f /usr/share/kwin/effects/ravana_ember/contents/code/main.js
+$KW --file /etc/xdg/kwinrc --group Plugins --key ravana_riseEnabled true
+$KW --file /etc/xdg/kwinrc --group Plugins --key ravana_emberEnabled true
+for fx in scale glide fade magiclamp squash kwin4_effect_squash kwin4_effect_scale; do
+    $KW --file /etc/xdg/kwinrc --group Plugins --key "${fx}Enabled" false
+done
 $KW --file /etc/xdg/kwinrc --group Plugins --key blurEnabled true           # translucent panels/menus
 $KW --file /etc/xdg/kwinrc --group Plugins --key contrastEnabled true
 $KW --file /etc/xdg/kwinrc --group Plugins --key overviewEnabled true       # Mission Control (Meta+W)

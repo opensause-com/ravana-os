@@ -1,0 +1,15 @@
+{
+    "KPackageStructure": "KWin/Effect",
+    "KPlugin": {
+        "Authors": [{ "Name": "Ravana OS" }],
+        "Category": "Window Open/Close Animation",
+        "Description": "Ravana motion: windows rise into place when they open and sink away when they close",
+        "EnabledByDefault": false,
+        "Id": "ravana_rise",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana Rise"
+    },
+    "X-KDE-Ordering": 60,
+    "X-KWin-Exclusive-Category": "toplevel-open-close-animation",
+    "X-Plasma-API": "javascript"
+}

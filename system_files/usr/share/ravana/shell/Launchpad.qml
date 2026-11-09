@@ -31,13 +31,13 @@ PanelWindow {
 
     // Technical tools and duplicates stay out of the grid (still searchable in Spotlight)
     readonly property var hidden: ["Nested Desktop", "Nested Steam Gamemode", "KDE System Settings",
-        "Help Center", "Bazzite Portal", "ROM Properties Page", "KDE Connect Indicator", "Cardwire",
+        "Help Center", "Bazzite Portal", "ROM Properties", "KDE Connect Indicator", "Cardwire",
         "Input Remapper", "Reset Ravana Look", "Firewall", "KDebugSettings", "Menu Editor",
         "Journald Browser", "KWalletManager", "KWrite", "KFind", "Kvantum Manager"]
     readonly property var apps: {
         const q = search.text.trim().toLowerCase();
         return DesktopEntries.applications.values
-            .filter(e => !e.noDisplay && e.name && !pad.hidden.includes(e.name))
+            .filter(e => !e.noDisplay && e.name && !pad.hidden.some(h => e.name.startsWith(h)))
             .filter(e => !q || e.name.toLowerCase().includes(q)
                      || (e.genericName || "").toLowerCase().includes(q)
                      || (e.keywords || []).some(k => k.toLowerCase().includes(q)))
@@ -147,6 +147,8 @@ PanelWindow {
                     text: cellMouse.modelData.name
                     elide: Text.ElideRight
                     color: "white"
+                    style: Text.Raised
+                    styleColor: Qt.rgba(0, 0, 0, 0.35)
                     font.family: R.Theme.fontFamily
                     font.pixelSize: 13
                     renderType: Text.NativeRendering

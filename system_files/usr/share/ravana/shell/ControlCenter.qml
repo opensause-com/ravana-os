@@ -52,6 +52,7 @@ PopupWindow {
                 spacing: R.Theme.gap
                 R.Glass {
                     Layout.fillWidth: true
+                    Layout.minimumWidth: 170
                     Layout.preferredHeight: conn.implicitHeight + 12
                     ColumnLayout {
                         id: conn
@@ -79,6 +80,7 @@ PopupWindow {
                     }
                 }
                 ColumnLayout {
+                    Layout.fillWidth: false          // layouts stretch by default; keep this column narrow
                     Layout.preferredWidth: 128
                     spacing: R.Theme.gap
                     R.Glass {

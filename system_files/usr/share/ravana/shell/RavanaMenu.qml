@@ -42,11 +42,11 @@ PopupWindow {
             MenuEntry { text: qsTr("Force Quit…"); onActivated: menu.run("dbus-send --session --type=method_call --dest=org.kde.KWin /KWin org.kde.KWin.killWindow") }
             MenuSeparator {}
             MenuEntry { text: qsTr("Sleep"); onActivated: menu.run("systemctl suspend") }
-            MenuEntry { text: qsTr("Restart…"); onActivated: menu.run("qs ipc -p /usr/share/ravana/shell call power show restart") }
-            MenuEntry { text: qsTr("Shut Down…"); onActivated: menu.run("qs ipc -p /usr/share/ravana/shell call power show shutdown") }
+            MenuEntry { text: qsTr("Restart…"); onActivated: menu.run("qs ipc -p /usr/share/ravana/shell call power ask restart") }
+            MenuEntry { text: qsTr("Shut Down…"); onActivated: menu.run("qs ipc -p /usr/share/ravana/shell call power ask shutdown") }
             MenuSeparator {}
             MenuEntry { text: qsTr("Lock Screen"); onActivated: menu.run("loginctl lock-session") }
-            MenuEntry { text: qsTr("Log Out…"); onActivated: menu.run("qs ipc -p /usr/share/ravana/shell call power show logout") }
+            MenuEntry { text: qsTr("Log Out…"); onActivated: menu.run("qs ipc -p /usr/share/ravana/shell call power ask logout") }
         }
     }
 }

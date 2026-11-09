@@ -31,7 +31,7 @@ ShellRoot {
     PowerDialog { id: powerDialog; screen: Quickshell.screens[0] }
     IpcHandler {
         target: "power"
-        function show(kind: string): void { powerDialog.present(kind); }
+        function ask(kind: string): void { powerDialog.present(kind); }
         function close(): void { powerDialog.dismiss(); }
     }
 

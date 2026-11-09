@@ -1,6 +1,12 @@
 #!/usr/bin/python3 -I
 # Copyright (c) 2026 Ravana OS. All rights reserved.
-"""Give Plasma's lock screen the Ravana look without touching how it unlocks.
+"""Ravana lock and logout screens on top of Plasma's own session logic.
+
+Logout: Plasma's LogoutControls.qml (only the look) is replaced by Ravana's, which calls
+the same actions; Logout.qml (the logic) stays Plasma's. Installed only if Plasma's file
+still offers exactly the actions Ravana's uses.
+
+Lock screen: Give Plasma's lock screen the Ravana look without touching how it unlocks.
 
 Only visual pieces of LockScreenUi.qml change: KDE's clock is replaced by the Ravana
 clock (date above a large time) and a soft crown sits at the top. Every edit must find
@@ -58,7 +64,35 @@ EDITS = [
     ("        ListModel {\n            id: users", CLOCK + "\n        ListModel {\n            id: users"),
 ]
 
+SHELL = Path("/usr/share/plasma/shells/org.kde.plasma.desktop/contents")
+RAVANA_LOGOUT = Path("/usr/share/ravana/session/LogoutControls.qml")
+LOGOUT_API = ["readonly property Item hostRoot: parent", "controls.hostRoot.sleepRequested()",
+              "controls.hostRoot.hibernateRequested()", "controls.hostRoot.rebootRequested()",
+              "controls.hostRoot.rebootUpdateRequested()", "controls.hostRoot.haltRequested()",
+              "controls.hostRoot.haltUpdateRequested()", "controls.hostRoot.logoutRequested()",
+              "controls.hostRoot.cancelRequested()", "spdMethods.SuspendState", "canLogout", "maysd"]
+
+def logout():
+    ctl = SHELL / "logout/LogoutControls.qml"
+    if not ctl.exists() or not RAVANA_LOGOUT.exists():
+        print("no Plasma logout screen"); return
+    orig = ctl.with_suffix(".qml.kde")
+    kde = (orig if orig.exists() else ctl).read_text()
+    missing = [a for a in LOGOUT_API if a not in kde]
+    if missing:
+        print("WARNING: Plasma's logout screen changed, keeping it:", missing); return
+    if not orig.exists():
+        shutil.copy2(ctl, orig)
+    shutil.copy2(RAVANA_LOGOUT, ctl)
+    # a lighter veil behind the Ravana alert (Plasma uses near-black)
+    lo = SHELL / "logout/Logout.qml"
+    t = lo.read_text()
+    if t.count('color: "black"\n        opacity: 0.85') == 1:
+        lo.write_text(t.replace('color: "black"\n        opacity: 0.85', 'color: "black"\n        opacity: 0.45'))
+    print("logout screen: Ravana alert applied")
+
 def main():
+    logout()
     if not UI.exists():
         print("no Plasma lock screen at", UI); return 0
     s = UI.read_text()

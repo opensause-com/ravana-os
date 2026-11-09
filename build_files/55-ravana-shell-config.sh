@@ -59,7 +59,7 @@ Keywords=settings;preferences;control;wifi;bluetooth;sound;display;appearance;
 StartupNotify=false
 DESKTOP
 
-# Lock screen: Ravana clock on Plasma's own (unchanged) unlock logic, Lanka wallpaper
-/usr/libexec/ravana-lockscreen-style
+# Lock and logout screens: Ravana design on Plasma's own (unchanged) session logic; Lanka wallpaper
+/usr/libexec/ravana-session-style
 $KW --file /etc/xdg/kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General \
     --key Image "file:///usr/share/wallpapers/RavanaLanka/"

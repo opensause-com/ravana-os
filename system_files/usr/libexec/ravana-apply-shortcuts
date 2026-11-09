@@ -3,7 +3,7 @@
 # Runs before the desktop starts (plasma-workspace/env), so nothing overwrites it.
 set -uo pipefail
 SRC=/etc/skel/.config/kglobalshortcutsrc
-KW="$(command -v kwriteconfig6)" || exit 0
+KW="$(command -v kwriteconfig6 || ls /usr/bin/kwriteconfig6 /usr/sbin/kwriteconfig6 2>/dev/null | head -1)"; [ -n "$KW" ] || exit 0
 groups=()
 while IFS= read -r line || [ -n "$line" ]; do
     case "$line" in

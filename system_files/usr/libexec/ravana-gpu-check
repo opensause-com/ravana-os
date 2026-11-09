@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Rounded window corners use GPU shaders that fail on software rendering (llvmpipe)
+# and some virtual GPUs, which leaves windows blank. Before the desktop starts, keep
+# the effect on for real GPUs and switch it off (for this user) otherwise.
+set -u
+real=0
+for drv in /sys/class/drm/renderD*/device/driver /sys/class/drm/card[0-9]*/device/driver; do
+    [ -e "$drv" ] || continue
+    case "$(basename "$(readlink -f "$drv")")" in
+        amdgpu|radeon|i915|xe|nouveau|nvidia|nvidia-drm|msm|panfrost|v3d) real=1 ;;
+    esac
+done
+[ -e /proc/driver/nvidia/version ] && real=1
+kw="$(command -v kwriteconfig6 || ls /usr/bin/kwriteconfig6 /usr/sbin/kwriteconfig6 2>/dev/null | head -1)"; [ -n "$kw" ] || exit 0
+if [ "$real" = 1 ]; then
+    "$kw" --file kwinrc --group Plugins --key kwin4_effect_shapecornersEnabled --delete 2>/dev/null || true
+else
+    "$kw" --file kwinrc --group Plugins --key kwin4_effect_shapecornersEnabled false
+fi

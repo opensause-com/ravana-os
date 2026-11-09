@@ -79,6 +79,7 @@ PlasmoidItem {
                 property int cycle: 0
 
                 function publishGeometry() {
+                    if (typeof tasksModel === "undefined" || !tasksModel || task.index < 0) return;
                     const p = task.mapToGlobal(0, 0);
                     tasksModel.requestPublishDelegateGeometry(tasksModel.makeModelIndex(task.index),
                         Qt.rect(p.x, p.y, task.width, task.height), task);

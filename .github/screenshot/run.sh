@@ -76,6 +76,8 @@ chmod 777 "$OUT"
 cat > /home/ravana/wrapper.sh <<'WRAP'
 #!/usr/bin/env bash
 OUT=/shots
+/usr/libexec/ravana-gpu-check   # same check a real login runs before KWin starts
+grep -A3 '^\[Plugins\]' "$HOME/.config/kwinrc" >> "$OUT/steps.log" 2>&1
 kwin_wayland --virtual --no-lockscreen --width 1920 --height 1080 --socket wayland-ravana > "$OUT/kwin.log" 2>&1 &
 KPID=$!
 WPID=

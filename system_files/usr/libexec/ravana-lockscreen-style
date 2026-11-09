@@ -1,0 +1,78 @@
+#!/usr/bin/python3 -I
+# Copyright (c) 2026 Ravana OS. All rights reserved.
+"""Give Plasma's lock screen the Ravana look without touching how it unlocks.
+
+Only visual pieces of LockScreenUi.qml change: KDE's clock is replaced by the Ravana
+clock (date above a large time) and a soft crown sits at the top. Every edit must find
+its exact anchor; if any is missing (a newer Plasma), nothing is written and the stock
+lock screen stays. Safe to run more than once."""
+import sys, shutil
+from pathlib import Path
+
+UI = Path("/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml")
+MARK = "// ravana-lockscreen-style v1"
+
+CLOCK = '''
+        // Ravana clock: the date above a large time, high on the screen like macOS
+        Item {
+            id: ravanaClock
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: Math.round(parent.height * 0.10)
+            width: ravanaClockColumn.implicitWidth
+            height: ravanaClockColumn.implicitHeight
+            property date now: new Date()
+            Timer { interval: 1000; running: true; repeat: true; onTriggered: ravanaClock.now = new Date() }
+            Column {
+                id: ravanaClockColumn
+                spacing: -6
+                Image {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    source: "file:///usr/share/icons/hicolor/64x64/apps/ravana-logo-white.png"
+                    sourceSize: Qt.size(30, 30)
+                    opacity: 0.85
+                    bottomPadding: 14
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatDate(ravanaClock.now, "dddd d MMMM")
+                    color: "white"
+                    font.family: "Inter"; font.pixelSize: 24; font.weight: Font.DemiBold
+                    style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatTime(ravanaClock.now, "h:mm")
+                    color: "white"
+                    font.family: "Inter"; font.pixelSize: 116; font.weight: Font.Bold
+                    style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
+                }
+            }
+        }
+'''
+
+EDITS = [
+    # KDE's clock and its shadow step aside for the Ravana clock
+    ("visible: y > 0 && config.alwaysShowClock", "visible: false"),
+    ("visible: !lockScreenUi.softwareRendering && config.alwaysShowClock", "visible: false"),
+    # insert the Ravana clock just before the user list model
+    ("        ListModel {\n            id: users", CLOCK + "\n        ListModel {\n            id: users"),
+]
+
+def main():
+    if not UI.exists():
+        print("no Plasma lock screen at", UI); return 0
+    s = UI.read_text()
+    if MARK in s:
+        print("already Ravana-styled"); return 0
+    for old, _ in EDITS:
+        if s.count(old) != 1:
+            print("WARNING: lock screen layout changed (anchor not found once):", old.splitlines()[0])
+            print("leaving the stock lock screen untouched"); return 0
+    for old, new in EDITS:
+        s = s.replace(old, new)
+    shutil.copy2(UI, UI.with_suffix(".qml.kde"))
+    UI.write_text(MARK + "\n" + s)
+    print("lock screen: Ravana clock applied")
+    return 0
+
+sys.exit(main())

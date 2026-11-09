@@ -46,3 +46,8 @@ test -x /usr/bin/ravana-settings
 # "System Settings" with the settings icon in the menu bar and the Dock
 $KW --file /etc/xdg/taskmanagerrulesrc --group Mapping --key org.quickshell org.ravana.settings
 $KW --file /etc/xdg/taskmanagerrulesrc --group Mapping --key quickshell org.ravana.settings
+
+# Lock screen: Ravana clock on Plasma's own (unchanged) unlock logic, Lanka wallpaper
+/usr/libexec/ravana-lockscreen-style
+$KW --file /etc/xdg/kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General \
+    --key Image "file:///usr/share/wallpapers/RavanaLanka/"

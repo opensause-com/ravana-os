@@ -67,6 +67,10 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   $SQ about >> "$OUT/steps.log" 2>&1; shot 36-settings-about 2
   $SQ trackpad >/dev/null 2>&1; shot 37-settings-trackpad 2
   pkill -f "qs -p /usr/share/ravana/settings" 2>/dev/null; pkill -f "quickshell -p /usr/share/ravana/settings" 2>/dev/null; sleep 1
+  /usr/libexec/kscreenlocker_greet --testing >> "$OUT/lockscreen.log" 2>&1 &
+  LK=$!; sleep 6; shot 38-lock-screen 1
+  kill $LK 2>/dev/null; sleep 1
+  $QS power show restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1
   shot 23-shell-notification 2

@@ -27,6 +27,14 @@ ShellRoot {
         function toggle(): void { notificationCenter.toggle(); }
     }
 
+    // Restart / Shut Down / Log Out alert
+    PowerDialog { id: powerDialog; screen: Quickshell.screens[0] }
+    IpcHandler {
+        target: "power"
+        function show(kind: string): void { powerDialog.show(kind); }
+        function close(): void { powerDialog.close(); }
+    }
+
     // Volume / brightness / keyboard-light HUD (fed by ravana-osd)
     Hud { screen: Quickshell.screens[0] }
 

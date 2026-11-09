@@ -1,0 +1,45 @@
+name: Publish ISO to Cloudflare R2
+
+# Sends ISOs from an earlier "Build Ravana OS live ISO" run to R2 without rebuilding.
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Run ID of the live ISO build (the number in its URL)
+        required: true
+      channel:
+        description: Folder in the bucket
+        type: choice
+        options: [testing, latest]
+        default: testing
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '*-live-iso'
+          merge-multiple: true
+          path: output
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check
+        run: |
+          ls -lh output
+          cd output && sha256sum -c *.sha256
+
+      - name: Upload to Cloudflare R2
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
+        run: scripts/r2-upload.sh "${{ inputs.channel }}" output/*-live.iso

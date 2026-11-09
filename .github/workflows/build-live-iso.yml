@@ -28,7 +28,7 @@ on:
         options: [latest, testing]
         default: latest
       sourceforge:
-        description: Upload to SourceForge
+        description: Upload to Cloudflare R2 / SourceForge (when set up)
         type: boolean
         default: true
   workflow_run:
@@ -129,6 +129,16 @@ jobs:
             || xorriso -osirrox on -indev "$ISO" -extract /EFI/BOOT/grub.cfg /tmp/grub.cfg 2>/dev/null || true
           grep -E "menuentry|search" /tmp/grub.cfg 2>/dev/null || true
 
+      - name: Upload to Cloudflare R2
+        if: vars.R2_BUCKET != '' && (github.event_name != 'workflow_dispatch' || inputs.sourceforge)
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
+        run: scripts/r2-upload.sh "$CHANNEL" "output/$ISO"
+
       - name: Upload to SourceForge
         if: env.SF_PROJECT != '' && (github.event_name != 'workflow_dispatch' || inputs.sourceforge)
         env:
@@ -193,7 +203,13 @@ jobs:
             echo
             echo "| Edition | Download |"
             echo "|---|---|"
-            if [ -n "$SF" ]; then
+            R2="${{ vars.R2_PUBLIC_URL }}"
+            if [ -n "$R2" ]; then
+              echo "| Ravana OS (AMD / Intel) | [ravana-os-live.iso]($R2/latest/ravana-os-live.iso) |"
+              echo "| Ravana OS (NVIDIA) | [ravana-os-nvidia-live.iso]($R2/latest/ravana-os-nvidia-live.iso) |"
+              echo
+              echo "Direct downloads, no sign-in needed. Verify with \`SHA256SUMS\` below."
+            elif [ -n "$SF" ]; then
               for e in "ravana-os:AMD / Intel" "ravana-os-nvidia:NVIDIA"; do
                 f="${e%%:*}-$VERSION-$STAMP-live.iso"
                 echo "| Ravana OS (${e#*:}) | [$f]($SF_DIR/$f/download) |"

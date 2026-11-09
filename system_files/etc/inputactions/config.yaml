@@ -1,0 +1,59 @@
+# Copyright (c) 2026 Ravana OS. All rights reserved.
+# Ravana trackpad gestures (InputActions). Users can override in
+# ~/.config/inputactions/config.yaml.
+#
+#   3 fingers up          Mission Control (all windows)
+#   3 fingers down        App Exposé (this app's windows)
+#   3 fingers left/right  next / previous Space
+#   4 fingers up / pinch  Launchpad
+#   4 fingers spread      show the desktop
+#   4 fingers left        Notification Center
+touchpad:
+  gestures:
+    - type: swipe
+      fingers: 3
+      direction: up
+      actions:
+        - plasma_shortcut: kwin,Overview
+
+    - type: swipe
+      fingers: 3
+      direction: down
+      actions:
+        - plasma_shortcut: kwin,ExposeClass
+
+    - type: swipe
+      fingers: 3
+      direction: left
+      actions:
+        - plasma_shortcut: kwin,Switch One Desktop to the Right
+
+    - type: swipe
+      fingers: 3
+      direction: right
+      actions:
+        - plasma_shortcut: kwin,Switch One Desktop to the Left
+
+    - type: swipe
+      fingers: 4
+      direction: up
+      actions:
+        - command: qs ipc -p /usr/share/ravana/shell call launchpad toggle
+
+    - type: pinch
+      fingers: 4
+      direction: in
+      actions:
+        - command: qs ipc -p /usr/share/ravana/shell call launchpad toggle
+
+    - type: pinch
+      fingers: 4
+      direction: out
+      actions:
+        - plasma_shortcut: kwin,Show Desktop
+
+    - type: swipe
+      fingers: 4
+      direction: left
+      actions:
+        - command: qs ipc -p /usr/share/ravana/shell call notifications toggle

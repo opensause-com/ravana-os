@@ -27,3 +27,11 @@ if "[services][org.ravana.launchpad.desktop]" not in s:
 open(p, "w").write(s)
 PY
 fi
+
+# Trackpad gestures (InputActions, built in the Containerfile): turn the plugin on if it's there
+if ls /usr/lib64/qt6/plugins/kwin/*/*inputactions* /usr/lib64/qt6/plugins/kwin/*/*gestures* >/dev/null 2>&1; then
+    $KW --file /etc/xdg/kwinrc --group Plugins --key kwin_gesturesEnabled true
+    ls /usr/lib64/qt6/plugins/kwin/*/*inputactions* /usr/lib64/qt6/plugins/kwin/*/*gestures* 2>/dev/null
+else
+    echo "InputActions not in this image: KWin's built-in gestures stay"
+fi

@@ -62,6 +62,29 @@ RUN set -eux; mkdir -p /out; \
       find /out -type f | head -20; \
     else echo "WARNING: no kwin-devel $KV in Fedora; rounded corners skipped"; fi
 
+# Trackpad gestures, Mac style (InputActions KWin plugin, GPL-3.0): three-finger swipes
+# for Mission Control / App Exposé / Spaces, pinch for Launchpad and the desktop.
+# Built against the base image's exact KWin; skipped (KWin's own gestures stay) if
+# Fedora has no matching kwin-devel or the build fails.
+FROM ${BASE_IMAGE} AS gestures
+ARG IA_VERSION=v0.9.2.1
+ARG IA_COMMIT=f61770a60682d1ffb31010f210457cf4ff5228a0
+COPY build_files/fedora-build.repo /etc/yum.repos.d/ravana-build-fedora.repo
+RUN set -eux; mkdir -p /out; \
+    KV="$(rpm -q --qf '%{VERSION}-%{RELEASE}' kwin)"; echo "kwin $KV"; \
+    if dnf5 install -y --setopt=install_weak_deps=False --repo=ravana-build-fedora --repo=ravana-build-updates \
+        git cmake gcc-c++ extra-cmake-modules "kwin-devel-$KV" qt6-qtbase-devel qt6-qtbase-private-devel \
+        qt6-qtdeclarative-devel kf6-ki18n-devel kf6-kguiaddons-devel kf6-kcmutils-devel kf6-kconfigwidgets-devel \
+        wayland-devel yaml-cpp-devel libepoxy-devel libevdev-devel libdrm-devel cli11-devel layer-shell-qt-devel; then \
+      git clone --recursive --branch "$IA_VERSION" https://github.com/InputActions/kwin /tmp/ia && cd /tmp/ia; \
+      test "$(git rev-parse HEAD)" = "$IA_COMMIT"; \
+      if cmake -B build -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release && cmake --build build -j"$(nproc)"; then \
+        DESTDIR=/out cmake --install build; \
+        install -Dm644 LICENSE /out/usr/share/licenses/inputactions/LICENSE 2>/dev/null || true; \
+        find /out -type f | head -30; \
+      else rm -rf /out/*; echo "WARNING: InputActions build failed; KWin's own gestures stay"; fi; \
+    else echo "WARNING: no kwin-devel $KV in Fedora; InputActions skipped"; fi
+
 FROM scratch AS ctx
 COPY system_files /files
 COPY build_files /build_files
@@ -75,6 +98,7 @@ ARG IMAGE_FLAVOR=main
 
 COPY --from=keyd /out/ /
 COPY --from=roundcorners /out/ /
+COPY --from=gestures /out/ /
 COPY --from=gtktheme /out/ /
 
 RUN --mount=type=tmpfs,dst=/tmp \

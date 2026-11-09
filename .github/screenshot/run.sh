@@ -53,7 +53,7 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   $QS hud level volume 65 >> "$OUT/steps.log" 2>&1; shot 32-shell-hud 1
   notify-send -a Steam -i steam "Download complete" "Your game is ready to play." 2>/dev/null; sleep 6
   $QS notifications toggle >> "$OUT/steps.log" 2>&1; shot 33-shell-notification-center 2; $QS notifications toggle >/dev/null 2>&1; sleep 1
-  /usr/libexec/kwin-tabbox-preview /usr/share/kwin/tabbox/ravana >> "$OUT/tabbox.log" 2>&1 &
+  /usr/libexec/kwin-tabbox-preview /usr/share/kwin/tabbox/ravana/contents/ui/main.qml >> "$OUT/tabbox.log" 2>&1 &
   TB=$!; shot 34-shell-app-switcher 4; kill $TB 2>/dev/null; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1

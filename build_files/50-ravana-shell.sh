@@ -22,3 +22,6 @@ test -f /usr/share/kwin/tabbox/ravana/contents/ui/main.qml
 python3 -c 'import dbus, gi; from gi.repository import GLib' || \
     dnf5 install -y --setopt=install_weak_deps=False python3-dbus python3-gobject-base
 systemctl --global enable ravana-osd.service
+
+# Gesture plugin runtime libraries (the plugin itself is built in the Containerfile)
+dnf5 install -y --setopt=install_weak_deps=False yaml-cpp libevdev || true

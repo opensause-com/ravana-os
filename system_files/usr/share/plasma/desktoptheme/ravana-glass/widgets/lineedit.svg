@@ -30,4 +30,5 @@
 <rect id="hint-bottom-margin" x="300" y="10" width="6" height="6" fill="none"/>
 <rect id="hint-left-margin" x="300" y="20" width="10" height="10" fill="none"/>
 <rect id="hint-right-margin" x="300" y="40" width="10" height="10" fill="none"/>
+<rect id="hint-stretch-borders" x="480" y="480" width="1" height="1" fill="none"/><rect id="mask-hint-stretch-borders" x="482" y="480" width="1" height="1" fill="none"/>
 </svg>

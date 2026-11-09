@@ -44,4 +44,5 @@
 <rect id="minimized-left" x="240" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.030"/>
 <rect id="minimized-right" x="256" y="12" width="12" height="4" fill="#ffffff" fill-opacity="0.030"/>
 <rect id="minimized-center" x="252" y="12" width="4" height="4" fill="#ffffff" fill-opacity="0.030"/>
+<rect id="hint-stretch-borders" x="480" y="480" width="1" height="1" fill="none"/><rect id="mask-hint-stretch-borders" x="482" y="480" width="1" height="1" fill="none"/>
 </svg>

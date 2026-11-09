@@ -149,7 +149,11 @@ def hints(margins: dict, ox: int) -> str:
 
 
 def svg(body: str, w=500, h=500) -> str:
-    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">\n{body}\n</svg>\n'
+    # Stretch borders/centre instead of tiling the 4 px strips: tiling leaves faint seams
+    # between pieces (a visible inner rectangle in translucent glass).
+    hints = ('<rect id="hint-stretch-borders" x="480" y="480" width="1" height="1" fill="none"/>'
+             '<rect id="mask-hint-stretch-borders" x="482" y="480" width="1" height="1" fill="none"/>')
+    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">\n{body}\n{hints}\n</svg>\n'
 
 
 def write(rel: str, text: str) -> None:

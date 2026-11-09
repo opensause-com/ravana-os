@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Launchpad
+Exec=qs ipc -p /usr/share/ravana/shell call launchpad toggle
+Icon=ravana-launchpad
+NoDisplay=true
+X-KDE-Shortcuts=F4,Alt+F1

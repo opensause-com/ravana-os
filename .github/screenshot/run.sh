@@ -25,9 +25,21 @@ python3 -c "import dbus" >> "$OUT/steps.log" 2>&1 && log "dbus-python ok" || log
 for d in /usr/libexec/kactivitymanagerd /usr/lib64/libexec/kactivitymanagerd; do [ -x "$d" ] && { "$d" >/dev/null 2>&1 & break; }; done
 /usr/bin/kded6 >/dev/null 2>&1 &
 sleep 2
-plasmashell --no-respawn >"$OUT/plasmashell.log" 2>&1 &
+if [ -f /usr/share/ravana/shell/shell.qml ] && command -v quickshell >/dev/null; then
+  RAVANA_SHELL=1
+  quickshell -p /usr/share/ravana/shell >"$OUT/plasmashell.log" 2>&1 &
+  log "started Ravana Shell"
+else
+  plasmashell --no-respawn >"$OUT/plasmashell.log" 2>&1 &
+fi
 sleep 45
 shot 01-desktop 1
+if [ -n "${RAVANA_SHELL:-}" ]; then
+  QS="qs ipc -p /usr/share/ravana/shell call"
+  $QS launchpad toggle >> "$OUT/steps.log" 2>&1; shot 20-shell-launchpad 2; $QS launchpad toggle >/dev/null 2>&1; sleep 1
+  $QS menu toggle >> "$OUT/steps.log" 2>&1; shot 21-shell-menu 2; $QS menu toggle >/dev/null 2>&1; sleep 1
+  $QS controlcenter toggle >> "$OUT/steps.log" 2>&1; shot 22-shell-control-center 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
+fi
 
 send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.activateLauncherMenu
 shot 02-launchpad

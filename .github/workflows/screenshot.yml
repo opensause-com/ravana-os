@@ -6,7 +6,7 @@ on:
   workflow_run:
     workflows: ["Build Ravana OS image"]
     types: [completed]
-    branches: [testing]
+    branches: [testing, ravana-shell]
   workflow_dispatch:
     inputs:
       tag:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Screenshot the desktop
         run: |
-          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ravana-os:${{ inputs.tag || 'testing' }}"
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ravana-os:${{ inputs.tag || (github.event.workflow_run.head_branch == 'ravana-shell' && 'shell') || 'testing' }}"
           sudo podman pull -q "$IMAGE"
           mkdir -p shots
           sudo podman run --rm --privileged --security-opt label=disable --device /dev/dri \

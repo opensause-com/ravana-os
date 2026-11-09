@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Ravana Shell
+Comment=The Ravana desktop: menu bar, dock, Launchpad and Control Center
+Exec=/usr/bin/quickshell -p /usr/share/ravana/shell
+Icon=ravana-logo
+NoDisplay=true
+X-KDE-Wayland-Interfaces=org_kde_plasma_window_management,org_kde_plasma_activation_feedback,org_kde_kwin_keystate

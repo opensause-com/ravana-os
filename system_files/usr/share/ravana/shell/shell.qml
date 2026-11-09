@@ -1,0 +1,37 @@
+// Copyright (c) 2026 Ravana OS. All rights reserved.
+// Ravana Shell: the Ravana desktop (wallpaper, menu bar, dock, Launchpad) drawn entirely
+// by Ravana on the Ravana UI kit. KWin stays underneath as the window engine.
+import QtQuick
+import Quickshell
+import Quickshell.Io
+
+ShellRoot {
+    id: shell
+
+    Variants {
+        model: Quickshell.screens
+        Scope {
+            id: perScreen
+            required property var modelData
+            Wallpaper { screen: perScreen.modelData }
+            MenuBar { screen: perScreen.modelData }
+            Dock { screen: perScreen.modelData; onLaunchpadRequested: launchpad.toggle() }
+        }
+    }
+
+    // One Launchpad, on the first screen
+    Launchpad { id: launchpad; screen: Quickshell.screens[0] }
+
+    // `qs ipc -p /usr/share/ravana/shell call launchpad toggle` (used by the F4 shortcut)
+    IpcHandler {
+        target: "launchpad"
+        function toggle(): void { launchpad.toggle(); }
+    }
+
+    // Tell the login splash the desktop is ready (Plasma's shell used to do this)
+    Process {
+        running: true
+        command: ["dbus-send", "--session", "--type=method_call", "--dest=org.kde.KSplash",
+                  "/KSplash", "org.kde.KSplash.setStage", "string:desktop"]
+    }
+}

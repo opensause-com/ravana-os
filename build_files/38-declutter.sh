@@ -12,7 +12,7 @@ HIDE=(
 for f in /usr/share/applications/*.desktop; do
     name="$(sed -n 's/^Name=//p' "$f" | head -1)"
     for h in "${HIDE[@]}"; do
-        if [ "$name" = "$h" ]; then
+        if [ "$name" = "$h" ] || { [[ "$h" == Nested* ]] && [[ "$name" == Nested* ]]; }; then
             sed -i '/^NoDisplay=/d' "$f"
             sed -i '0,/^\[Desktop Entry\]/s//[Desktop Entry]\nNoDisplay=true/' "$f"
             echo "Hidden: $name ($(basename "$f"))"

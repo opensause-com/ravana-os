@@ -185,7 +185,7 @@ if __name__ == "__main__":
     lineedit = "\n".join([
         soft("base", 11, "#ffffff", 0.09, 0, 0),
         soft("hover", 11, "#ffffff", 0.06, 60, 0),
-        soft("focus", 11, "#d21f3c", 0.35, 120, 0),
+        soft("focus", 11, "#d21f3c", 0.16, 120, 0),
         '<rect id="hint-top-margin" x="300" y="0" width="6" height="6" fill="none"/>',
         '<rect id="hint-bottom-margin" x="300" y="10" width="6" height="6" fill="none"/>',
         '<rect id="hint-left-margin" x="300" y="20" width="10" height="10" fill="none"/>',

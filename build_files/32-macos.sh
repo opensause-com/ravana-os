@@ -90,3 +90,23 @@ $KW --file /etc/xdg/dolphinrc --group KFileDialog\ Settings --key Places\ Icons\
 for app in dolphinrc konsolerc katerc okularrc gwenviewrc arkrc; do
     $KW --file "/etc/xdg/$app" --group MainWindow --key MenuBar Enabled
 done
+
+# --- Rounded corners on every window (squircle, like macOS) + thin light outline ---
+if compgen -G '/usr/lib64/qt6/plugins/kwin/effects/plugins/kwin4_effect_shapecorners*' >/dev/null; then
+    $KW --file /etc/xdg/kwinrc --group Plugins --key kwin4_effect_shapecornersEnabled true
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key Size 18
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key InactiveCornerRadius 18
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key UseSquircleShape true
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key OutlineThickness 1
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key OutlineColor 255,255,255
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key ActiveOutlineAlpha 34
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key InactiveOutlineAlpha 20
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key InactiveOutlineThickness 1
+    $KW --file /etc/xdg/kwinrc --group Round-Corners --key InactiveOutlineColor 255,255,255
+    echo "Rounded window corners: on"
+else
+    echo "Rounded window corners: plugin not built for this KWin"
+fi
+
+# --- Dialogs: dim the window behind a dialog, like a macOS sheet ---
+$KW --file /etc/xdg/kwinrc --group Plugins --key dialogparentEnabled true

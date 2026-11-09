@@ -13,7 +13,7 @@ OUT = Path(__file__).resolve().parent.parent / "system_files/usr/share/aurorae/t
 P = 24      # shadow padding left/right
 PT = 14     # shadow padding top
 PB = 34     # shadow padding bottom
-R = 12      # top corner radius
+R = 18      # top corner radius (matches the rounded-corners effect)
 TITLE_EDGE_TOP, TITLE_HEIGHT, TITLE_EDGE_BOTTOM = 5, 24, 5   # 34 px title bar
 BTN = 14    # button box (12 px circle + 1 px margin)
 

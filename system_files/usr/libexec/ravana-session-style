@@ -16,52 +16,105 @@ import sys, shutil
 from pathlib import Path
 
 UI = Path("/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml")
-MARK = "// ravana-lockscreen-style v2"
+MARK = "// ravana-lockscreen-style v3"
 
-CLOCK = '''
-        // Ravana clock: the date above a large time, high on the screen like macOS
-        Item {
-            id: ravanaClock
+# Sharp wallpaper over Plasma's blurred one (macOS shows the wallpaper as it is)
+SHARP = '''
+        // Ravana: the wallpaper stays sharp, only a light veil for legibility
+        Image {
+            anchors.fill: parent
+            source: "file:///usr/share/wallpapers/RavanaLanka/contents/images/3840x2160.png"
+            sourceSize: Qt.size(lockScreenRoot.width, lockScreenRoot.height)
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: false
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.18) }
+        }
+
+        DropShadow {
+            id: clockShadow'''
+
+# Status in the top-right corner, and Shut Down / Restart / Sleep along the bottom
+CHROME = '''
+        // Ravana: battery and time, top right
+        RowLayout {
+            anchors.top: parent.top; anchors.right: parent.right
+            anchors.topMargin: 6; anchors.rightMargin: 14
+            spacing: 12
+            Battery {}
+            Text {
+                id: ravanaTime
+                property date now: new Date()
+                Timer { interval: 1000; running: true; repeat: true; onTriggered: ravanaTime.now = new Date() }
+                text: Qt.formatDate(now, "ddd d MMM") + "   " + Qt.formatTime(now, Qt.locale().timeFormat(Locale.ShortFormat))
+                color: "white"
+                font.family: "Inter"; font.pixelSize: 13; font.weight: Font.Medium
+            }
+        }
+
+        // Ravana: Shut Down / Restart / Sleep, round glass buttons at the bottom
+        Row {
+            id: ravanaPower
             anchors.horizontalCenter: parent.horizontalCenter
-            y: Math.round(parent.height * 0.10)
-            width: ravanaClockColumn.implicitWidth
-            height: ravanaClockColumn.implicitHeight
-            property date now: new Date()
-            Timer { interval: 1000; running: true; repeat: true; onTriggered: ravanaClock.now = new Date() }
-            Column {
-                id: ravanaClockColumn
-                spacing: -6
-                Image {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    source: "file:///usr/share/icons/hicolor/64x64/apps/ravana-logo-white.png"
-                    sourceSize: Qt.size(30, 30)
-                    opacity: 0.85
-                }
-                Item { width: 1; height: 14 }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(ravanaClock.now, "dddd d MMMM")
-                    color: "white"
-                    font.family: "Inter"; font.pixelSize: 24; font.weight: Font.DemiBold
-                    style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatTime(ravanaClock.now, "h:mm")
-                    color: "white"
-                    font.family: "Inter"; font.pixelSize: 116; font.weight: Font.Bold
-                    style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: Math.round(parent.height * 0.06)
+            spacing: 44
+            Repeater {
+                model: [
+                    { label: i18nd("plasma_shell_org.kde.plasma.desktop", "&Shut Down").replace("&", ""), icon: "system-shutdown", act: 0, show: sessionManagement.canShutdown },
+                    { label: i18nd("plasma_shell_org.kde.plasma.desktop", "&Restart").replace("&", ""), icon: "system-reboot", act: 1, show: sessionManagement.canReboot },
+                    { label: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "Slee&p").replace("&", ""), icon: "system-suspend", act: 2, show: sessionManagement.canSuspend }
+                ]
+                Column {
+                    id: powerItem
+                    required property var modelData
+                    visible: modelData.show
+                    spacing: 8
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 44; height: 44; radius: 22
+                        color: Qt.rgba(1, 1, 1, powerArea.containsMouse ? 0.30 : 0.18)
+                        border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.25)
+                        Kirigami.Icon {
+                            anchors.centerIn: parent
+                            width: 20; height: 20
+                            source: powerItem.modelData.icon
+                            color: "white"; isMask: true
+                        }
+                        MouseArea {
+                            id: powerArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                if (powerItem.modelData.act === 0) sessionManagement.requestShutdown();
+                                else if (powerItem.modelData.act === 1) sessionManagement.requestReboot();
+                                else sessionManagement.suspend();
+                            }
+                        }
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: powerItem.modelData.label
+                        color: "white"
+                        font.family: "Inter"; font.pixelSize: 12; font.weight: Font.Medium
+                    }
                 }
             }
         }
 '''
 
 EDITS = [
-    # KDE's clock and its shadow step aside for the Ravana clock
+    # KDE's big clock and its shadow are not part of this design
     ("visible: y > 0 && config.alwaysShowClock", "visible: false"),
     ("visible: !lockScreenUi.softwareRendering && config.alwaysShowClock", "visible: false"),
-    # insert the Ravana clock just before the user list model
-    ("        ListModel {\n            id: users", CLOCK + "\n        ListModel {\n            id: users"),
+    # sharp wallpaper above the blurred one, below everything else
+    ("\n        DropShadow {\n            id: clockShadow", SHARP),
+    # status and power row
+    ("        ListModel {\n            id: users", CHROME + "\n        ListModel {\n            id: users"),
+    # Plasma's small action buttons under the password and its footer give way to the above
+    ("visible: sessionManagement.canSuspend", "visible: false"),
+    ("visible: sessionManagement.canHibernate", "visible: false"),
+    ("visible: sessionManagement.canSwitchUser", "visible: false"),
+    ("        RowLayout {\n            id: footer", "        RowLayout {\n            id: footer\n            visible: false"),
 ]
 
 SHELL = Path("/usr/share/plasma/shells/org.kde.plasma.desktop/contents")

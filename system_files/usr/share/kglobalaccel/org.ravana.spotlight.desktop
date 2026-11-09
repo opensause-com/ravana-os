@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Ravana Search
+Exec=qs ipc -p /usr/share/ravana/shell call spotlight toggle
+Icon=search
+NoDisplay=true
+X-KDE-Shortcuts=Meta+Space,Alt+Space

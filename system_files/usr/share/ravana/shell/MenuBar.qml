@@ -144,7 +144,7 @@ PanelWindow {
         BarButton { icon: "ravana-controlcenter"; onClicked: controlCenter.visible = !controlCenter.visible }
         BarButton {
             icon: "search-symbolic"
-            onClicked: bar.run("dbus-send --session --type=method_call --dest=org.kde.krunner /App org.kde.krunner.App.toggleDisplay")
+            onClicked: bar.run("qs ipc -p /usr/share/ravana/shell call spotlight toggle")
         }
         Text {
             id: clockText

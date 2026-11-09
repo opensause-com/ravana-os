@@ -24,6 +24,12 @@ ShellRoot {
 
     // One Launchpad, on the first screen
     Launchpad { id: launchpad; screen: Quickshell.screens[0] }
+    Spotlight { id: spotlight; screen: Quickshell.screens[0] }
+    IpcHandler {
+        target: "spotlight"
+        function toggle(): void { spotlight.toggle(); }
+        function search(text: string): void { spotlight.open(text); }
+    }
 
     // `qs ipc -p /usr/share/ravana/shell call launchpad toggle` (used by the F4 shortcut)
     IpcHandler {

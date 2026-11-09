@@ -115,3 +115,59 @@ sed -i 's/^widgetStyle=Breeze$/widgetStyle=kvantum/' \
     /usr/share/plasma/look-and-feel/org.ravana.desktop/contents/defaults
 test -f /usr/lib64/qt6/plugins/styles/libkvantum.so || test -f /usr/lib/qt6/plugins/styles/libkvantum.so
 sed -i "/^\[Desktop Entry\]/a NoDisplay=true" /usr/share/applications/kvantummanager.desktop 2>/dev/null || true
+
+# --- Rounded selection pills in lists and sidebars (macOS System Settings style) ---
+# Kvantum draws selections from 9-slice SVG elements; replace KvMojave's square ones
+# (renamed out of the way) with rounded ones drawn off to the side of the canvas.
+python3 - "$DST/RavanaGlass.svg" <<'PY'
+import re, sys
+path = sys.argv[1]
+s = open(path, encoding="utf-8").read()
+R = 7          # corner radius
+E = 4          # edge strip length
+states = {"toggled": "#a51d34", "pressed": "#c3283f", "focused": "#2e2e34"}   # focused = hover
+s = re.sub(r'id="(itemview-(?:toggled|pressed|focused)(?:-[a-z]+)?)"', r'id="old-\1"', s)
+out = []
+for n, (state, col) in enumerate(states.items()):
+    ox, oy = 4000 + n * 40, 4000
+    f = f'fill="{col}"'
+    pid = f"itemview-{state}"
+    corners = {
+        "topleft": (0, 0, f"M0,{R} A{R},{R} 0 0 1 {R},0 L{R},{R} Z"),
+        "topright": (R + E, 0, f"M0,0 A{R},{R} 0 0 1 {R},{R} L0,{R} Z"),
+        "bottomleft": (0, R + E, f"M0,0 L{R},0 L{R},{R} A{R},{R} 0 0 1 0,0 Z"),
+        "bottomright": (R + E, R + E, f"M0,0 L{R},0 A{R},{R} 0 0 1 0,{R} Z"),
+    }
+    for part, (x, y, d) in corners.items():
+        out.append(f'<path id="{pid}-{part}" transform="translate({ox + x},{oy + y})" d="{d}" {f}/>')
+    for part, x, y, w, h in (("top", R, 0, E, R), ("bottom", R, R + E, E, R), ("left", 0, R, R, E),
+                             ("right", R + E, R, R, E)):
+        out.append(f'<rect id="{pid}-{part}" x="{ox + x}" y="{oy + y}" width="{w}" height="{h}" {f}/>')
+    out.append(f'<rect id="{pid}" x="{ox + R}" y="{oy + R}" width="{E}" height="{E}" {f}/>')
+s = s.replace("</svg>", "<g id=\"ravana-pills\">\n" + "\n".join(out) + "\n</g>\n</svg>")
+open(path, "w", encoding="utf-8").write(s)
+print("rounded itemview selections:", len(out), "elements")
+PY
+# The frame border sizes must match the new corner size
+python3 - "$DST/RavanaGlass.kvconfig" <<'PY'
+import re, sys
+path = sys.argv[1]
+lines = open(path, encoding="utf-8").read().splitlines()
+out, sec, done = [], None, set()
+want = {"frame.top": "7", "frame.bottom": "7", "frame.left": "7", "frame.right": "7"}
+for line in lines:
+    m = re.match(r"^\[(.+)\]$", line)
+    if m:
+        if sec == "ItemView":
+            out += [f"{k}={v}" for k, v in want.items() if k not in done]
+        sec = m.group(1)
+    elif sec == "ItemView":
+        k = line.split("=", 1)[0].strip()
+        if k in want:
+            line = f"{k}={want[k]}"; done.add(k)
+    out.append(line)
+if sec == "ItemView":
+    out += [f"{k}={v}" for k, v in want.items() if k not in done]
+open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
+PY
+grep -A12 '^\[ItemView\]' "$DST/RavanaGlass.kvconfig" | head -14

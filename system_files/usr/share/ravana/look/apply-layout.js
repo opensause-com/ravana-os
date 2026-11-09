@@ -8,7 +8,7 @@ for (var i = 0; i < ps.length; i++) {
     var ws = p.widgets();
     for (var j = 0; j < ws.length; j++) {
         var w = ws[j];
-        if (w.type == "org.kde.plasma.icontasks" || w.type == "org.kde.plasma.taskmanager") {
+        if (w.type == "org.kde.plasma.icontasks" || w.type == "org.kde.plasma.taskmanager" || w.type == "org.ravana.dockapps") {
             w.currentConfigGroup = ["General"];
             var l = w.readConfig("launchers", "");
             if (typeof l == "string") l = l.length ? l.split(",") : [];
@@ -26,7 +26,7 @@ loadTemplate("org.ravana.dock");
 if (pinned.length) {
     ps = panels();
     for (var i = 0; i < ps.length; i++) {
-        var ws = ps[i].widgets("org.kde.plasma.icontasks");
+        var ws = ps[i].widgets("org.ravana.dockapps");
         for (var j = 0; j < ws.length; j++) {
             ws[j].currentConfigGroup = ["General"];
             ws[j].writeConfig("launchers", pinned.join(","));

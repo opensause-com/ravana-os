@@ -1,4 +1,4 @@
-// Ravana dock (macOS-style): Launchpad | apps | Trash. Floating glass, centered, sized to its icons.
+// Ravana dock (macOS-style): Launchpad | apps | divider | Trash. Floating glass, centered, sized to its icons.
 var dock = new Panel;
 dock.location = "bottom";
 dock.height = Math.round(gridUnit * 3.9);
@@ -16,7 +16,7 @@ launchpad.writeConfig("showRecentApps", "false");
 launchpad.writeConfig("showRecentDocs", "false");
 launchpad.globalShortcut = "Alt+F1";
 
-var tasks = dock.addWidget("org.kde.plasma.icontasks");
+var tasks = dock.addWidget("org.ravana.dockapps");      // pinned + open apps, dots, names on hover
 tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", [
     "applications:org.kde.dolphin.desktop",
@@ -27,10 +27,5 @@ tasks.writeConfig("launchers", [
     "applications:org.kde.konsole.desktop",
     "applications:systemsettings.desktop"
 ].join(","));
-tasks.writeConfig("indicateAudioStreams", "true");
-tasks.writeConfig("iconSpacing", "1");
-tasks.writeConfig("maxStripes", "1");
-tasks.writeConfig("groupedTaskVisualization", "1");
 
-dock.addWidget("org.kde.plasma.marginsseparator");
 dock.addWidget("org.kde.plasma.trash");

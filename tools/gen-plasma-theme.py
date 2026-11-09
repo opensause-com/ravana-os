@@ -9,7 +9,8 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "system_files/usr/share/plasma/desktoptheme/ravana-glass"
 
-TINT = (22, 22, 26)          # glass tint (near-black, a touch of warmth)
+TINT = (22, 22, 26)          # popup glass tint (near-black, a touch of warmth)
+BAR_TINT = (62, 60, 66)      # menu bar / dock glass: lighter see-through grey, like the macOS dock
 RIM = 0.13                   # light rim opacity
 OUTLINE = 0.45               # dark outline opacity
 
@@ -18,9 +19,9 @@ def rgba(rgb, a):
     return f"rgb({rgb[0]},{rgb[1]},{rgb[2]})", f"{a:.3f}"
 
 
-def frame(prefix: str, R: int, alpha: float, ox: int = 0, oy: int = 0) -> str:
+def frame(prefix: str, R: int, alpha: float, ox: int = 0, oy: int = 0, tint=None) -> str:
     """Nine-slice rounded glass frame. Corners R x R, edges 1 px thick strips scaled by Plasma."""
-    fill, fa = rgba(TINT, alpha)
+    fill, fa = rgba(tint or TINT, alpha)
     pre = f"{prefix}-" if prefix else ""
     E = 4  # edge strip length (stretched)
     g = []
@@ -163,8 +164,9 @@ PANEL_R, DIALOG_R, TIP_R = 18, 14, 10
 if __name__ == "__main__":
     # Panels: the full-width menu bar shows only its bottom edge; the floating dock is fully rounded.
     for sub, a in (("", 0.86), ("translucent/", 0.50), ("opaque/", 1.0)):
+        bar_a = {"": 0.80, "translucent/": 0.36, "opaque/": 1.0}[sub]
         write(f"{sub}widgets/panel-background.svg", svg(
-            frame("", PANEL_R, a) + "\n" + mask(PANEL_R, 0, 60) + "\n" + shadow(22, 0, 140, 0.38) + "\n"
+            frame("", PANEL_R, bar_a, tint=BAR_TINT) + "\n" + mask(PANEL_R, 0, 60) + "\n" + shadow(22, 0, 140, 0.38) + "\n"
             + hints({"top": 5, "bottom": 5, "left": 10, "right": 10}, 400)))
         write(f"{sub}dialogs/background.svg", svg(
             frame("", DIALOG_R, min(1.0, a + 0.12)) + "\n" + mask(DIALOG_R, 0, 60) + "\n" + shadow(26, 0, 140, 0.45) + "\n"

@@ -31,7 +31,8 @@ def shortcut(sc):
     try:
         keys = ["+".join(str(k) for k in combo) for combo in sc]
         s = keys[0] if keys else ""
-        return (s.replace("Control", "⌃").replace("Shift", "⇧").replace("Alt", "⌥")
+        # On Ravana the ⌘ key gives Ctrl shortcuts (keyd), so Ctrl shows as ⌘ like on a Mac
+        return (s.replace("Control", "⌘").replace("Shift", "⇧").replace("Alt", "⌥")
                  .replace("Super", "⌘").replace("+", ""))
     except Exception:
         return ""

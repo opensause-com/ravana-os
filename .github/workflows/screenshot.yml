@@ -78,7 +78,7 @@ jobs:
           python3 - <<'PY' || true
           import glob, os
           from PIL import Image
-          for f in sorted(glob.glob("shots/[23]*.png") + glob.glob("shots/0[15]*.png")):
+          for f in sorted(glob.glob("shots/[2-9]*.png") + glob.glob("shots/0[15]*.png")):
               Image.open(f).convert("RGB").resize((1280, 720), Image.LANCZOS).save(
                   "shell-jpg/" + os.path.basename(f)[:-4] + ".jpg", quality=80)
           PY

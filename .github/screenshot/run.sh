@@ -76,7 +76,7 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   kill $LK 2>/dev/null; sleep 1
   G=$(ls /usr/libexec/ksmserver-logout-greeter /usr/lib64/libexec/ksmserver-logout-greeter 2>/dev/null | head -1)
   [ -n "$G" ] && { "$G" --windowed >> "$OUT/logout.log" 2>&1 & LG=$!; sleep 5; shot 40-logout-screen 1; kill $LG 2>/dev/null; sleep 1; }
-  $QS power show restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
+  $QS power ask restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1
   shot 23-shell-notification 2

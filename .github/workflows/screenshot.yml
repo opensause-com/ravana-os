@@ -74,21 +74,29 @@ jobs:
         run: |
           mkdir -p logs shell-jpg
           find shots -maxdepth 1 -type f ! -name '*.png' -exec cp {} logs/ \;
-          for f in shots/[23]*.png shots/0[15]*.png; do
-            [ -f "$f" ] && convert "$f" -resize 1280x720 -quality 80 "shell-jpg/$(basename "${f%.png}").jpg"
-          done
+          python3 -m pip install -q --user --break-system-packages pillow || true
+          python3 - <<'PY' || true
+          import glob, os
+          from PIL import Image
+          for f in sorted(glob.glob("shots/[23]*.png") + glob.glob("shots/0[15]*.png")):
+              Image.open(f).convert("RGB").resize((1280, 720), Image.LANCZOS).save(
+                  "shell-jpg/" + os.path.basename(f)[:-4] + ".jpg", quality=80)
+          PY
           du -sh logs shell-jpg shots
       - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: logs
           path: logs
           retention-days: 14
       - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: shell-jpg
           path: shell-jpg
           retention-days: 14
       - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: desktop-screenshots
           path: shots

@@ -6,7 +6,7 @@
         "Description": "Name of the app you're using, in bold, like the macOS menu bar",
         "Icon": "window",
         "Id": "org.ravana.appname",
-        "License": "GPL-2.0-or-later",
+        "License": "LicenseRef-Ravana-All-Rights-Reserved",
         "Name": "Ravana App Name",
         "Version": "1.0"
     },

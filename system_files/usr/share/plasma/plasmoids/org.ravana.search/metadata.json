@@ -6,7 +6,7 @@
         "Description": "Search apps, files, settings and the web (Meta+Space)",
         "Icon": "search",
         "Id": "org.ravana.search",
-        "License": "GPL-2.0-or-later",
+        "License": "LicenseRef-Ravana-All-Rights-Reserved",
         "Name": "Ravana Search",
         "Version": "1.0"
     },

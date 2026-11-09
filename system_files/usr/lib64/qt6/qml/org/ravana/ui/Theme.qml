@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Ravana OS. All rights reserved.
 /*
  * Ravana UI kit: design tokens shared by every Ravana surface
  * (menu bar widgets, Control Center, Spotlight, dialogs, Settings).

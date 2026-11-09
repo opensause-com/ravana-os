@@ -6,7 +6,7 @@
         "Description": "Wi-Fi, Bluetooth, Focus, appearance, display brightness and sound in one place",
         "Icon": "ravana-controlcenter",
         "Id": "org.ravana.controlcenter",
-        "License": "GPL-2.0-or-later",
+        "License": "LicenseRef-Ravana-All-Rights-Reserved",
         "Name": "Ravana Control Center",
         "Version": "1.0"
     },

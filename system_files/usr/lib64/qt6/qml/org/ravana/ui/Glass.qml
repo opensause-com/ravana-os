@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Ravana OS. All rights reserved.
 // Ravana UI kit: a rounded block sitting on the popup's frosted glass.
 import QtQuick
 

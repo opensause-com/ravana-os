@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Ravana OS. All rights reserved.
 // Ravana UI kit: round icon bubble (accent when on) + title + status line.
 // Clicking toggles; used for Wi-Fi, Bluetooth, Focus, Appearance.
 import QtQuick

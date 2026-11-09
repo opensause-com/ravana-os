@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Ravana OS. All rights reserved.
 // Ravana UI kit: small bold label above a group.
 import QtQuick
 

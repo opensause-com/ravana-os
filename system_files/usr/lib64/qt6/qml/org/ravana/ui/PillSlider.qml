@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Ravana OS. All rights reserved.
 // Ravana UI kit: wide pill slider with the icon inside the track (Control Center style).
 import QtQuick
 import org.kde.kirigami as Kirigami

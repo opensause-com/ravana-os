@@ -18,3 +18,8 @@ rm -f /etc/xdg/autostart/ravana-look-update.desktop
 # Search: Ravana Spotlight takes Meta+Space / Alt+Space; KRunner keeps Alt+F2
 K=/usr/share/applications/org.kde.krunner.desktop; [ -f "$K" ] && sed -i "s/^X-KDE-Shortcuts=.*/X-KDE-Shortcuts=Alt+F2,Search/" "$K"
 test -f /usr/share/kglobalaccel/org.ravana.spotlight.desktop
+
+# HUDs: KDE's volume/brightness keys report to Plasma's OSD service; Ravana answers it
+python3 -c 'import dbus, gi; from gi.repository import GLib' || \
+    dnf5 install -y --setopt=install_weak_deps=False python3-dbus python3-gobject-base
+systemctl --global enable ravana-osd.service

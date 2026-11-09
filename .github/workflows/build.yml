@@ -2,7 +2,9 @@ name: Build Ravana OS image
 
 on:
   push:
-    branches: [main, testing, ravana-shell]   # main -> :latest, testing -> :testing, ravana-shell -> :shell
+    branches: [main, testing]   # main -> :latest, testing -> :testing
+    # ravana-shell -> :shell is built only on request (Actions > Run workflow on ravana-shell);
+    # day-to-day shell changes go through the fast lane in screenshot.yml
     paths-ignore:
       - '**/*.md'
       - 'docs/**'

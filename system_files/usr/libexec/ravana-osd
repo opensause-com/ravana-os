@@ -1,0 +1,64 @@
+#!/usr/bin/python3 -I
+# Copyright (c) 2026 Ravana OS. All rights reserved.
+"""Ravana OSD bridge. KDE's volume/brightness/keyboard-light keys report to the
+on-screen-display service Plasma's shell used to own (org.kde.osdService on
+org.kde.plasmashell). Ravana Shell replaces Plasma's shell, so this answers those
+calls and hands them to Ravana Shell's HUD."""
+import subprocess
+import dbus, dbus.service
+from dbus.mainloop.glib import DBusGMainLoop
+from gi.repository import GLib
+
+SHELL = ["qs", "ipc", "-p", "/usr/share/ravana/shell", "call", "hud"]
+
+def hud(*args):
+    subprocess.Popen(SHELL + [str(a) for a in args],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+class Osd(dbus.service.Object):
+    I = "org.kde.osdService"
+
+    @dbus.service.method(I, in_signature="i")
+    def brightnessChanged(self, percent): hud("level", "brightness", percent)
+
+    @dbus.service.method(I, in_signature="i")
+    def keyboardBrightnessChanged(self, percent): hud("level", "keyboard", percent)
+
+    @dbus.service.method(I, in_signature="ii")
+    def volumeChanged(self, percent, maximum=100): hud("level", "volume", percent)
+
+    @dbus.service.method(I, in_signature="i")
+    def microphoneVolumeChanged(self, percent): hud("level", "microphone", percent)
+
+    @dbus.service.method(I, in_signature="iss")
+    def mediaPlayerVolumeChanged(self, percent, name, icon): hud("level", "volume", percent)
+
+    @dbus.service.method(I, in_signature="s")
+    def kbdLayoutChanged(self, name): hud("text", "input-keyboard-symbolic", name)
+
+    @dbus.service.method(I, in_signature="s")
+    def virtualDesktopChanged(self, name): pass   # the Spaces animation says it already
+
+    @dbus.service.method(I, in_signature="b")
+    def touchpadEnabledChanged(self, on): hud("text", "input-touchpad-symbolic", "Trackpad On" if on else "Trackpad Off")
+
+    @dbus.service.method(I, in_signature="b")
+    def wifiEnabledChanged(self, on): hud("text", "network-wireless-symbolic", "Wi-Fi On" if on else "Wi-Fi Off")
+
+    @dbus.service.method(I, in_signature="b")
+    def bluetoothEnabledChanged(self, on): hud("text", "network-bluetooth-symbolic", "Bluetooth On" if on else "Bluetooth Off")
+
+    @dbus.service.method(I, in_signature="b")
+    def wwanEnabledChanged(self, on): pass
+
+    @dbus.service.method(I, in_signature="ss")
+    def showText(self, icon, text): hud("text", icon, text)
+
+    @dbus.service.method(I, in_signature="ssi")
+    def showActionText(self, icon, text, extra=0): hud("text", icon, text)
+
+DBusGMainLoop(set_as_default=True)
+bus = dbus.SessionBus()
+name = dbus.service.BusName("org.kde.plasmashell", bus, do_not_queue=True)
+Osd(bus, "/org/kde/osdService")
+GLib.MainLoop().run()

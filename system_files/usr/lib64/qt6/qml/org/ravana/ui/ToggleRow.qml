@@ -11,7 +11,9 @@ Item {
     property string status
     property bool on: false
     property bool available: true
+    property bool expandable: false     // click the text to open details, the bubble to toggle
     signal toggled()
+    signal expanded()
 
     implicitHeight: 44
     opacity: available ? 1 : 0.45
@@ -31,6 +33,9 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         color: row.on ? Theme.accent : Theme.bubble
         Behavior on color { ColorAnimation { duration: Theme.normal } }
+        // a little spring when toggled
+        scale: mouse.pressed && mouse.mouseX < bubble.x + bubble.width + 4 ? 0.86 : 1
+        Behavior on scale { SpringAnimation { spring: 6; damping: 0.32; epsilon: 0.005 } }
         Kirigami.Icon {
             anchors.centerIn: parent
             width: 16; height: 16
@@ -74,6 +79,6 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         enabled: row.available
-        onClicked: row.toggled()
+        onClicked: m => (row.expandable && m.x > bubble.x + bubble.width + 4) ? row.expanded() : row.toggled()
     }
 }

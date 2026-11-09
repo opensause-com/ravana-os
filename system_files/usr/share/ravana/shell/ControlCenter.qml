@@ -5,6 +5,8 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.UPower
+import org.kde.kirigami as Kirigami
 import org.ravana.ui as R
 
 PopupWindow {
@@ -17,7 +19,26 @@ PopupWindow {
     visible: false
     color: "transparent"
     implicitWidth: 340 + 28
-    implicitHeight: col.implicitHeight + 2 * R.Theme.pad + 28
+    implicitHeight: (page ? detail.implicitHeight : col.implicitHeight) + 2 * R.Theme.pad + 28
+    onVisibleChanged: if (!visible) page = ""
+
+    // Expanded module ("" = the grid of modules)
+    property string page: ""
+    property var listRows: []
+    Process {
+        id: lister
+        stdout: StdioCollector {
+            onStreamFinished: cc.listRows = text.split("\n").filter(l => l.length).map(l => l.split("\t"))
+        }
+    }
+    function openPage(p) {
+        page = p; listRows = [];
+        lister.command = ["/usr/libexec/ravana-cc", p === "wifi" ? "wifi-list" : "bt-list"];
+        lister.running = true;
+    }
+    property real pageShift: 0
+    onPageChanged: { pageShift = 1; pageAnim.restart(); }
+    NumberAnimation { id: pageAnim; target: cc; property: "pageShift"; to: 0; duration: R.Theme.normal; easing.type: Easing.OutCubic }
 
     property var st: ({})
     function flag(k) { return st[k] === "1"; }
@@ -34,6 +55,7 @@ PopupWindow {
         }
     }
     Process { id: action }
+    function showPage(p) { visible = true; openPage(p); }
     Process { id: appearance; command: ["/usr/libexec/ravana-appearance", "toggle"] }
     function act(args) { action.command = ["/usr/libexec/ravana-cc"].concat(args); action.running = true; refreshSoon.restart(); }
     Timer { id: refreshSoon; interval: 600; onTriggered: status.running = true }
@@ -47,6 +69,9 @@ PopupWindow {
             anchors.fill: parent
             anchors.margins: R.Theme.pad
             spacing: R.Theme.gap
+            visible: !cc.page
+            opacity: 1 - cc.pageShift * 0.6
+            transform: Translate { x: cc.page ? 0 : -cc.pageShift * 30 }
 
             RowLayout {
                 Layout.fillWidth: true
@@ -68,6 +93,8 @@ PopupWindow {
                             status: !available ? qsTr("No Wi-Fi") : (!on ? qsTr("Off")
                                     : (cc.st.wifi_name || (cc.flag("net_wired") ? qsTr("Wired") : qsTr("Not connected"))))
                             onToggled: cc.act(["wifi", on ? "off" : "on"])
+                            expandable: available
+                            onExpanded: cc.openPage("wifi")
                         }
                         R.ToggleRow {
                             Layout.fillWidth: true
@@ -77,6 +104,8 @@ PopupWindow {
                             on: cc.flag("bt_on")
                             status: !available ? qsTr("Not available") : (!on ? qsTr("Off") : (cc.st.bt_devices || qsTr("On")))
                             onToggled: cc.act(["bluetooth", on ? "off" : "on"])
+                            expandable: available
+                            onExpanded: cc.openPage("bluetooth")
                         }
                     }
                 }
@@ -134,6 +163,138 @@ PopupWindow {
                         value: parseInt(cc.st.volume || "50") / 100
                         onReleased: v => cc.act(["volume", String(Math.round(v * 100))])
                     }
+                }
+            }
+            NowPlaying { Layout.fillWidth: true }
+            R.Glass {
+                Layout.fillWidth: true; Layout.preferredHeight: 52
+                visible: UPower.displayDevice && UPower.displayDevice.isLaptopBattery
+                RowLayout {
+                    anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14; spacing: 10
+                    Kirigami.Icon {
+                        implicitWidth: 20; implicitHeight: 20; isMask: true; color: R.Theme.text
+                        source: UPower.displayDevice && UPower.displayDevice.state === UPowerDeviceState.Charging
+                                ? "battery-full-charging-symbolic" : "battery-good-symbolic"
+                    }
+                    R.SectionLabel { Layout.fillWidth: true; text: qsTr("Battery") }
+                    Text {
+                        readonly property real p: UPower.displayDevice ? UPower.displayDevice.percentage : 0
+                        text: Math.round(p <= 1 ? p * 100 : p) + "%"
+                        color: R.Theme.secondaryText
+                        font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
+                    }
+                }
+            }
+        }
+
+        // Expanded module: Wi-Fi networks or Bluetooth devices
+        ColumnLayout {
+            id: detail
+            anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
+            anchors.margins: R.Theme.pad
+            spacing: 6
+            visible: !!cc.page
+            opacity: 1 - cc.pageShift * 0.6
+            transform: Translate { x: cc.pageShift * 30 }
+            RowLayout {
+                Layout.fillWidth: true
+                MouseArea {
+                    implicitWidth: 28; implicitHeight: 28
+                    onClicked: cc.page = ""
+                    Rectangle { anchors.fill: parent; radius: 14; color: R.Theme.bubble }
+                    Text { anchors.centerIn: parent; text: "‹"; color: R.Theme.text; font.pixelSize: 18 }
+                }
+                Text {
+                    Layout.fillWidth: true; leftPadding: 6
+                    text: cc.page === "wifi" ? qsTr("Wi-Fi") : qsTr("Bluetooth")
+                    color: R.Theme.text
+                    font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody + 2; font.weight: Font.Bold
+                }
+                Rectangle {     // the module's own switch
+                    readonly property bool on: cc.page === "wifi" ? cc.flag("wifi_on") : cc.flag("bt_on")
+                    implicitWidth: 38; implicitHeight: 22; radius: 11
+                    color: on ? R.Theme.accent : R.Theme.sliderTrack
+                    Behavior on color { ColorAnimation { duration: R.Theme.fast } }
+                    Rectangle {
+                        width: 18; height: 18; radius: 9; y: 2; color: "white"
+                        x: parent.on ? parent.width - width - 2 : 2
+                        Behavior on x { SpringAnimation { spring: 5; damping: 0.38; epsilon: 0.3 } }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: { cc.act([cc.page === "wifi" ? "wifi" : "bluetooth", parent.on ? "off" : "on"]); listRefresh.restart(); }
+                    }
+                    Timer { id: listRefresh; interval: 1500; onTriggered: cc.openPage(cc.page) }
+                }
+            }
+            R.SectionLabel {
+                Layout.topMargin: 4
+                text: cc.page === "wifi" ? qsTr("Networks") : qsTr("My Devices")
+                color: R.Theme.secondaryText
+                font.pixelSize: R.Theme.sizeCaption
+            }
+            Text {
+                visible: cc.listRows.length === 0
+                text: lister.running ? qsTr("Searching…") : (cc.page === "wifi" ? qsTr("No networks found") : qsTr("No paired devices"))
+                color: R.Theme.tertiaryText
+                font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
+                Layout.leftMargin: 6
+            }
+            Repeater {
+                model: cc.listRows
+                MouseArea {
+                    id: net
+                    required property var modelData
+                    readonly property bool wifi: cc.page === "wifi"
+                    readonly property bool active: wifi ? modelData[0] === "*" : modelData[2] === "1"
+                    readonly property string name: wifi ? modelData[1] : modelData[1]
+                    Layout.fillWidth: true
+                    implicitHeight: 34
+                    hoverEnabled: true
+                    onClicked: {
+                        cc.act(wifi ? ["wifi-connect", name] : ["bt-device", modelData[0]]);
+                        listRefresh.restart();
+                    }
+                    Rectangle { anchors.fill: parent; radius: R.Theme.radiusHighlight; color: R.Theme.hover; opacity: net.containsMouse ? 1 : 0 }
+                    RowLayout {
+                        anchors.fill: parent; anchors.leftMargin: 6; anchors.rightMargin: 8; spacing: 10
+                        Rectangle {
+                            implicitWidth: 26; implicitHeight: 26; radius: 13
+                            color: net.active ? R.Theme.accent : R.Theme.bubble
+                            Kirigami.Icon {
+                                anchors.centerIn: parent; width: 14; height: 14; isMask: true
+                                color: net.active ? R.Theme.textOnAccent : R.Theme.text
+                                source: !net.wifi ? "network-bluetooth-symbolic"
+                                    : parseInt(net.modelData[2]) > 66 ? "network-wireless-signal-excellent-symbolic"
+                                    : parseInt(net.modelData[2]) > 33 ? "network-wireless-signal-good-symbolic"
+                                    : "network-wireless-signal-weak-symbolic"
+                            }
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: net.name
+                            color: R.Theme.text; elide: Text.ElideRight
+                            font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
+                            font.weight: net.active ? Font.DemiBold : Font.Normal
+                        }
+                        Kirigami.Icon {
+                            visible: net.wifi && (net.modelData[3] || "").length > 0 && net.modelData[3] !== "--"
+                            implicitWidth: 12; implicitHeight: 12; isMask: true; color: R.Theme.tertiaryText
+                            source: "object-locked-symbolic"
+                        }
+                    }
+                }
+            }
+            MenuSeparator { Layout.fillWidth: true }
+            MouseArea {
+                Layout.fillWidth: true; implicitHeight: 28
+                onClicked: { cc.visible = false; settingsRun.running = true; }
+                Process { id: settingsRun; command: ["systemsettings", cc.page === "wifi" ? "kcm_networkmanagement" : "kcm_bluetooth"] }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter; leftPadding: 6
+                    text: cc.page === "wifi" ? qsTr("Wi-Fi Settings…") : qsTr("Bluetooth Settings…")
+                    color: R.Theme.text
+                    font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
                 }
             }
         }

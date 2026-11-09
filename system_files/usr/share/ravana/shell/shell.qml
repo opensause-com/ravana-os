@@ -20,7 +20,15 @@ ShellRoot {
     }
 
     // Ravana Shell is the notification server
-    Notifications { screen: Quickshell.screens[0] }
+    Notifications { id: notifications; screen: Quickshell.screens[0] }
+    NotificationCenter { id: notificationCenter; screen: Quickshell.screens[0]; history: notifications.history }
+    IpcHandler {
+        target: "notifications"
+        function toggle(): void { notificationCenter.toggle(); }
+    }
+
+    // Volume / brightness / keyboard-light HUD (fed by ravana-osd)
+    Hud { screen: Quickshell.screens[0] }
 
     // One Launchpad, on the first screen
     Launchpad { id: launchpad; screen: Quickshell.screens[0] }

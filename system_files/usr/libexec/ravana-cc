@@ -7,6 +7,10 @@
 #   ravana-cc mute toggle
 #   ravana-cc brightness <0-100>
 #   ravana-cc focus on|off            (Do Not Disturb)
+#   ravana-cc wifi-list               -> in-use<TAB>ssid<TAB>signal<TAB>security
+#   ravana-cc wifi-connect <ssid>     (known or open networks; otherwise opens Network settings)
+#   ravana-cc bt-list                 -> mac<TAB>name<TAB>connected
+#   ravana-cc bt-device <mac>         (connect / disconnect)
 set -u
 SINK=@DEFAULT_AUDIO_SINK@
 KW="$(command -v kwriteconfig6 || ls /usr/bin/kwriteconfig6 /usr/sbin/kwriteconfig6 2>/dev/null | head -1)"
@@ -82,5 +86,22 @@ case "${1:-status}" in
         else
             "$KW" --file plasmanotifyrc --group DoNotDisturb --key Until --delete
         fi ;;
-    *) echo "usage: ravana-cc status|wifi|bluetooth|volume|mute|brightness|focus" >&2; exit 2 ;;
+    wifi-list)
+        nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list --rescan auto 2>/dev/null \
+            | sed 's/\\:/\x01/g; s/:/\t/g; s/\x01/:/g' | awk -F'\t' '$2 != "" && !seen[$2]++' | head -12 ;;
+    wifi-connect)
+        nmcli con up id "$2" >/dev/null 2>&1 || nmcli dev wifi connect "$2" >/dev/null 2>&1 \
+            || (setsid systemsettings kcm_networkmanagement >/dev/null 2>&1 &) ;;
+    bt-list)
+        conn="$(bluetoothctl devices Connected 2>/dev/null | awk '{print $2}')"
+        bluetoothctl devices Paired 2>/dev/null | while read -r _ mac name; do
+            printf '%s\t%s\t%s\n' "$mac" "$name" "$(grep -qx "$mac" <<<"$conn" && echo 1 || echo 0)"
+        done ;;
+    bt-device)
+        if bluetoothctl devices Connected 2>/dev/null | grep -q " $2 "; then
+            bluetoothctl disconnect "$2" >/dev/null
+        else
+            bluetoothctl connect "$2" >/dev/null
+        fi ;;
+    *) echo "usage: ravana-cc status|wifi|bluetooth|volume|mute|brightness|focus|wifi-list|wifi-connect|bt-list|bt-device" >&2; exit 2 ;;
 esac

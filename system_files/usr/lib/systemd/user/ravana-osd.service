@@ -1,0 +1,13 @@
+[Unit]
+Description=Ravana OSD bridge (volume, brightness and keyboard-light HUDs)
+PartOf=graphical-session.target
+After=ravana-shell.service
+
+[Service]
+ExecStart=/usr/libexec/ravana-osd
+Restart=on-failure
+RestartSec=2
+Slice=session.slice
+
+[Install]
+WantedBy=plasma-workspace.target

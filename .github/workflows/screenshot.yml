@@ -2,7 +2,17 @@ name: Desktop screenshots
 
 # Boots the Ravana desktop headless in the cloud and screenshots it, so UI changes
 # can be checked without downloading or installing anything.
+#
+# Fast lane (push to ravana-shell): no image build. The last built :shell image is
+# started with this commit's system_files laid over it, so shell/UI changes are on
+# screen in ~10 minutes. A full image build runs only when asked for.
 on:
+  push:
+    branches: [ravana-shell]
+    paths:
+      - 'system_files/**'
+      - '.github/screenshot/**'
+      - '.github/workflows/screenshot.yml'
   workflow_run:
     workflows: ["Build Ravana OS image"]
     types: [completed]
@@ -13,9 +23,13 @@ on:
         description: Image tag
         default: testing
 
+concurrency:
+  group: screenshot-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   screenshot:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -35,11 +49,16 @@ jobs:
 
       - name: Screenshot the desktop
         run: |
-          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ravana-os:${{ inputs.tag || (github.event.workflow_run.head_branch == 'ravana-shell' && 'shell') || 'testing' }}"
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ravana-os:${{ inputs.tag || ((github.event.workflow_run.head_branch == 'ravana-shell' || github.ref_name == 'ravana-shell') && 'shell') || 'testing' }}"
           sudo podman pull -q "$IMAGE"
           mkdir -p shots
+          OVERLAY=()
+          if [ "${{ github.event_name }}" = push ]; then
+            echo "Fast lane: this commit's system_files over $IMAGE"
+            OVERLAY=(-v "$PWD/system_files:/overlay:ro")
+          fi
           sudo podman run --rm --privileged --security-opt label=disable --device /dev/dri \
-            -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" -v "$PWD/.github/screenshot/capture.py:/capture.py:ro" -v "$PWD/build_files/fedora-build.repo:/fedora-build.repo:ro" \
+            "${OVERLAY[@]}" -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" -v "$PWD/.github/screenshot/capture.py:/capture.py:ro" -v "$PWD/build_files/fedora-build.repo:/fedora-build.repo:ro" \
             "$IMAGE" bash /run.sh
           sudo chown -R "$USER" shots
           cat shots/steps.log || true

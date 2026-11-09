@@ -155,6 +155,8 @@ PanelWindow {
             font.weight: Font.Medium
             SystemClock { id: clock; precision: SystemClock.Minutes }
             text: Qt.formatDateTime(clock.date, "ddd d MMM") + "   " + Qt.formatTime(clock.date, Qt.locale().timeFormat(Locale.ShortFormat))
+            // the clock opens Notification Center
+            MouseArea { anchors.fill: parent; onClicked: bar.run("qs ipc -p /usr/share/ravana/shell call notifications toggle") }
         }
     }
 
@@ -172,7 +174,11 @@ PanelWindow {
     // `qs ipc -p /usr/share/ravana/shell call menu toggle` / `call controlcenter toggle` / `call appmenu open`
     readonly property bool primary: bar.screen === Quickshell.screens[0]
     IpcHandler { target: "menu"; enabled: bar.primary; function toggle(): void { ravanaMenu.visible = !ravanaMenu.visible; } }
-    IpcHandler { target: "controlcenter"; enabled: bar.primary; function toggle(): void { controlCenter.visible = !controlCenter.visible; } }
+    IpcHandler {
+        target: "controlcenter"; enabled: bar.primary
+        function toggle(): void { controlCenter.visible = !controlCenter.visible; }
+        function page(name: string): void { controlCenter.showPage(name); }
+    }
     IpcHandler {
         target: "appmenu"; enabled: bar.primary
         function first(): string {

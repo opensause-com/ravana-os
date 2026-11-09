@@ -130,7 +130,8 @@ jobs:
           grep -E "menuentry|search" /tmp/grub.cfg 2>/dev/null || true
 
       - name: Upload to Cloudflare R2
-        if: vars.R2_BUCKET != '' && (github.event_name != 'workflow_dispatch' || inputs.sourceforge)
+        # Only the AMD/Intel ISO goes to R2 (keeps the bucket inside the free 10 GB)
+        if: vars.R2_BUCKET != '' && matrix.image == 'ravana-os' && (github.event_name != 'workflow_dispatch' || inputs.sourceforge)
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

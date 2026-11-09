@@ -91,8 +91,51 @@ def logout():
         lo.write_text(t.replace('color: "black"\n        opacity: 0.85', 'color: "black"\n        opacity: 0.45'))
     print("logout screen: Ravana alert applied")
 
+# Password row, macOS style: a frosted capsule field and a round arrow button
+MAINBLOCK = SHELL / "lockscreen/MainBlock.qml"
+MB_MARK = "// ravana-mainblock-style v1"
+MB_EDITS = [
+    ('"@info:placeholder in text field", "Password")',
+     '"@info:placeholder in text field", "Enter Password")'),
+    ("            cursorVisible: visible\n",
+     "            cursorVisible: visible\n"
+     "            implicitWidth: 220\n"
+     "            leftPadding: 16; rightPadding: 16\n"
+     "            color: \"white\"\n"
+     "            background: Rectangle {\n"
+     "                radius: height / 2\n"
+     "                color: Qt.rgba(1, 1, 1, passwordBox.activeFocus ? 0.24 : 0.16)\n"
+     "                border.width: 1\n"
+     "                border.color: Qt.rgba(1, 1, 1, 0.22)\n"
+     "            }\n"),
+    ("            onClicked: sessionManager.startLogin()\n",
+     "            onClicked: sessionManager.startLogin()\n"
+     "            background: Rectangle {\n"
+     "                radius: height / 2\n"
+     "                color: Qt.rgba(1, 1, 1, loginButton.hovered ? 0.28 : 0.16)\n"
+     "                border.width: 1\n"
+     "                border.color: Qt.rgba(1, 1, 1, 0.22)\n"
+     "            }\n"),
+]
+
+def mainblock():
+    if not MAINBLOCK.exists():
+        return
+    orig = MAINBLOCK.with_suffix(".qml.kde")
+    s = (orig if orig.exists() else MAINBLOCK).read_text()
+    for old, _ in MB_EDITS:
+        if s.count(old) != 1:
+            print("WARNING: lock screen password row changed, keeping Plasma's:", old.splitlines()[0]); return
+    if not orig.exists():
+        shutil.copy2(MAINBLOCK, orig)
+    for old, new in MB_EDITS:
+        s = s.replace(old, new)
+    MAINBLOCK.write_text(MB_MARK + "\n" + s)
+    print("lock screen: Ravana password capsule applied")
+
 def main():
     logout()
+    mainblock()
     if not UI.exists():
         print("no Plasma lock screen at", UI); return 0
     s = UI.read_text()

@@ -18,7 +18,10 @@ chmod 666 /dev/dri/* 2>/dev/null || true
 { find /usr/share /usr/lib64/qt6/qml -name 'LockScreen*.qml' -o -name 'Logout*.qml' -o -name 'MainBlock.qml' -o -name 'Greeter*.qml' 2>/dev/null;
   ls -R /usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents | head -80; rpm -ql kscreenlocker plasma-workspace 2>/dev/null | grep -iE 'lockscreen|logout|greet' | head -60; } > "$OUT/lock-files.txt" 2>&1
 find /usr/share /usr/lib64/qt6/qml \( -path '*lockscreen*' -o -path '*logout*' -o -path '*kscreenlocker*' \) -name '*.qml' 2>/dev/null | tar czf "$OUT/lock-qml.tgz" -T - 2>/dev/null || true
-ls /usr/share/plasma/look-and-feel/ /usr/share/plasma-login-manager* /usr/share/sddm/themes 2>/dev/null > "$OUT/login-themes.txt"
+{ ls -la /etc/systemd/system/display-manager.service; rpm -qa | grep -iE "sddm|plasma-login|plasmalogin|gdm|greetd|lightdm" ;
+  ls /etc/plasmalogin* /etc/sddm* 2>&1; rpm -ql plasma-login-manager 2>/dev/null | grep -iE "qml|conf|theme|service" | head -60;
+  rpm -ql sddm 2>/dev/null | grep -iE "themes" | head; } > "$OUT/login-themes.txt" 2>&1
+rpm -ql plasma-login-manager 2>/dev/null | grep -E '\.qml$|\.js$' | tar czf "$OUT/login-qml.tgz" -T - 2>/dev/null || true
 ls -la /dev/dri >> "$OUT/kwin-info.txt" 2>&1
 
 cat > /home/ravana/session.sh <<'SESSION'

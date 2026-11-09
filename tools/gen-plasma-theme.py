@@ -212,12 +212,10 @@ if __name__ == "__main__":
     "X-Plasma-API": "5.0"
 }
 """)
-    # Vibrancy: blur plus a contrast/saturation boost of what's behind the glass, like macOS
+    # Blur only: KWin applies the contrast/saturation boost to a rectangle, not the rounded
+    # glass, which showed as a coloured square around the dock's corners
     write("plasmarc", """[ContrastEffect]
-enabled=true
-contrast=0.25
-intensity=1.6
-saturation=1.9
+enabled=false
 
 [BlurBehindEffect]
 enabled=true

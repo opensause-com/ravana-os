@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # GTK/libadwaita apps, Flatpaks, Firefox and Chrome get the same macOS-style look:
-# WhiteSur (red accent, built in the Containerfile's gtktheme stage) with the window
+# WhiteSur (prebuilt GTK 3 themes + red-accent libadwaita styling, from the gtktheme stage) with the window
 # buttons on the left (close, minimize, maximize) like everything else in Ravana.
 set -euxo pipefail
-DARK=WhiteSur-Dark-red
-LIGHT=WhiteSur-Light-red
+DARK=WhiteSur-Dark
+LIGHT=WhiteSur-Light
 ls /usr/share/themes
 test -d "/usr/share/themes/$DARK" && test -d "/usr/share/themes/$LIGHT"
 
@@ -36,7 +36,7 @@ cp -r "/usr/share/themes/$DARK" "/usr/share/themes/$LIGHT" /etc/skel/.local/shar
 cat > /usr/lib/tmpfiles.d/ravana-flatpak-theme.conf <<'TMP'
 # Flatpak apps: read the user's GTK settings and themes, use the Ravana GTK theme
 d /var/lib/flatpak/overrides 0755 root root -
-f /var/lib/flatpak/overrides/global 0644 root root - [Context]\nfilesystems=xdg-config/gtk-3.0:ro;xdg-config/gtk-4.0:ro;xdg-data/themes:ro;\n\n[Environment]\nGTK_THEME=WhiteSur-Dark-red\n
+f /var/lib/flatpak/overrides/global 0644 root root - [Context]\nfilesystems=xdg-config/gtk-3.0:ro;xdg-config/gtk-4.0:ro;xdg-data/themes:ro;\n\n[Environment]\nGTK_THEME=WhiteSur-Dark\n
 TMP
 
 # --- Chrome / Chromium: use the GTK look (WhiteSur traffic-light buttons) from the first run ---

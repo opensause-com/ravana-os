@@ -26,15 +26,19 @@ RUN dnf -y install --setopt=install_weak_deps=False gcc make && \
 FROM registry.fedoraproject.org/fedora:${FEDORA_VERSION} AS gtktheme
 ARG WS_VERSION=2026-09-10
 ARG WS_SHA256=65516c8f45da45c602471e31b4de0b6e9aed6eb3fc3820df16161d077245a1a2
-RUN dnf -y install --setopt=install_weak_deps=False sassc glib2-devel libxml2 bc which findutils xz && \
+RUN dnf -y install --setopt=install_weak_deps=False sassc glib2-devel libxml2 bc which findutils xz \
+        util-linux shadow-utils && \
     curl -fsSL -o /tmp/ws.tar.gz "https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/refs/tags/${WS_VERSION}.tar.gz" && \
     echo "${WS_SHA256}  /tmp/ws.tar.gz" | sha256sum -c - && \
-    tar xzf /tmp/ws.tar.gz -C /tmp && cd "/tmp/WhiteSur-gtk-theme-${WS_VERSION}" && \
+    tar xzf /tmp/ws.tar.gz -C /tmp && WS="/tmp/WhiteSur-gtk-theme-${WS_VERSION}" && \
     mkdir -p /out/usr/share/themes && \
-    ./install.sh -d /out/usr/share/themes -t red -c dark -c light -o normal && \
-    ./install.sh -l -t red -c dark && \
-    install -d /out/usr/share/ravana/gtk-4.0 && cp -rL /root/.config/gtk-4.0/. /out/usr/share/ravana/gtk-4.0/ && \
-    install -Dm644 COPYING /out/usr/share/licenses/whitesur-gtk-theme/COPYING && \
+    tar xJf "$WS/release/WhiteSur-Dark.tar.xz" -C /out/usr/share/themes && \
+    tar xJf "$WS/release/WhiteSur-Light.tar.xz" -C /out/usr/share/themes && \
+    useradd -m builder && cp -r "$WS" /home/builder/ws && chown -R builder /home/builder/ws && \
+    (runuser -u builder -- bash -c 'cd ~/ws && USER=builder HOME=/home/builder ./install.sh -l -t red -c dark' || true) && \
+    test -f /home/builder/.config/gtk-4.0/gtk.css && \
+    install -d /out/usr/share/ravana/gtk-4.0 && cp -rL /home/builder/.config/gtk-4.0/. /out/usr/share/ravana/gtk-4.0/ && \
+    install -Dm644 "$WS/COPYING" /out/usr/share/licenses/whitesur-gtk-theme/COPYING && \
     ls /out/usr/share/themes /out/usr/share/ravana/gtk-4.0
 
 # Rounded window corners on every window, macOS style (KDE-Rounded-Corners, GPL-3.0).

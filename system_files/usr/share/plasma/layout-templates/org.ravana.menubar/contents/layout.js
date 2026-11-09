@@ -1,4 +1,4 @@
-// Ravana menu bar (macOS-style):  Ravana menu | App name | app menus ........ status icons | search | clock
+// Ravana menu bar (macOS-style):  Ravana menu | App name | app menus ........ status icons | Control Center | search | clock
 var bar = new Panel;
 bar.location = "top";
 bar.height = Math.round(gridUnit * 1.6);
@@ -12,6 +12,7 @@ bar.addWidget("org.kde.plasma.panelspacer");
 
 var tray = bar.addWidget("org.kde.plasma.systemtray");
 
+bar.addWidget("org.ravana.controlcenter");
 bar.addWidget("org.ravana.search");
 
 var clock = bar.addWidget("org.kde.plasma.digitalclock");

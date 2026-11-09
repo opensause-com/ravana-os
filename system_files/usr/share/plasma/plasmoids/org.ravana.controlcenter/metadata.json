@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [{ "Name": "Ravana OS" }],
+        "Category": "System Information",
+        "Description": "Wi-Fi, Bluetooth, Focus, appearance, display brightness and sound in one place",
+        "Icon": "ravana-controlcenter",
+        "Id": "org.ravana.controlcenter",
+        "License": "GPL-2.0-or-later",
+        "Name": "Ravana Control Center",
+        "Version": "1.0"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

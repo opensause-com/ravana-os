@@ -95,7 +95,7 @@ fi
 for t in org.ravana.menubar org.ravana.dock; do
     test -f "/usr/share/plasma/layout-templates/$t/contents/layout.js"
 done
-for w in org.ravana.menu org.ravana.search org.ravana.appname org.ravana.launchpad org.ravana.dockapps; do
+for w in org.ravana.menu org.ravana.search org.ravana.appname org.ravana.launchpad org.ravana.dockapps org.ravana.controlcenter; do
     test -f "/usr/share/plasma/plasmoids/$w/contents/ui/main.qml"
 done
 
@@ -180,3 +180,6 @@ $KW --file /etc/xdg/kscreenlockerrc --group Greeter --group Wallpaper --group or
 
 # Refresh the icon cache so ravana-logo resolves everywhere
 gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
+
+# Ravana UI kit (QML design system used by Ravana's own surfaces) must import
+test -f /usr/lib64/qt6/qml/org/ravana/ui/qmldir

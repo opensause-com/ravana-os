@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Ravana Control Center backend.
+#   ravana-cc status                  -> key=value lines
+#   ravana-cc wifi on|off
+#   ravana-cc bluetooth on|off
+#   ravana-cc volume <0-100>
+#   ravana-cc mute toggle
+#   ravana-cc brightness <0-100>
+#   ravana-cc focus on|off            (Do Not Disturb)
+set -u
+SINK=@DEFAULT_AUDIO_SINK@
+KW="$(command -v kwriteconfig6 || ls /usr/bin/kwriteconfig6 /usr/sbin/kwriteconfig6 2>/dev/null | head -1)"
+KR="$(command -v kreadconfig6 || ls /usr/bin/kreadconfig6 /usr/sbin/kreadconfig6 2>/dev/null | head -1)"
+
+bright_dev() {   # KDE's per-display brightness object, if any
+    busctl --user --list tree org.kde.ScreenBrightness 2>/dev/null | grep -o '/org/kde/ScreenBrightness/display[0-9]*' | head -1
+}
+
+status() {
+    # Wi-Fi
+    if command -v nmcli >/dev/null; then
+        echo "wifi_available=$(nmcli -t -f TYPE dev 2>/dev/null | grep -qx wifi && echo 1 || echo 0)"
+        echo "wifi_on=$( [ "$(nmcli -t -f WIFI radio 2>/dev/null)" = enabled ] && echo 1 || echo 0)"
+        echo "wifi_name=$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | sed -n 's/^yes://p' | head -1)"
+        echo "net_wired=$(nmcli -t -f TYPE,STATE dev 2>/dev/null | grep -q '^ethernet:connected' && echo 1 || echo 0)"
+    else
+        echo "wifi_available=0"
+    fi
+    # Bluetooth
+    if command -v bluetoothctl >/dev/null && bluetoothctl list 2>/dev/null | grep -q Controller; then
+        echo "bt_available=1"
+        echo "bt_on=$(bluetoothctl show 2>/dev/null | grep -q 'Powered: yes' && echo 1 || echo 0)"
+        echo "bt_devices=$(bluetoothctl devices Connected 2>/dev/null | sed 's/^Device [^ ]* //' | paste -sd ', ')"
+    else
+        echo "bt_available=0"
+    fi
+    # Sound
+    if v="$(wpctl get-volume "$SINK" 2>/dev/null)"; then
+        echo "volume=$(awk '{printf "%d", $2 * 100 + 0.5}' <<<"$v")"
+        echo "muted=$(grep -q MUTED <<<"$v" && echo 1 || echo 0)"
+        echo "sound_available=1"
+    else
+        echo "sound_available=0"
+    fi
+    # Brightness
+    d="$(bright_dev)"
+    if [ -n "$d" ]; then
+        cur=$(busctl --user get-property org.kde.ScreenBrightness "$d" org.kde.ScreenBrightness.Display Brightness 2>/dev/null | awk '{print $2}')
+        max=$(busctl --user get-property org.kde.ScreenBrightness "$d" org.kde.ScreenBrightness.Display MaxBrightness 2>/dev/null | awk '{print $2}')
+        if [ -n "$cur" ] && [ -n "$max" ] && [ "$max" -gt 0 ]; then
+            echo "brightness_available=1"; echo "brightness=$(( cur * 100 / max ))"
+        else
+            echo "brightness_available=0"
+        fi
+    else
+        echo "brightness_available=0"
+    fi
+    # Focus (Plasma's Do Not Disturb)
+    until="$("$KR" --file plasmanotifyrc --group DoNotDisturb --key Until 2>/dev/null)"
+    if [ -n "$until" ] && [ "$(date -d "$until" +%s 2>/dev/null || echo 0)" -gt "$(date +%s)" ]; then
+        echo "focus_on=1"
+    else
+        echo "focus_on=0"
+    fi
+    # Appearance
+    echo "dark=$( "$KR" --file kdeglobals --group General --key ColorScheme 2>/dev/null | grep -qi light && echo 0 || echo 1)"
+}
+
+case "${1:-status}" in
+    status) status ;;
+    wifi) nmcli radio wifi "$2" ;;
+    bluetooth) bluetoothctl power "$2" >/dev/null ;;
+    volume) wpctl set-mute "$SINK" 0; wpctl set-volume "$SINK" "$(awk -v v="$2" 'BEGIN {printf "%.2f", v / 100}')" ;;
+    mute) wpctl set-mute "$SINK" toggle ;;
+    brightness)
+        d="$(bright_dev)"; [ -n "$d" ] || exit 1
+        max=$(busctl --user get-property org.kde.ScreenBrightness "$d" org.kde.ScreenBrightness.Display MaxBrightness | awk '{print $2}')
+        busctl --user call org.kde.ScreenBrightness "$d" org.kde.ScreenBrightness.Display SetBrightness iu $(( $2 * max / 100 )) 0 ;;
+    focus)
+        if [ "$2" = on ]; then
+            "$KW" --file plasmanotifyrc --group DoNotDisturb --key Until "2999-12-31T23:59:59"
+        else
+            "$KW" --file plasmanotifyrc --group DoNotDisturb --key Until --delete
+        fi ;;
+    *) echo "usage: ravana-cc status|wifi|bluetooth|volume|mute|brightness|focus" >&2; exit 2 ;;
+esac

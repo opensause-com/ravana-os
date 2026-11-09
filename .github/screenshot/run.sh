@@ -52,6 +52,15 @@ shot 04-ravana-menu
 send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript string:'print(JSON.stringify(panels().map(function(p){return {loc:p.location,len:p.lengthMode,h:p.height,widgets:p.widgets().map(function(w){return w.type})}})))' 
 dbus-send --session --type=method_call --print-reply --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript string:'print(JSON.stringify(panels().map(function(p){return {loc:p.location,len:p.lengthMode,h:p.height,widgets:p.widgets().map(function(w){return w.type})}})))' > "$OUT/panels.txt" 2>&1
 
+# Control Center: give it a shortcut, then trigger exactly that widget
+CC=$(dbus-send --session --print-reply --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript string:'
+var p = panels(); for (var i = 0; i < p.length; i++) { var w = p[i].widgets("org.ravana.controlcenter"); if (w.length) { w[0].globalShortcut = "Meta+Ctrl+F11"; print(w[0].id); } }' 2>/dev/null | grep -o '"[0-9]*' | tr -d '"' | head -1)
+log "control center widget id: ${CC:-none}"
+[ -n "$CC" ] && sleep 1 && send --dest=org.kde.kglobalaccel /component/plasmashell org.kde.kglobalaccel.Component.invokeShortcut string:"activate widget $CC"
+shot 10-control-center 3
+[ -n "$CC" ] && send --dest=org.kde.kglobalaccel /component/plasmashell org.kde.kglobalaccel.Component.invokeShortcut string:"activate widget $CC"
+sleep 1
+
 dolphin /usr/share >/dev/null 2>&1 &
 sleep 6
 shot 05-window 2

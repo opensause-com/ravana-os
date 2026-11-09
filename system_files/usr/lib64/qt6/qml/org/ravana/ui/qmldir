@@ -1,0 +1,6 @@
+module org.ravana.ui
+singleton Theme 1.0 Theme.qml
+Glass 1.0 Glass.qml
+ToggleRow 1.0 ToggleRow.qml
+PillSlider 1.0 PillSlider.qml
+SectionLabel 1.0 SectionLabel.qml

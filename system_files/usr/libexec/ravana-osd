@@ -1,6 +1,11 @@
 #!/usr/bin/python3 -I
 # Copyright (c) 2026 Ravana OS. All rights reserved.
-"""Ravana OSD bridge. KDE's volume/brightness/keyboard-light keys report to the
+"""Ravana session bridge.
+
+1. App menus: KDE's menu registrar (kded "appmenu") only publishes apps' menus while a
+   menu view is on screen, which it detects by the bus name org.kde.kappmenuview (Plasma's
+   Global Menu widget held it). Ravana Shell's menu bar is that view, so we hold it.
+2. OSD: KDE's volume/brightness/keyboard-light keys report to the
 on-screen-display service Plasma's shell used to own (org.kde.osdService on
 org.kde.plasmashell). Ravana Shell replaces Plasma's shell, so this answers those
 calls and hands them to Ravana Shell's HUD."""
@@ -59,6 +64,17 @@ class Osd(dbus.service.Object):
 
 DBusGMainLoop(set_as_default=True)
 bus = dbus.SessionBus()
-name = dbus.service.BusName("org.kde.plasmashell", bus, do_not_queue=True)
+views = dbus.service.BusName("org.kde.kappmenuview", bus, do_not_queue=True)
+# make sure the registrar is running and notices us
+try:
+    kded = dbus.Interface(bus.get_object("org.kde.kded6", "/kded"), "org.kde.kded6")
+    kded.loadModule("appmenu")
+    dbus.Interface(bus.get_object("org.kde.kappmenu", "/KAppMenu"), "org.kde.kappmenu").reconfigure()
+except dbus.DBusException:
+    pass
+try:
+    name = dbus.service.BusName("org.kde.plasmashell", bus, do_not_queue=True)
+except dbus.DBusException:
+    name = None     # a Plasma shell is running (KDE session): it owns the OSD itself
 Osd(bus, "/org/kde/osdService")
 GLib.MainLoop().run()

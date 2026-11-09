@@ -1,7 +1,7 @@
 [Unit]
-Description=Ravana OSD bridge (volume, brightness and keyboard-light HUDs)
+Description=Ravana session bridge (app menus, volume/brightness HUDs)
 PartOf=graphical-session.target
-After=ravana-shell.service
+After=plasma-kded6.service
 
 [Service]
 ExecStart=/usr/libexec/ravana-osd

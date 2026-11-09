@@ -68,6 +68,26 @@ jobs:
           grep -iE "ravana|error|qml|file:" shots/plasmashell.log | grep -v "^$" | head -60 || true
           cat shots/panels.txt || true
 
+      # Small artifacts so checking a run is quick even on a slow connection:
+      # logs (text), new-shell shots as compact JPEGs, and the full PNG set
+      - name: Compact copies
+        run: |
+          mkdir -p logs shell-jpg
+          find shots -maxdepth 1 -type f ! -name '*.png' -exec cp {} logs/ \;
+          for f in shots/[23]*.png shots/0[15]*.png; do
+            [ -f "$f" ] && convert "$f" -resize 1280x720 -quality 80 "shell-jpg/$(basename "${f%.png}").jpg"
+          done
+          du -sh logs shell-jpg shots
+      - uses: actions/upload-artifact@v7
+        with:
+          name: logs
+          path: logs
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        with:
+          name: shell-jpg
+          path: shell-jpg
+          retention-days: 14
       - uses: actions/upload-artifact@v7
         with:
           name: desktop-screenshots

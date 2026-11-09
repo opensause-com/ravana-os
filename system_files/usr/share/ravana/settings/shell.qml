@@ -206,17 +206,17 @@ ShellRoot {
                 Text { Layout.alignment: Qt.AlignHCenter; text: (app.about.version ? qsTr("Version %1").arg(app.about.version) : "") + (app.about.base ? "  ·  " + app.about.base : ""); color: R.Theme.secondaryText
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody }
             }
-            SettingsGroup {
-                SettingsRow { label: qsTr("Name"); detail: app.about.host || "—" }
-                SettingsRow { label: qsTr("Chip"); detail: app.about.chip || "—" }
-                SettingsRow { label: qsTr("Cores"); detail: app.about.cores || "—" }
-                SettingsRow { label: qsTr("Memory"); detail: app.about.memory || "—" }
-                SettingsRow { label: qsTr("Graphics"); detail: app.about.graphics || "—" }
-                SettingsRow { label: qsTr("Storage"); detail: app.about.disk || "—" }
-                SettingsRow { label: qsTr("Kernel"); detail: app.about.kernel || "—"; last: true }
+            R.SettingsGroup {
+                R.SettingsRow { label: qsTr("Name"); detail: app.about.host || "—" }
+                R.SettingsRow { label: qsTr("Chip"); detail: app.about.chip || "—" }
+                R.SettingsRow { label: qsTr("Cores"); detail: app.about.cores || "—" }
+                R.SettingsRow { label: qsTr("Memory"); detail: app.about.memory || "—" }
+                R.SettingsRow { label: qsTr("Graphics"); detail: app.about.graphics || "—" }
+                R.SettingsRow { label: qsTr("Storage"); detail: app.about.disk || "—" }
+                R.SettingsRow { label: qsTr("Kernel"); detail: app.about.kernel || "—"; last: true }
             }
-            SettingsGroup {
-                SettingsRow { label: qsTr("System Report…"); chevron: true; last: true; onClicked: app.run(["kinfocenter"]) }
+            R.SettingsGroup {
+                R.SettingsRow { label: qsTr("System Report…"); chevron: true; last: true; onClicked: app.run(["kinfocenter"]) }
             }
         }
     }
@@ -224,14 +224,14 @@ ShellRoot {
         id: updatePage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
+            R.SettingsGroup {
                 footer: qsTr("Ravana updates arrive as a whole, tested system image. Your files and apps are never touched, and the previous version stays available at startup.")
-                SettingsRow { label: qsTr("Version"); detail: app.about.image || app.about.version || "—" }
-                SettingsRow { label: qsTr("Update channel"); detail: app.about.channel || "—"; last: true }
+                R.SettingsRow { label: qsTr("Version"); detail: app.about.image || app.about.version || "—" }
+                R.SettingsRow { label: qsTr("Update channel"); detail: app.about.channel || "—"; last: true }
             }
             RowLayout {
                 Item { Layout.fillWidth: true }
-                PushButton { text: qsTr("Check for Updates…"); primary: true; onClicked: app.run(["gtk-launch", "ravana-update"]) }
+                R.PushButton { text: qsTr("Check for Updates…"); primary: true; onClicked: app.run(["gtk-launch", "ravana-update"]) }
             }
         }
     }
@@ -239,16 +239,16 @@ ShellRoot {
         id: wifiPage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
-                SettingsRow { label: qsTr("Wi-Fi"); icon: "network-wireless-symbolic"; last: true
-                    ToggleSwitch { on: app.flag("wifi_on"); onToggled: app.cc(["wifi", on ? "off" : "on"]) } }
+            R.SettingsGroup {
+                R.SettingsRow { label: qsTr("Wi-Fi"); icon: "network-wireless-symbolic"; last: true
+                    R.ToggleSwitch { on: app.flag("wifi_on"); onToggled: app.cc(["wifi", on ? "off" : "on"]) } }
             }
-            SettingsGroup {
+            R.SettingsGroup {
                 title: qsTr("Known and nearby networks")
-                SettingsRow { visible: app.rows.length === 0; label: lister.running ? qsTr("Searching…") : qsTr("No networks found"); last: true }
+                R.SettingsRow { visible: app.rows.length === 0; label: lister.running ? qsTr("Searching…") : qsTr("No networks found"); last: true }
                 Repeater {
                     model: app.rows
-                    SettingsRow {
+                    R.SettingsRow {
                         required property var modelData
                         required property int index
                         label: modelData[1]
@@ -259,23 +259,23 @@ ShellRoot {
                     }
                 }
             }
-            RowLayout { Item { Layout.fillWidth: true } PushButton { text: qsTr("Advanced…"); onClicked: app.kcm("kcm_networkmanagement") } }
+            RowLayout { Item { Layout.fillWidth: true } R.PushButton { text: qsTr("Advanced…"); onClicked: app.kcm("kcm_networkmanagement") } }
         }
     }
     Component {
         id: btPage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
-                SettingsRow { label: qsTr("Bluetooth"); icon: "network-bluetooth-symbolic"; last: true
-                    ToggleSwitch { on: app.flag("bt_on"); onToggled: app.cc(["bluetooth", on ? "off" : "on"]) } }
+            R.SettingsGroup {
+                R.SettingsRow { label: qsTr("Bluetooth"); icon: "network-bluetooth-symbolic"; last: true
+                    R.ToggleSwitch { on: app.flag("bt_on"); onToggled: app.cc(["bluetooth", on ? "off" : "on"]) } }
             }
-            SettingsGroup {
+            R.SettingsGroup {
                 title: qsTr("My Devices")
-                SettingsRow { visible: app.rows.length === 0; label: qsTr("No paired devices"); last: true }
+                R.SettingsRow { visible: app.rows.length === 0; label: qsTr("No paired devices"); last: true }
                 Repeater {
                     model: app.rows
-                    SettingsRow {
+                    R.SettingsRow {
                         required property var modelData
                         required property int index
                         label: modelData[1]
@@ -286,44 +286,44 @@ ShellRoot {
                     }
                 }
             }
-            RowLayout { Item { Layout.fillWidth: true } PushButton { text: qsTr("Pair a New Device…"); onClicked: app.kcm("kcm_bluetooth") } }
+            RowLayout { Item { Layout.fillWidth: true } R.PushButton { text: qsTr("Pair a New Device…"); onClicked: app.kcm("kcm_bluetooth") } }
         }
     }
     Component {
         id: soundPage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
+            R.SettingsGroup {
                 title: qsTr("Output volume")
-                SettingsRow { label: ""; last: true
+                R.SettingsRow { label: ""; last: true
                     R.PillSlider { implicitWidth: pageCol.width - 40; iconName: "audio-volume-high-symbolic"
                         value: parseInt(app.st.volume || "50") / 100
                         onReleased: v => app.cc(["volume", String(Math.round(v * 100))]) } }
             }
-            SettingsGroup {
-                SettingsRow { label: qsTr("Mute"); last: true
-                    ToggleSwitch { on: app.flag("muted"); onToggled: app.cc(["mute", "toggle"]) } }
+            R.SettingsGroup {
+                R.SettingsRow { label: qsTr("Mute"); last: true
+                    R.ToggleSwitch { on: app.flag("muted"); onToggled: app.cc(["mute", "toggle"]) } }
             }
-            RowLayout { Item { Layout.fillWidth: true } PushButton { text: qsTr("Devices and Advanced…"); onClicked: app.kcm("kcm_pulseaudio") } }
+            RowLayout { Item { Layout.fillWidth: true } R.PushButton { text: qsTr("Devices and Advanced…"); onClicked: app.kcm("kcm_pulseaudio") } }
         }
     }
     Component {
         id: focusPage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
+            R.SettingsGroup {
                 footer: qsTr("Focus silences notifications until you turn it off. Critical alerts still come through.")
-                SettingsRow { label: qsTr("Do Not Disturb"); icon: "notifications-disabled-symbolic"; last: true
-                    ToggleSwitch { on: app.flag("focus_on"); onToggled: app.cc(["focus", on ? "off" : "on"]) } }
+                R.SettingsRow { label: qsTr("Do Not Disturb"); icon: "notifications-disabled-symbolic"; last: true
+                    R.ToggleSwitch { on: app.flag("focus_on"); onToggled: app.cc(["focus", on ? "off" : "on"]) } }
             }
-            RowLayout { Item { Layout.fillWidth: true } PushButton { text: qsTr("Notification Settings…"); onClicked: app.kcm("kcm_notifications") } }
+            RowLayout { Item { Layout.fillWidth: true } R.PushButton { text: qsTr("Notification Settings…"); onClicked: app.kcm("kcm_notifications") } }
         }
     }
     Component {
         id: appearancePage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
+            R.SettingsGroup {
                 title: qsTr("Appearance")
                 footer: qsTr("Ravana's look is the same everywhere: menus, apps, browsers and games' launchers follow it.")
                 Item {
@@ -362,10 +362,10 @@ ShellRoot {
                     }
                 }
             }
-            SettingsGroup {
-                SettingsRow { label: qsTr("Accent colour"); detail: qsTr("Ravana Red")
+            R.SettingsGroup {
+                R.SettingsRow { label: qsTr("Accent colour"); detail: qsTr("Ravana Red")
                     Rectangle { width: 16; height: 16; radius: 8; color: R.Theme.accent } }
-                SettingsRow { label: qsTr("Window buttons"); detail: qsTr("Red · Yellow · Green, on the left"); last: true }
+                R.SettingsRow { label: qsTr("Window buttons"); detail: qsTr("Red · Yellow · Green, on the left"); last: true }
             }
         }
     }
@@ -373,17 +373,17 @@ ShellRoot {
         id: displaysPage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
+            R.SettingsGroup {
                 title: qsTr("Brightness")
-                SettingsRow { visible: !app.flag("brightness_available"); label: qsTr("This display's brightness is set on the display itself."); last: true }
-                SettingsRow { visible: app.flag("brightness_available"); label: ""; last: true
+                R.SettingsRow { visible: !app.flag("brightness_available"); label: qsTr("This display's brightness is set on the display itself."); last: true }
+                R.SettingsRow { visible: app.flag("brightness_available"); label: ""; last: true
                     R.PillSlider { implicitWidth: pageCol.width - 40; iconName: "brightness-high-symbolic"
                         value: parseInt(app.st.brightness || "50") / 100
                         onReleased: v => app.cc(["brightness", String(Math.round(v * 100))]) } }
             }
-            SettingsGroup {
-                SettingsRow { label: qsTr("Resolution, scale and arrangement"); chevron: true; onClicked: app.kcm("kcm_kscreen") }
-                SettingsRow { label: qsTr("Night Shift"); chevron: true; last: true; onClicked: app.kcm("kcm_nightlight") }
+            R.SettingsGroup {
+                R.SettingsRow { label: qsTr("Resolution, scale and arrangement"); chevron: true; onClicked: app.kcm("kcm_kscreen") }
+                R.SettingsRow { label: qsTr("Night Shift"); chevron: true; last: true; onClicked: app.kcm("kcm_nightlight") }
             }
         }
     }
@@ -391,34 +391,34 @@ ShellRoot {
         id: trackpadPage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
+            R.SettingsGroup {
                 title: qsTr("Gestures")
-                SettingsRow { label: qsTr("Mission Control"); detail: qsTr("Swipe up with three fingers") }
-                SettingsRow { label: qsTr("App Exposé"); detail: qsTr("Swipe down with three fingers") }
-                SettingsRow { label: qsTr("Switch between Spaces"); detail: qsTr("Swipe left or right with three fingers") }
-                SettingsRow { label: qsTr("Launchpad"); detail: qsTr("Swipe up with four fingers, or pinch") }
-                SettingsRow { label: qsTr("Show Desktop"); detail: qsTr("Spread with four fingers") }
-                SettingsRow { label: qsTr("Notification Center"); detail: qsTr("Swipe left with four fingers"); last: true }
+                R.SettingsRow { label: qsTr("Mission Control"); detail: qsTr("Swipe up with three fingers") }
+                R.SettingsRow { label: qsTr("App Exposé"); detail: qsTr("Swipe down with three fingers") }
+                R.SettingsRow { label: qsTr("Switch between Spaces"); detail: qsTr("Swipe left or right with three fingers") }
+                R.SettingsRow { label: qsTr("Launchpad"); detail: qsTr("Swipe up with four fingers, or pinch") }
+                R.SettingsRow { label: qsTr("Show Desktop"); detail: qsTr("Spread with four fingers") }
+                R.SettingsRow { label: qsTr("Notification Center"); detail: qsTr("Swipe left with four fingers"); last: true }
             }
-            RowLayout { Item { Layout.fillWidth: true } PushButton { text: qsTr("Tracking, Tap and Scrolling…"); onClicked: app.kcm("kcm_touchpad") } }
+            RowLayout { Item { Layout.fillWidth: true } R.PushButton { text: qsTr("Tracking, Tap and Scrolling…"); onClicked: app.kcm("kcm_touchpad") } }
         }
     }
     Component {
         id: desktopPage
         ColumnLayout {
             spacing: 18
-            SettingsGroup {
+            R.SettingsGroup {
                 title: qsTr("Keyboard shortcuts")
-                SettingsRow { label: qsTr("Spotlight"); detail: "⌘ Space" }
-                SettingsRow { label: qsTr("Launchpad"); detail: "F4" }
-                SettingsRow { label: qsTr("Switch apps"); detail: "⌘ Tab" }
-                SettingsRow { label: qsTr("Mission Control"); detail: "⌃ ↑" }
-                SettingsRow { label: qsTr("Screenshot"); detail: "⇧ ⌘ 3 / 4 / 5" }
-                SettingsRow { label: qsTr("Lock Screen"); detail: "⌃ ⌘ Q"; last: true }
+                R.SettingsRow { label: qsTr("Spotlight"); detail: "⌘ Space" }
+                R.SettingsRow { label: qsTr("Launchpad"); detail: "F4" }
+                R.SettingsRow { label: qsTr("Switch apps"); detail: "⌘ Tab" }
+                R.SettingsRow { label: qsTr("Mission Control"); detail: "⌃ ↑" }
+                R.SettingsRow { label: qsTr("Screenshot"); detail: "⇧ ⌘ 3 / 4 / 5" }
+                R.SettingsRow { label: qsTr("Lock Screen"); detail: "⌃ ⌘ Q"; last: true }
             }
-            SettingsGroup {
-                SettingsRow { label: qsTr("Spaces (virtual desktops)"); chevron: true; onClicked: app.kcm("kcm_kwin_virtualdesktops") }
-                SettingsRow { label: qsTr("Window behaviour"); chevron: true; last: true; onClicked: app.kcm("kcm_kwinoptions") }
+            R.SettingsGroup {
+                R.SettingsRow { label: qsTr("Spaces (virtual desktops)"); chevron: true; onClicked: app.kcm("kcm_kwin_virtualdesktops") }
+                R.SettingsRow { label: qsTr("Window behaviour"); chevron: true; last: true; onClicked: app.kcm("kcm_kwinoptions") }
             }
         }
     }
@@ -440,11 +440,11 @@ ShellRoot {
                 gaming: ["kcm_gamecontroller", qsTr("Controllers and Game Mode. Steam's Game Mode is in the Ravana menu.")]
             })
             readonly property var entry: map[app.page] || ["", ""]
-            SettingsGroup {
-                SettingsRow { label: lp.entry[1] || ""; last: true }
+            R.SettingsGroup {
+                R.SettingsRow { label: lp.entry[1] || ""; last: true }
             }
             RowLayout { Item { Layout.fillWidth: true }
-                PushButton { text: qsTr("Open…"); primary: true; onClicked: app.kcm(lp.entry[0]) } }
+                R.PushButton { text: qsTr("Open…"); primary: true; onClicked: app.kcm(lp.entry[0]) } }
         }
     }
 }

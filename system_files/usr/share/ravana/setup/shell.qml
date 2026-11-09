@@ -10,7 +10,6 @@ import Quickshell.Io
 import Quickshell.Wayland
 import org.kde.kirigami as Kirigami
 import org.ravana.ui as R
-import "../settings"
 
 ShellRoot {
     id: app
@@ -146,12 +145,12 @@ ShellRoot {
                         Heading { text: qsTr("Get online") }
                         Body { text: app.st.net_wired === "1" ? qsTr("You're connected by cable. You can skip this step.")
                                     : qsTr("Pick a Wi-Fi network. Secured networks ask for their password.") }
-                        SettingsGroup {
+                        R.SettingsGroup {
                             Layout.topMargin: 12
-                            SettingsRow { visible: app.nets.length === 0; label: lister.running ? qsTr("Looking for networks…") : qsTr("No Wi-Fi networks found"); last: true }
+                            R.SettingsRow { visible: app.nets.length === 0; label: lister.running ? qsTr("Looking for networks…") : qsTr("No Wi-Fi networks found"); last: true }
                             Repeater {
                                 model: app.nets.slice(0, 5)
-                                SettingsRow {
+                                R.SettingsRow {
                                     required property var modelData
                                     required property int index
                                     label: modelData[1]
@@ -166,14 +165,14 @@ ShellRoot {
                     // 3 — Gestures and keys
                     Page {
                         Heading { text: qsTr("Move like a pro") }
-                        SettingsGroup {
+                        R.SettingsGroup {
                             Layout.topMargin: 12
-                            SettingsRow { label: qsTr("Search anything"); detail: "⌘ Space" }
-                            SettingsRow { label: qsTr("All your apps"); detail: qsTr("F4 · four fingers up") }
-                            SettingsRow { label: qsTr("Switch apps"); detail: "⌘ Tab" }
-                            SettingsRow { label: qsTr("See every window"); detail: qsTr("three fingers up") }
-                            SettingsRow { label: qsTr("Switch desktops"); detail: qsTr("three fingers sideways") }
-                            SettingsRow { label: qsTr("Screenshot"); detail: "⇧ ⌘ 4"; last: true }
+                            R.SettingsRow { label: qsTr("Search anything"); detail: "⌘ Space" }
+                            R.SettingsRow { label: qsTr("All your apps"); detail: qsTr("F4 · four fingers up") }
+                            R.SettingsRow { label: qsTr("Switch apps"); detail: "⌘ Tab" }
+                            R.SettingsRow { label: qsTr("See every window"); detail: qsTr("three fingers up") }
+                            R.SettingsRow { label: qsTr("Switch desktops"); detail: qsTr("three fingers sideways") }
+                            R.SettingsRow { label: qsTr("Screenshot"); detail: "⇧ ⌘ 4"; last: true }
                         }
                     }
                     // 4 — Ready
@@ -206,9 +205,9 @@ ShellRoot {
                 anchors.bottom: parent.bottom; anchors.bottomMargin: 28
                 anchors.right: parent.right; anchors.rightMargin: 40
                 spacing: 10
-                PushButton { visible: app.step > 0 && app.step < app.steps - 1; text: qsTr("Back"); onClicked: app.step-- }
-                PushButton { visible: app.step > 0 && app.step < app.steps - 1; text: qsTr("Skip"); onClicked: app.step++ }
-                PushButton {
+                R.PushButton { visible: app.step > 0 && app.step < app.steps - 1; text: qsTr("Back"); onClicked: app.step-- }
+                R.PushButton { visible: app.step > 0 && app.step < app.steps - 1; text: qsTr("Skip"); onClicked: app.step++ }
+                R.PushButton {
                     primary: true
                     text: app.step === 0 ? qsTr("Get Started") : app.step === app.steps - 1 ? qsTr("Start Using Ravana") : qsTr("Continue")
                     onClicked: app.step === app.steps - 1 ? app.finish() : app.step++

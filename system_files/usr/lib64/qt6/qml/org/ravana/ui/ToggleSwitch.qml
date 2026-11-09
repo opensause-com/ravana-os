@@ -1,15 +1,14 @@
 // Copyright (c) 2026 Ravana OS. All rights reserved.
 // Ravana switch: red when on, white knob with a soft spring.
 import QtQuick
-import org.ravana.ui as R
 
 Rectangle {
     id: sw
     property bool on: false
     signal toggled()
     implicitWidth: 40; implicitHeight: 24; radius: 12
-    color: on ? R.Theme.accent : R.Theme.sliderTrack
-    Behavior on color { ColorAnimation { duration: R.Theme.fast } }
+    color: on ? Theme.accent : Theme.sliderTrack
+    Behavior on color { ColorAnimation { duration: Theme.fast } }
     Rectangle {
         width: 20; height: 20; radius: 10; y: 2
         x: sw.on ? sw.width - width - 2 : 2

@@ -3,7 +3,6 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
-import org.ravana.ui as R
 
 Item {
     id: row
@@ -27,7 +26,7 @@ Item {
     Rectangle {
         anchors.fill: parent; anchors.margins: 2
         radius: 8
-        color: R.Theme.hover
+        color: Theme.hover
         visible: area.containsMouse
     }
     RowLayout {
@@ -37,28 +36,28 @@ Item {
         Kirigami.Icon {
             visible: row.icon.length > 0
             implicitWidth: 18; implicitHeight: 18
-            source: row.icon; isMask: true; color: R.Theme.text
+            source: row.icon; isMask: true; color: Theme.text
         }
         Text {
             Layout.fillWidth: true
             text: row.label
             elide: Text.ElideRight
-            color: R.Theme.text
-            font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
+            color: Theme.text
+            font.family: Theme.fontFamily; font.pixelSize: Theme.sizeBody
         }
         Text {
             visible: row.detail.length > 0
             text: row.detail
             Layout.maximumWidth: row.width * 0.55
             elide: Text.ElideMiddle
-            color: R.Theme.secondaryText
-            font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
+            color: Theme.secondaryText
+            font.family: Theme.fontFamily; font.pixelSize: Theme.sizeBody
         }
         Item { id: slot; implicitWidth: childrenRect.width; implicitHeight: childrenRect.height; Layout.alignment: Qt.AlignVCenter }
         Text {
             visible: row.chevron
             text: "›"
-            color: R.Theme.tertiaryText
+            color: Theme.tertiaryText
             font.pixelSize: 18
         }
     }
@@ -67,6 +66,6 @@ Item {
         anchors.bottom: parent.bottom
         anchors.left: parent.left; anchors.right: parent.right; anchors.leftMargin: 12
         height: 1
-        color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.07)
+        color: Theme.dark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.07)
     }
 }

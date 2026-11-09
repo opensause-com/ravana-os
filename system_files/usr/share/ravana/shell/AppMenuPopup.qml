@@ -15,6 +15,8 @@ PopupWindow {
     property Item anchorItem
     property bool side: false          // submenu: open to the right of anchorItem
     signal triggered()
+    signal closing()
+    onVisibleChanged: if (!visible) closing()
 
     anchor.item: anchorItem
     anchor.rect.x: side ? (anchorItem ? anchorItem.width + 2 : 0) : -10
@@ -86,20 +88,20 @@ PopupWindow {
                                 color: row.containsMouse && row.enabled ? R.Theme.textOnAccent : R.Theme.tertiaryText
                                 font.family: R.Theme.fontFamily; font.pixelSize: modelData.submenu ? 16 : R.Theme.sizeBody
                             }
-                            Loader {
+                            QtObject {
                                 id: sub
-                                active: false
-                                function open() { active = true; if (item) item.visible = true; }
-                                sourceComponent: Component {
-                                    AppMenuPopup {
-                                        items: modelData.children
-                                        service: pop.service
-                                        objectPath: pop.objectPath
-                                        anchorItem: row
-                                        side: true
-                                        visible: true
-                                        onTriggered: { pop.visible = false; pop.triggered(); }
+                                property var popup: null
+                                // created from the file: a QML type can't contain itself directly
+                                function open() {
+                                    if (!popup) {
+                                        popup = Qt.createComponent("AppMenuPopup.qml").createObject(row, {
+                                            items: modelData.children, service: pop.service, objectPath: pop.objectPath,
+                                            anchorItem: row, side: true });
+                                        if (!popup) return;
+                                        popup.triggered.connect(() => { pop.visible = false; pop.triggered(); });
+                                        pop.closing.connect(() => { if (sub.popup) sub.popup.visible = false; });
                                     }
+                                    popup.visible = true;
                                 }
                             }
                         }

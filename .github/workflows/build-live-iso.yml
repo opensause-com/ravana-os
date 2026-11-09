@@ -137,6 +137,8 @@ jobs:
           R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
           R2_BUCKET: ${{ vars.R2_BUCKET }}
           R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
+          R2_CHANNEL: ${{ vars.R2_CHANNEL }}
+          R2_EDITIONS: ${{ vars.R2_EDITIONS }}
         run: scripts/r2-upload.sh "$CHANNEL" "output/$ISO"
 
       - name: Upload to SourceForge
@@ -205,10 +207,10 @@ jobs:
             echo "|---|---|"
             R2="${{ vars.R2_PUBLIC_URL }}"
             if [ -n "$R2" ]; then
-              echo "| Ravana OS (AMD / Intel) | [ravana-os-live.iso]($R2/latest/ravana-os-live.iso) |"
-              echo "| Ravana OS (NVIDIA) | [ravana-os-nvidia-live.iso]($R2/latest/ravana-os-nvidia-live.iso) |"
+              echo "| Ravana OS (AMD / Intel) | [ravana-os-live.iso]($R2/${{ vars.R2_CHANNEL || 'testing' }}/ravana-os-live.iso) (direct, no sign-in) |"
+              echo "| Ravana OS (NVIDIA) | \`ravana-os-nvidia-live.iso\` from the [build page]($RUN_URL#artifacts) |"
               echo
-              echo "Direct downloads, no sign-in needed. Verify with \`SHA256SUMS\` below."
+              echo "Verify with \`SHA256SUMS\` below."
             elif [ -n "$SF" ]; then
               for e in "ravana-os:AMD / Intel" "ravana-os-nvidia:NVIDIA"; do
                 f="${e%%:*}-$VERSION-$STAMP-live.iso"

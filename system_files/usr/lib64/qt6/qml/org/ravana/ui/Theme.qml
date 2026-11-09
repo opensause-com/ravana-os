@@ -16,7 +16,7 @@ QtObject {
     // Brand
     readonly property color accent: "#d21f3c"
     readonly property color accentHover: "#e8435a"
-    readonly property color onAccent: "#ffffff"
+    readonly property color textOnAccent: "#ffffff"
 
     // Text
     readonly property color text: dark ? "#f5f5f7" : "#1d1d1f"

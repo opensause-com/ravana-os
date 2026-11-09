@@ -36,7 +36,7 @@ Item {
             width: 16; height: 16
             source: row.iconName
             isMask: true
-            color: row.on ? Theme.onAccent : Theme.text
+            color: row.on ? Theme.textOnAccent : Theme.text
         }
     }
 

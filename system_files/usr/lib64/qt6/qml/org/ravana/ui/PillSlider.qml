@@ -27,6 +27,8 @@ Item {
             width: Math.max(parent.height, parent.width * slider.value)
             radius: height / 2
             color: Theme.sliderFill
+            border.width: Theme.dark ? 0 : 1
+            border.color: Qt.rgba(0, 0, 0, 0.08)
             Behavior on width { enabled: !drag.pressed; NumberAnimation { duration: Theme.fast } }
         }
 

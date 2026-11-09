@@ -101,6 +101,10 @@ dolphin /usr/share >/dev/null 2>&1 &
 sleep 6
 shot 05-window 2
 if [ -n "${QS:-}" ]; then
+  { echo "== appmenu diag =="; echo "QT_QPA_PLATFORMTHEME=${QT_QPA_PLATFORMTHEME:-unset}";
+    busctl --user list 2>/dev/null | grep -iE "appmenu|kded|dolphin" ;
+    dbus-send --session --print-reply --dest=org.kde.kded6 /kded org.kde.kded6.loadedModules 2>&1 | tr -s ' \n' ' ' ; echo;
+    for d in $(busctl --user list 2>/dev/null | awk '/dolphin/{print $1}'); do busctl --user tree "$d" 2>&1 | grep -i menu; done; } > "$OUT/appmenu.txt" 2>&1
   $QS appmenu first >> "$OUT/steps.log" 2>&1; shot 27-shell-app-menu 2; $QS appmenu close >/dev/null 2>&1; sleep 1
 fi
 systemsettings >/dev/null 2>&1 &

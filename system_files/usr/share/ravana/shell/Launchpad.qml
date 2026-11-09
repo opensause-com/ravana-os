@@ -17,6 +17,7 @@ PanelWindow {
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
 
+    readonly property color ink: R.Theme.dark ? "white" : "#1d1d1f"
     property real shown: 0
     Behavior on shown { NumberAnimation { duration: R.Theme.normal + 60; easing.type: Easing.OutCubic } }
 
@@ -63,7 +64,7 @@ PanelWindow {
             blurEnabled: true; blur: 1.0; blurMax: 64
             saturation: 0.2
         }
-        Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, R.Theme.dark ? 0.45 : 0.25) }
+        Rectangle { anchors.fill: parent; color: R.Theme.dark ? Qt.rgba(0, 0, 0, 0.45) : Qt.rgba(1, 1, 1, 0.35) }
         MouseArea { anchors.fill: parent; onClicked: pad.hide() }
     }
 
@@ -80,19 +81,19 @@ PanelWindow {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 70
             width: 320; height: 36; radius: 18
-            color: Qt.rgba(1, 1, 1, R.Theme.dark ? 0.12 : 0.5)
+            color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.07)
             border.width: 1
-            border.color: Qt.rgba(1, 1, 1, 0.18)
+            border.color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(0, 0, 0, 0.08)
             Kirigami.Icon {
                 x: 12; anchors.verticalCenter: parent.verticalCenter
-                width: 16; height: 16; source: "search-symbolic"; isMask: true; color: "white"; opacity: 0.8
+                width: 16; height: 16; source: "search-symbolic"; isMask: true; color: pad.ink; opacity: 0.7
             }
             TextInput {
                 id: search
                 anchors.fill: parent
                 anchors.leftMargin: 36; anchors.rightMargin: 14
                 verticalAlignment: TextInput.AlignVCenter
-                color: "white"
+                color: pad.ink
                 font.family: R.Theme.fontFamily
                 font.pixelSize: 15
                 selectByMouse: true
@@ -104,7 +105,7 @@ PanelWindow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("Search")
-                    color: "white"; opacity: 0.6
+                    color: pad.ink; opacity: 0.5
                     font: search.font
                     visible: !search.text && !search.activeFocus
                 }
@@ -163,7 +164,7 @@ PanelWindow {
                             Rectangle {
                                 anchors.fill: parent; anchors.margins: 6
                                 radius: R.Theme.radiusLarge
-                                color: Qt.rgba(1, 1, 1, 0.10)
+                                color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0, 0, 0, 0.06)
                                 opacity: cellMouse.containsMouse ? 1 : 0
                                 Behavior on opacity { NumberAnimation { duration: R.Theme.fast } }
                             }
@@ -182,8 +183,8 @@ PanelWindow {
                                 horizontalAlignment: Text.AlignHCenter
                                 text: cellMouse.modelData.name
                                 elide: Text.ElideRight
-                                color: "white"
-                                style: Text.Raised
+                                color: pad.ink
+                                style: R.Theme.dark ? Text.Raised : Text.Normal
                                 styleColor: Qt.rgba(0, 0, 0, 0.35)
                                 font.family: R.Theme.fontFamily
                                 font.pixelSize: 13
@@ -207,7 +208,7 @@ PanelWindow {
                 Rectangle {
                     required property int index
                     width: 8; height: 8; radius: 4
-                    color: "white"
+                    color: pad.ink
                     opacity: index === pages.currentIndex ? 0.95 : 0.35
                     Behavior on opacity { NumberAnimation { duration: R.Theme.fast } }
                     MouseArea { anchors.fill: parent; anchors.margins: -4; onClicked: pages.currentIndex = parent.index }

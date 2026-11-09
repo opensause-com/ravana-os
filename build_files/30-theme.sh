@@ -74,7 +74,7 @@ for fx in scale glide fade magiclamp squash kwin4_effect_squash kwin4_effect_sca
     $KW --file /etc/xdg/kwinrc --group Plugins --key "${fx}Enabled" false
 done
 $KW --file /etc/xdg/kwinrc --group Plugins --key blurEnabled true           # translucent panels/menus
-$KW --file /etc/xdg/kwinrc --group Plugins --key contrastEnabled true
+$KW --file /etc/xdg/kwinrc --group Plugins --key contrastEnabled false       # its rectangle showed around rounded glass
 $KW --file /etc/xdg/kwinrc --group Plugins --key overviewEnabled true       # Mission Control (Meta+W)
 $KW --file /etc/xdg/kwinrc --group Plugins --key wobblywindowsEnabled false
 $KW --file /etc/xdg/kwinrc --group Effect-blur --key BlurStrength 10

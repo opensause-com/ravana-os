@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Copyright (c) 2026 Ravana OS. All rights reserved.
+# Open Ravana Settings (optionally at a page: about, wifi, sound, appearance, …).
+page="${1:-}"
+qs ipc -p /usr/share/ravana/settings call settings open "$page" >/dev/null 2>&1 && exit 0
+RAVANA_SETTINGS_PAGE="$page" exec qs -p /usr/share/ravana/settings

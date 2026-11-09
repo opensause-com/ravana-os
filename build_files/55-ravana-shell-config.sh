@@ -35,3 +35,9 @@ if ls /usr/lib64/qt6/plugins/kwin/*/*inputactions* /usr/lib64/qt6/plugins/kwin/*
 else
     echo "InputActions not in this image: KWin's built-in gestures stay"
 fi
+
+# Ravana Settings is "System Settings"; KDE's stays reachable from its Advanced… buttons
+for f in /usr/share/applications/systemsettings.desktop /usr/share/applications/org.kde.kinfocenter.desktop; do
+    [ -f "$f" ] && { grep -q '^NoDisplay=true' "$f" || sed -i '/^\[Desktop Entry\]/a NoDisplay=true' "$f"; }
+done
+test -x /usr/bin/ravana-settings

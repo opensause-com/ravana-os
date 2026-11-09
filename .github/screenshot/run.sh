@@ -58,6 +58,12 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   $QS notifications toggle >> "$OUT/steps.log" 2>&1; shot 33-shell-notification-center 2; $QS notifications toggle >/dev/null 2>&1; sleep 1
   /usr/libexec/kwin-tabbox-preview /usr/share/kwin/tabbox/ravana/contents/ui/main.qml >> "$OUT/tabbox.log" 2>&1 &
   TB=$!; shot 34-shell-app-switcher 4; kill $TB 2>/dev/null; sleep 1
+  ravana-settings appearance >/dev/null 2>&1 &
+  sleep 5; shot 35-settings-appearance 1
+  SQ="qs ipc -p /usr/share/ravana/settings call settings open"
+  $SQ about >> "$OUT/steps.log" 2>&1; shot 36-settings-about 2
+  $SQ trackpad >/dev/null 2>&1; shot 37-settings-trackpad 2
+  pkill -f "qs -p /usr/share/ravana/settings" 2>/dev/null; pkill -f "quickshell -p /usr/share/ravana/settings" 2>/dev/null; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1
   shot 23-shell-notification 2

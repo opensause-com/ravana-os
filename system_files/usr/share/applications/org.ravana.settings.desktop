@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=System Settings
+GenericName=Ravana Settings
+Comment=Wi-Fi, Bluetooth, Sound, Appearance, Displays and more
+Exec=ravana-settings
+Icon=preferences-system
+Categories=Settings;System;
+Keywords=settings;preferences;control;wifi;bluetooth;sound;display;appearance;
+StartupNotify=false

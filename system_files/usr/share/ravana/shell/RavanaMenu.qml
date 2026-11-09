@@ -33,9 +33,9 @@ PopupWindow {
             anchors.fill: parent
             anchors.margins: 6
             spacing: 0
-            MenuEntry { text: qsTr("About This Computer"); onActivated: menu.run("kinfocenter") }
+            MenuEntry { text: qsTr("About This Computer"); onActivated: menu.run("ravana-settings about") }
             MenuSeparator {}
-            MenuEntry { text: qsTr("System Settings…"); onActivated: menu.run("systemsettings") }
+            MenuEntry { text: qsTr("System Settings…"); onActivated: menu.run("ravana-settings") }
             MenuEntry { text: qsTr("App Store…"); onActivated: menu.run("gtk-launch io.github.kolunmi.Bazaar || plasma-discover") }
             MenuEntry { text: qsTr("Software Update…"); onActivated: menu.run("gtk-launch ravana-update") }
             MenuSeparator {}

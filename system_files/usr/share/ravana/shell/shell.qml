@@ -31,6 +31,13 @@ ShellRoot {
         function toggle(): void { launchpad.toggle(); }
     }
 
+    // App menus: KDE's menu registrar lives in kded; make sure it's loaded (Plasma's shell did this)
+    Process {
+        running: true
+        command: ["dbus-send", "--session", "--type=method_call", "--dest=org.kde.kded6",
+                  "/kded", "org.kde.kded6.loadModule", "string:appmenu"]
+    }
+
     // Tell the login splash the desktop is ready (Plasma's shell used to do this)
     Process {
         running: true

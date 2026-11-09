@@ -84,6 +84,9 @@ sleep 1
 dolphin /usr/share >/dev/null 2>&1 &
 sleep 6
 shot 05-window 2
+if [ -n "${QS:-}" ]; then
+  $QS appmenu first >> "$OUT/steps.log" 2>&1; shot 27-shell-app-menu 2; $QS appmenu close >/dev/null 2>&1; sleep 1
+fi
 systemsettings >/dev/null 2>&1 &
 shot 06-settings 8
 kinfocenter >/dev/null 2>&1 &

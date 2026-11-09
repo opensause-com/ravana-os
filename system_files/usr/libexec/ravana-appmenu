@@ -1,0 +1,82 @@
+#!/usr/bin/python3 -I
+# Copyright (c) 2026 Ravana OS. All rights reserved.
+"""Ravana app menus: read an app's menu over D-Bus (com.canonical.dbusmenu) for the
+Ravana Shell menu bar, and send clicks back.
+
+  ravana-appmenu layout <service> <path> [parent-id]   -> JSON menu tree
+  ravana-appmenu click  <service> <path> <id>
+"""
+import json, sys, time
+import dbus
+
+IFACE = "com.canonical.dbusmenu"
+PROPS = ["label", "enabled", "visible", "type", "toggle-type", "toggle-state", "shortcut", "children-display"]
+
+def menu(service, path):
+    return dbus.Interface(dbus.SessionBus().get_object(service, path), IFACE)
+
+def clean(label):
+    # "&File" / "_File" mnemonics -> "File"; keep a literal "&&"
+    out, i = [], 0
+    while i < len(label):
+        c = label[i]
+        if c in "_&" and i + 1 < len(label):
+            if label[i + 1] == c:
+                out.append(c); i += 2; continue
+            i += 1; continue
+        out.append(c); i += 1
+    return "".join(out)
+
+def shortcut(sc):
+    try:
+        keys = ["+".join(str(k) for k in combo) for combo in sc]
+        s = keys[0] if keys else ""
+        return (s.replace("Control", "⌃").replace("Shift", "⇧").replace("Alt", "⌥")
+                 .replace("Super", "⌘").replace("+", ""))
+    except Exception:
+        return ""
+
+def node(item):
+    iid, props, children = int(item[0]), dict(item[1]), item[2]
+    return {
+        "id": iid,
+        "label": clean(str(props.get("label", ""))),
+        "enabled": bool(props.get("enabled", True)),
+        "visible": bool(props.get("visible", True)),
+        "separator": str(props.get("type", "")) == "separator",
+        "toggle": str(props.get("toggle-type", "")),
+        "checked": int(props.get("toggle-state", 0)) == 1,
+        "shortcut": shortcut(props.get("shortcut", [])),
+        "submenu": str(props.get("children-display", "")) == "submenu" or len(children) > 0,
+        "children": [node(c) for c in children],
+    }
+
+def layout(service, path, parent=0):
+    m = menu(service, path)
+    try:
+        m.AboutToShow(dbus.Int32(parent))
+    except Exception:
+        pass
+    _rev, root = m.GetLayout(dbus.Int32(parent), dbus.Int32(-1), dbus.Array(PROPS, signature="s"))
+    tree = node(root)
+    def prune(n):
+        n["children"] = [prune(c) for c in n["children"] if c["visible"]]
+        return n
+    return prune(tree)
+
+def main():
+    if len(sys.argv) < 4:
+        print(json.dumps({"error": "usage"})); return 2
+    cmd, service, path = sys.argv[1], sys.argv[2], sys.argv[3]
+    try:
+        if cmd == "layout":
+            print(json.dumps(layout(service, path, int(sys.argv[4]) if len(sys.argv) > 4 else 0)))
+        elif cmd == "click":
+            menu(service, path).Event(dbus.Int32(int(sys.argv[4])), "clicked",
+                                      dbus.Int32(0, variant_level=1), dbus.UInt32(int(time.time())))
+    except Exception as e:
+        print(json.dumps({"error": str(e)}))
+        return 1
+    return 0
+
+sys.exit(main())

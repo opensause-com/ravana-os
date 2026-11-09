@@ -14,6 +14,9 @@ OUT=/shots
 useradd -m -s /bin/bash ravana 2>/dev/null || true
 install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
 chmod 666 /dev/dri/* 2>/dev/null || true
+# reference for Ravana's lock/logout screens: the exact Plasma greeter/logout code in this image
+tar czf "$OUT/breeze-lnf.tgz" -C /usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents lockscreen logout components 2>/dev/null || true
+ls /usr/share/plasma/look-and-feel/ /usr/share/plasma-login-manager* /usr/share/sddm/themes 2>/dev/null > "$OUT/login-themes.txt"
 ls -la /dev/dri >> "$OUT/kwin-info.txt" 2>&1
 
 cat > /home/ravana/session.sh <<'SESSION'

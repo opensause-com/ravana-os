@@ -210,9 +210,9 @@ Rectangle {
         spacing: 44
         Repeater {
             model: [
-                { label: "Shut Down", glyph: "⏻", act: 0, show: sddm.canPowerOff },
-                { label: "Restart", glyph: "↻", act: 1, show: sddm.canReboot },
-                { label: "Sleep", glyph: "☾", act: 2, show: sddm.canSuspend }
+                { label: "Shut Down", glyph: "⏻", act: 0, show: true },
+                { label: "Restart", glyph: "↻", act: 1, show: true },
+                { label: "Sleep", glyph: "☾", act: 2, show: true }
             ]
             Column {
                 id: power

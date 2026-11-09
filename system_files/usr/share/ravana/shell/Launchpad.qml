@@ -18,7 +18,7 @@ PanelWindow {
     color: "transparent"
 
     property real shown: 0
-    Behavior on shown { NumberAnimation { duration: R.Theme.normal; easing.type: Easing.OutQuint } }
+    Behavior on shown { NumberAnimation { duration: R.Theme.normal + 60; easing.type: Easing.OutCubic } }
 
     function toggle() {
         if (visible) { hide(); return; }
@@ -69,8 +69,9 @@ PanelWindow {
 
     Item {
         anchors.fill: parent
+        // Ravana zoom: apps settle in from slightly larger, like stepping back to see them all
         opacity: pad.shown
-        transform: Translate { y: (1 - pad.shown) * 24 }
+        scale: 1.07 - 0.07 * pad.shown
         Keys.onEscapePressed: pad.hide()
 
         // search pill

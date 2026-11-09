@@ -21,6 +21,7 @@ PopupWindow {
 
     PopupSurface {
         anchors.fill: parent
+        growFrom: Item.Bottom
         radius: R.Theme.radiusMenu
         ColumnLayout {
             id: col

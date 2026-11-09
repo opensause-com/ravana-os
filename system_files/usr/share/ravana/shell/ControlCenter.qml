@@ -40,6 +40,7 @@ PopupWindow {
     Timer { interval: 2500; repeat: true; running: cc.visible; triggeredOnStart: true; onTriggered: status.running = true }
 
     PopupSurface {
+        growFrom: Item.TopRight
         anchors.fill: parent
         ColumnLayout {
             id: col

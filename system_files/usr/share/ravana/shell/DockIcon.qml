@@ -20,18 +20,30 @@ Item {
     height: host.iconSize
     Behavior on width { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
 
-    property real pulse: 0
-    SequentialAnimation on pulse {
+    // Ravana launch: the icon leaps and lands with a settle while the app starts
+    property real lift: 0
+    SequentialAnimation on lift {
         running: it.launching
         loops: Animation.Infinite
         alwaysRunToEnd: true
-        NumberAnimation { to: 1; duration: 420; easing.type: Easing.InOutSine }
-        NumberAnimation { to: 0; duration: 420; easing.type: Easing.InOutSine }
+        NumberAnimation { to: 1; duration: 300; easing.type: Easing.OutCubic }
+        NumberAnimation { to: 0; duration: 520; easing.type: Easing.OutBounce }
+        PauseAnimation { duration: 120 }
     }
+    // New items grow in; a click gives a quick press-and-spring
+    property real appear: 0
+    Component.onCompleted: appearAnim.start()
+    NumberAnimation { id: appearAnim; target: it; property: "appear"; from: 0; to: 1
+        duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+    property real press: mouse.pressed ? 0.88 : 1
+    Behavior on press { SpringAnimation { spring: 6; damping: 0.32; epsilon: 0.005 } }
 
     R.AppIcon {
         id: icon
-        size: host.iconSize * it.s * (1 + it.pulse * 0.06)
+        size: host.iconSize * it.s
+        scale: it.appear * it.press
+        transformOrigin: Item.Bottom
+        anchors.bottomMargin: it.lift * host.iconSize * 0.42
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         source: it.iconSource

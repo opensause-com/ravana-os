@@ -25,6 +25,7 @@ PopupWindow {
     Process { id: runner }
 
     PopupSurface {
+        growFrom: Item.TopLeft
         anchors.fill: parent
         radius: R.Theme.radiusMedium
         ColumnLayout {

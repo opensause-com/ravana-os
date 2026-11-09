@@ -18,8 +18,9 @@ Item {
     // slide in from the right, slide out when done
     property real shown: 0
     Component.onCompleted: shown = 1
-    Behavior on shown { NumberAnimation { duration: R.Theme.normal; easing.type: Easing.OutQuint } }
-    opacity: shown
+    Behavior on shown { NumberAnimation { duration: R.Theme.bloom + 80; easing.type: Easing.OutBack; easing.overshoot: 0.9 } }
+    opacity: Math.min(1, shown * 1.4)
+    scale: 0.96 + 0.04 * Math.min(1, shown)
     transform: Translate { x: (1 - card.shown) * 60 }
 
     function close() { shown = 0; leave.start(); }

@@ -34,6 +34,7 @@ PopupWindow {
 
     PopupSurface {
         anchors.fill: parent
+        growFrom: pop.side ? Item.Left : Item.TopLeft
         radius: R.Theme.radiusMenu
         ColumnLayout {
             id: col

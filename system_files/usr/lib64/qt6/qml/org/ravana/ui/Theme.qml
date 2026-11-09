@@ -52,11 +52,17 @@ QtObject {
     readonly property real springStiffness: 4.2
     readonly property real springDamping: 0.42
     readonly property real springEpsilon: 0.25
+    // Ravana motion signature: surfaces "bloom" out of what opened them —
+    // a quick scale from 92% with a soft overshoot, opacity leading slightly.
+    readonly property int bloom: 260
+    readonly property real bloomFrom: 0.92
+    readonly property real bloomOvershoot: 1.15
+    readonly property int exit: 120
 
     // ---- UI kit v2: Ravana Glass ------------------------------------------------
     // Wallpaper behind the glass (Ravana Shell draws glass from it)
     readonly property string wallpaper: dark
-        ? "file:///usr/share/wallpapers/Ravana/contents/images/3840x2160.png"
+        ? "file:///usr/share/wallpapers/RavanaLanka/contents/images/3840x2160.png"
         : "file:///usr/share/wallpapers/Ravana/contents/images_light/3840x2160.png"
 
     // Materials: clear (menu bar), regular (dock, popups), thick (sheets, sidebars)

@@ -25,9 +25,12 @@ PanelWindow {
     function toggle() { if (visible) hide(); else open(""); }
     function open(text) {
         field.text = text; selected = 0; files = [];
-        visible = true; shown = 1; field.forceActiveFocus();
+        visible = true; shown = 1; bloomIn.restart(); field.forceActiveFocus();
     }
     function hide() { shown = 0; closeTimer.restart(); }
+    property real reveal: 0
+    NumberAnimation { id: bloomIn; target: spot; property: "reveal"; from: 0; to: 1
+        duration: R.Theme.bloom; easing.type: Easing.OutBack; easing.overshoot: R.Theme.bloomOvershoot }
     Timer { id: closeTimer; interval: R.Theme.fast; onTriggered: spot.visible = false }
 
     readonly property string query: field.text.trim()
@@ -101,10 +104,12 @@ PanelWindow {
         id: box
         width: Math.min(680, spot.width - 48)
         height: col.implicitHeight
+        Behavior on height { NumberAnimation { duration: R.Theme.fast; easing.type: Easing.OutCubic } }
         anchors.horizontalCenter: parent.horizontalCenter
         y: spot.height * 0.22
         opacity: spot.shown
-        scale: 0.97 + 0.03 * spot.shown
+        scale: spot.shown < 1 && !bloomIn.running ? 0.97 + 0.03 * spot.shown : R.Theme.bloomFrom + (1 - R.Theme.bloomFrom) * spot.reveal
+        transformOrigin: Item.Top
 
         RectangularShadow {
             anchors.fill: glass; radius: glass.radius

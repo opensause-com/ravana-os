@@ -42,4 +42,6 @@ jobs:
           R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
           R2_BUCKET: ${{ vars.R2_BUCKET }}
           R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
+          R2_CHANNEL: ${{ vars.R2_CHANNEL }}
+          R2_EDITIONS: ${{ vars.R2_EDITIONS }}
         run: scripts/r2-upload.sh "${{ inputs.channel }}" output/*-live.iso

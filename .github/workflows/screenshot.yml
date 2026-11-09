@@ -23,13 +23,13 @@ on:
         description: Image tag
         default: testing
 
-concurrency:
-  group: screenshot-${{ github.event.workflow_run.head_branch || github.ref_name }}
-  cancel-in-progress: true
-
 jobs:
   screenshot:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    # job-level, so skipped runs (cancelled builds) never cancel a real one
+    concurrency:
+      group: screenshot-${{ github.event.workflow_run.head_branch || github.ref_name }}
+      cancel-in-progress: true
     runs-on: ubuntu-24.04
     permissions:
       contents: read

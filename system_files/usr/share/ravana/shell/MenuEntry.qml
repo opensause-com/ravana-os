@@ -22,7 +22,7 @@ MouseArea {
         id: label
         anchors.verticalCenter: parent.verticalCenter
         x: 12
-        color: e.containsMouse ? R.Theme.onAccent : R.Theme.text
+        color: e.containsMouse ? R.Theme.textOnAccent : R.Theme.text
         font.family: R.Theme.fontFamily
         font.pixelSize: 13
         renderType: Text.NativeRendering

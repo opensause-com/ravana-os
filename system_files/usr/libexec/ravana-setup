@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Copyright (c) 2026 Ravana OS. All rights reserved.
+# First login: show the Ravana Setup Assistant once, only for new accounts.
+done="$HOME/.config/ravana-setup-done"
+[ "${1:-}" = "--force" ] || {
+    [ -e "$done" ] && exit 0
+    # existing accounts (updated from an older Ravana) skip it quietly
+    born=$(stat -c %W "$HOME" 2>/dev/null || echo 0)
+    if [ "$born" -gt 0 ] && [ $(( $(date +%s) - born )) -gt 86400 ]; then
+        mkdir -p "$HOME/.config" && touch "$done"; exit 0
+    fi
+}
+exec qs -p /usr/share/ravana/setup

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Ravana Setup Assistant
+Exec=/usr/libexec/ravana-setup
+NoDisplay=true
+X-KDE-autostart-phase=2
+OnlyShowIn=KDE;

@@ -63,3 +63,9 @@ DESKTOP
 /usr/libexec/ravana-session-style
 $KW --file /etc/xdg/kscreenlockerrc --group Greeter --group Wallpaper --group org.kde.image --group General \
     --key Image "file:///usr/share/wallpapers/RavanaLanka/"
+
+# First login: the Ravana Setup Assistant replaces KDE's Welcome Center
+for f in /etc/xdg/autostart/org.kde.plasma-welcome.desktop /usr/share/autostart/org.kde.plasma-welcome.desktop; do
+    [ -f "$f" ] && { grep -q '^Hidden=true' "$f" || echo "Hidden=true" >> "$f"; }
+done
+test -x /usr/libexec/ravana-setup

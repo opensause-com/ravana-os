@@ -82,6 +82,12 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
     sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/ravana >> "$OUT/login.log" 2>&1 & LG2=$!
     sleep 6; shot 41-login-screen 1; kill $LG2 2>/dev/null; sleep 1
   fi
+  /usr/libexec/ravana-setup --force >> "$OUT/setup.log" 2>&1 & ST=$!
+  sleep 5; shot 42-setup-welcome 1
+  SU="qs ipc -p /usr/share/ravana/setup call setup go"
+  $SU 1 >> "$OUT/steps.log" 2>&1; sleep 1; shot 43-setup-look 1
+  $SU 3 >/dev/null 2>&1; sleep 1; shot 44-setup-keys 1
+  kill $ST 2>/dev/null; pkill -f "share/ravana/setup" 2>/dev/null; sleep 1
   $QS power ask restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1

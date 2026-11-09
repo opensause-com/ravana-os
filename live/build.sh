@@ -18,9 +18,16 @@ mount -o remount,rw /proc/sys
 curl --retry 3 -Lo /etc/flatpak/remotes.d/flathub.flatpakrepo https://dl.flathub.org/repo/flathub.flatpakrepo
 xargs -r flatpak install -y --noninteractive <"$SCRIPT_DIR/flatpaks"
 
-# (No embedded copy of the OS: the installer downloads it from the registry.)
+# Embed the OS the installer writes to disk, so installing needs no internet.
+# It sits in the live system's container storage; mksquashfs stores files that are
+# identical to the live system only once, so the ISO grows far less than the image size.
 : "${RAVANA_IMAGE:?}" "${RAVANA_TAG:?}"
 export RAVANA_IMAGE RAVANA_TAG
+for i in 1 2 3; do
+    podman pull "$RAVANA_IMAGE:$RAVANA_TAG" && break
+    echo "pull failed, retrying ($i)"; sleep 10
+done
+podman images
 
 # Fedora base repos for live-only packages (Bazzite ships without them)
 cp "$SCRIPT_DIR/fedora-live.repo" /etc/yum.repos.d/fedora-live.repo

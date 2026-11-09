@@ -205,9 +205,9 @@ run0 --user=liveuser yad \
 %end
 
 
-# Network install: the system image is downloaded from the Ravana registry during
-# installation (keeps the ISO ~6 GB instead of carrying a second copy of the OS).
-ostreecontainer --url=$imageref:$imagetag --transport=registry --no-signature-verification
+# Offline install: the system image is embedded in the live system's container
+# storage (see build.sh), so installing needs no internet connection.
+ostreecontainer --url=$imageref:$imagetag --transport=containers-storage --no-signature-verification
 %include /usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %include /usr/share/anaconda/post-scripts/disable-fedora-flatpak.ks
 %include /usr/share/anaconda/post-scripts/install-flatpaks.ks
@@ -220,7 +220,9 @@ EOF
 cat <<EOF >>/usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %post --erroronfail --log=/tmp/anacoda_custom_logs/bootc-switch.log
 # Updates come from the Ravana registry and must carry the Ravana signature
-sed -i 's|container-image-reference=.*|container-image-reference=ostree-image-signed:docker://$imageref:$imagetag|' /ostree/deploy/default/deploy/*.origin
+# Installed offline from the USB; from now on updates come from the Ravana registry and
+# must carry the Ravana signature (repoints only, nothing is downloaded here)
+bootc switch --mutate-in-place --enforce-container-sigpolicy --transport registry $imageref:$imagetag
 %end
 EOF
 

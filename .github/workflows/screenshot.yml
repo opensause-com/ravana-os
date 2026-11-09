@@ -11,6 +11,7 @@ on:
     branches: [ravana-shell]
     paths:
       - 'system_files/**'
+      - 'build_files/55-ravana-shell-config.sh'
       - '.github/screenshot/**'
       - '.github/workflows/screenshot.yml'
   workflow_run:
@@ -55,7 +56,7 @@ jobs:
           OVERLAY=()
           if [ "${{ github.event_name }}" = push ]; then
             echo "Fast lane: this commit's system_files over $IMAGE"
-            OVERLAY=(-v "$PWD/system_files:/overlay:ro")
+            OVERLAY=(-v "$PWD/system_files:/overlay:ro" -v "$PWD/build_files/55-ravana-shell-config.sh:/fastlane-config.sh:ro")
           fi
           sudo podman run --rm --privileged --security-opt label=disable --device /dev/dri \
             "${OVERLAY[@]}" -v "$PWD/shots:/shots" -v "$PWD/.github/screenshot/run.sh:/run.sh:ro" -v "$PWD/.github/screenshot/capture.py:/capture.py:ro" -v "$PWD/build_files/fedora-build.repo:/fedora-build.repo:ro" \

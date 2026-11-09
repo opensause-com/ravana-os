@@ -15,9 +15,8 @@ systemctl --global mask plasma-plasmashell.service
 # The Plasma look updater only knows Plasma panels
 rm -f /etc/xdg/autostart/ravana-look-update.desktop
 
-# Search: Ravana Spotlight takes Meta+Space / Alt+Space; KRunner keeps Alt+F2
-K=/usr/share/applications/org.kde.krunner.desktop; [ -f "$K" ] && sed -i "s/^X-KDE-Shortcuts=.*/X-KDE-Shortcuts=Alt+F2,Search/" "$K"
 test -f /usr/share/kglobalaccel/org.ravana.spotlight.desktop
+test -f /usr/share/kwin/tabbox/ravana/contents/ui/main.qml
 
 # HUDs: KDE's volume/brightness keys report to Plasma's OSD service; Ravana answers it
 python3 -c 'import dbus, gi; from gi.repository import GLib' || \

@@ -3,9 +3,8 @@
 if [ -d /overlay ]; then
   cp -a --no-preserve=ownership /overlay/. / && echo "overlay applied" > /shots/overlay.txt
   chmod +x /usr/libexec/ravana-* 2>/dev/null || true
-  # the image-build bits that matter for the session
-  K=/usr/share/applications/org.kde.krunner.desktop
-  [ -f "$K" ] && sed -i "s/^X-KDE-Shortcuts=.*/X-KDE-Shortcuts=Alt+F2,Search/" "$K"
+  # the image's plain-config build step, so new settings show up without a build
+  [ -f /fastlane-config.sh ] && bash /fastlane-config.sh > /shots/fastlane-config.log 2>&1
 fi
 # Runs inside the Ravana image: starts a headless Plasma session for a fresh user
 # and screenshots the desktop, Launchpad, Spotlight, the Ravana menu and a window.
@@ -16,7 +15,6 @@ useradd -m -s /bin/bash ravana 2>/dev/null || true
 install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
 chmod 666 /dev/dri/* 2>/dev/null || true
 ls -la /dev/dri >> "$OUT/kwin-info.txt" 2>&1
-{ echo "== tabbox / effects / scripts =="; ls -d /usr/share/kwin*/ /usr/share/kwin*/* 2>&1; ls /usr/share/kwin*/tabbox /usr/share/kwin*/effects /usr/share/kwin*/scripts 2>&1; ls /usr/lib64/qt6/plugins/kwin/effects/plugins /usr/lib64/qt6/plugins/kwin/plugins 2>&1; rpm -q kwin kwin-wayland kwin-devel 2>&1; timeout 60 dnf5 repoquery --quiet inputactions 2>&1 | head -3; } >> "$OUT/kwin-info.txt" 2>&1
 
 cat > /home/ravana/session.sh <<'SESSION'
 #!/usr/bin/env bash
@@ -55,6 +53,8 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   $QS hud level volume 65 >> "$OUT/steps.log" 2>&1; shot 32-shell-hud 1
   notify-send -a Steam -i steam "Download complete" "Your game is ready to play." 2>/dev/null; sleep 6
   $QS notifications toggle >> "$OUT/steps.log" 2>&1; shot 33-shell-notification-center 2; $QS notifications toggle >/dev/null 2>&1; sleep 1
+  /usr/libexec/kwin-tabbox-preview /usr/share/kwin/tabbox/ravana >> "$OUT/tabbox.log" 2>&1 &
+  TB=$!; shot 34-shell-app-switcher 4; kill $TB 2>/dev/null; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1
   shot 23-shell-notification 2

@@ -1,0 +1,10 @@
+{
+  "KPackageStructure": "KWin/WindowSwitcher",
+  "KPlugin": {
+    "Authors": [{"Name": "Ravana OS"}],
+    "Description": "Ravana app switcher: a glass bar of large app icons",
+    "Id": "ravana",
+    "License": "LicenseRef-Ravana-All-Rights-Reserved",
+    "Name": "Ravana"
+  }
+}

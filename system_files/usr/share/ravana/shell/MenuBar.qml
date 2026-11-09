@@ -95,7 +95,7 @@ PanelWindow {
         BarButton {
             id: crown
             Layout.preferredWidth: 32
-            icon: "ravana-logo"
+            icon: R.Theme.dark ? "ravana-logo-white" : "ravana-logo"
             iconIsMask: false
             onClicked: ravanaMenu.visible = !ravanaMenu.visible
         }

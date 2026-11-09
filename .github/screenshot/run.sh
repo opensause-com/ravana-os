@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Fast lane: lay the commit's system files over the image before anything starts
 if [ -d /overlay ]; then
+  # login screen test needs SDDM's greeter (the full build installs it)
+  command -v sddm-greeter-qt6 >/dev/null || timeout 240 dnf5 install -y -q --setopt=install_weak_deps=False sddm > /shots/sddm-install.log 2>&1 || true
   cp -a --no-preserve=ownership /overlay/. / && echo "overlay applied" > /shots/overlay.txt
   chmod +x /usr/libexec/ravana-* 2>/dev/null || true
   # the image's plain-config build step, so new settings show up without a build
@@ -76,6 +78,10 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   kill $LK 2>/dev/null; sleep 1
   G=$(ls /usr/libexec/ksmserver-logout-greeter /usr/lib64/libexec/ksmserver-logout-greeter 2>/dev/null | head -1)
   [ -n "$G" ] && { "$G" --windowed >> "$OUT/logout.log" 2>&1 & LG=$!; sleep 5; shot 40-logout-screen 1; kill $LG 2>/dev/null; sleep 1; }
+  if command -v sddm-greeter-qt6 >/dev/null; then
+    sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/ravana >> "$OUT/login.log" 2>&1 & LG2=$!
+    sleep 6; shot 41-login-screen 1; kill $LG2 2>/dev/null; sleep 1
+  fi
   $QS power ask restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1

@@ -1,0 +1,244 @@
+// Copyright (c) 2026 Ravana OS. All rights reserved.
+// Ravana login (SDDM theme): the wallpaper as it is, a round avatar and name in the
+// middle, a frosted capsule "Enter Password" field with a round arrow, other users
+// beside, time and keyboard layout top right, Shut Down / Restart / Sleep at the bottom.
+// Signing in is SDDM's own (sddm.login); this file is only the look.
+import QtQuick
+import QtQuick.Effects
+
+Rectangle {
+    id: root
+    width: 1920; height: 1080
+    color: "#0b0a0c"
+
+    readonly property string fontFamily: "Inter"
+    property int userIndex: userModel.lastIndex >= 0 ? userModel.lastIndex : 0
+    property int sessionIndex: sessionModel.lastIndex >= 0 ? sessionModel.lastIndex : 0
+    property string userName: ""
+    property string realName: ""
+    property string userIcon: ""
+
+    // ---- wallpaper: sharp, with a light veil ----
+    Image {
+        anchors.fill: parent
+        source: config.background
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: false
+        sourceSize: Qt.size(root.width, root.height)
+    }
+    Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.18) }
+
+    // ---- top right: keyboard layout and time ----
+    Row {
+        anchors.top: parent.top; anchors.right: parent.right
+        anchors.topMargin: 8; anchors.rightMargin: 16
+        spacing: 16
+        Text {
+            visible: keyboard.layouts.length > 1
+            text: keyboard.layouts.length > 0 ? keyboard.layouts[keyboard.currentLayout].shortName.toUpperCase() : ""
+            color: "white"; font.family: root.fontFamily; font.pixelSize: 13; font.weight: Font.DemiBold
+            MouseArea { anchors.fill: parent; onClicked: keyboard.currentLayout = (keyboard.currentLayout + 1) % keyboard.layouts.length }
+        }
+        Text {
+            id: clock
+            property date now: new Date()
+            Timer { interval: 1000; running: true; repeat: true; onTriggered: clock.now = new Date() }
+            text: Qt.formatDate(now, "ddd d MMM") + "   " + Qt.formatTime(now, Qt.locale().timeFormat(Locale.ShortFormat))
+            color: "white"; font.family: root.fontFamily; font.pixelSize: 13; font.weight: Font.Medium
+        }
+    }
+
+    // ---- users: the chosen one big in the middle, others small beside ----
+    ListView {
+        id: users
+        model: userModel
+        currentIndex: root.userIndex
+        orientation: ListView.Horizontal
+        interactive: false
+        spacing: 36
+        width: Math.min(root.width - 80, count * 150 + (count - 1) * 36)
+        height: 180
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: Math.round(root.height * 0.36) - 60
+        highlightRangeMode: ListView.ApplyRange
+        delegate: Item {
+            id: person
+            required property int index
+            required property string name
+            required property string realName
+            required property string icon
+            readonly property bool current: ListView.isCurrentItem
+            width: 150; height: 180
+            opacity: current ? 1 : 0.65
+            scale: current ? 1 : 0.8
+            Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack } }
+            Behavior on opacity { NumberAnimation { duration: 220 } }
+            onCurrentChanged: if (current) { root.userName = name; root.realName = realName || name; root.userIcon = icon; }
+            Component.onCompleted: if (current) { root.userName = name; root.realName = realName || name; root.userIcon = icon; }
+
+            Rectangle {       // round avatar with a soft rim
+                id: avatar
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 104; height: 104; radius: 52
+                color: "#d21f3c"
+                border.width: 2; border.color: Qt.rgba(1, 1, 1, 0.55)
+                Image {
+                    id: face
+                    anchors.fill: parent; anchors.margins: 2
+                    source: person.icon
+                    fillMode: Image.PreserveAspectCrop
+                    sourceSize: Qt.size(208, 208)
+                    visible: false
+                }
+                Rectangle {
+                    id: faceMask
+                    anchors.fill: face
+                    radius: width / 2
+                    visible: false
+                    layer.enabled: true
+                }
+                MultiEffect {           // the photo, cut to a circle
+                    anchors.fill: face
+                    source: face
+                    maskEnabled: true
+                    maskSource: faceMask
+                    visible: face.status === Image.Ready
+                }
+                Text {
+                    anchors.centerIn: parent
+                    visible: face.status !== Image.Ready
+                    text: (person.realName || person.name).charAt(0).toUpperCase()
+                    color: "white"; font.family: root.fontFamily; font.pixelSize: 44; font.weight: Font.DemiBold
+                }
+            }
+            Text {
+                anchors.top: avatar.bottom; anchors.topMargin: 14
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: person.realName || person.name
+                color: "white"; font.family: root.fontFamily; font.pixelSize: 20; font.weight: Font.Bold
+                style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
+            }
+            MouseArea { anchors.fill: parent; onClicked: { root.userIndex = person.index; password.forceActiveFocus(); } }
+        }
+    }
+
+    // ---- password capsule ----
+    Item {
+        id: passwordRow
+        width: 236; height: 30
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: users.y + 192
+        property real shake: 0
+        transform: Translate { x: passwordRow.shake }
+        SequentialAnimation {
+            id: shakeAnim
+            loops: 2
+            NumberAnimation { target: passwordRow; property: "shake"; to: -10; duration: 50 }
+            NumberAnimation { target: passwordRow; property: "shake"; to: 10; duration: 80 }
+            NumberAnimation { target: passwordRow; property: "shake"; to: 0; duration: 50 }
+        }
+
+        Rectangle {
+            id: capsule
+            width: 200; height: 30; radius: 15
+            color: Qt.rgba(1, 1, 1, password.activeFocus ? 0.26 : 0.18)
+            border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.25)
+            TextInput {
+                id: password
+                anchors.fill: parent
+                anchors.leftMargin: 14; anchors.rightMargin: 14
+                verticalAlignment: TextInput.AlignVCenter
+                echoMode: TextInput.Password
+                passwordCharacter: "●"
+                color: "white"
+                font.family: root.fontFamily; font.pixelSize: 13
+                focus: true
+                clip: true
+                Keys.onReturnPressed: root.login()
+                Keys.onEnterPressed: root.login()
+                Keys.onLeftPressed: event => { if (!text && root.userIndex > 0) root.userIndex--; else event.accepted = false; }
+                Keys.onRightPressed: event => { if (!text && root.userIndex < users.count - 1) root.userIndex++; else event.accepted = false; }
+            }
+            Text {
+                anchors.centerIn: parent
+                visible: !password.text
+                text: "Enter Password"
+                color: Qt.rgba(1, 1, 1, 0.6)
+                font.family: root.fontFamily; font.pixelSize: 13
+            }
+        }
+        Rectangle {      // round arrow
+            anchors.left: capsule.right; anchors.leftMargin: 6
+            anchors.verticalCenter: capsule.verticalCenter
+            width: 30; height: 30; radius: 15
+            visible: password.text.length > 0
+            color: Qt.rgba(1, 1, 1, arrowArea.containsMouse ? 0.32 : 0.18)
+            border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.25)
+            Text { anchors.centerIn: parent; text: "→"; color: "white"; font.pixelSize: 15 }
+            MouseArea { id: arrowArea; anchors.fill: parent; hoverEnabled: true; onClicked: root.login() }
+        }
+    }
+    Text {
+        id: message
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: passwordRow.bottom; anchors.topMargin: 14
+        color: "white"
+        font.family: root.fontFamily; font.pixelSize: 12; font.weight: Font.Medium
+        text: keyboard.capsLock ? "Caps Lock is on" : ""
+    }
+
+    function login() {
+        if (!password.text) return;
+        message.text = "";
+        sddm.login(root.userName, password.text, root.sessionIndex);
+    }
+    Connections {
+        target: sddm
+        function onLoginFailed() {
+            password.text = "";
+            message.text = "Incorrect password";
+            shakeAnim.restart();
+            password.forceActiveFocus();
+        }
+    }
+
+    // ---- Shut Down / Restart / Sleep ----
+    Row {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Math.round(root.height * 0.06)
+        spacing: 44
+        Repeater {
+            model: [
+                { label: "Shut Down", glyph: "⏻", act: 0, show: sddm.canPowerOff },
+                { label: "Restart", glyph: "↻", act: 1, show: sddm.canReboot },
+                { label: "Sleep", glyph: "☾", act: 2, show: sddm.canSuspend }
+            ]
+            Column {
+                id: power
+                required property var modelData
+                visible: modelData.show
+                spacing: 8
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 44; height: 44; radius: 22
+                    color: Qt.rgba(1, 1, 1, powerArea.containsMouse ? 0.30 : 0.18)
+                    border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.25)
+                    Text { anchors.centerIn: parent; text: power.modelData.glyph; color: "white"; font.pixelSize: 18 }
+                    MouseArea {
+                        id: powerArea
+                        anchors.fill: parent; hoverEnabled: true
+                        onClicked: power.modelData.act === 0 ? sddm.powerOff() : power.modelData.act === 1 ? sddm.reboot() : sddm.suspend()
+                    }
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: power.modelData.label
+                    color: "white"; font.family: root.fontFamily; font.pixelSize: 12; font.weight: Font.Medium
+                }
+            }
+        }
+    }
+
+    Component.onCompleted: password.forceActiveFocus()
+}

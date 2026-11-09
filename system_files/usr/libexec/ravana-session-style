@@ -16,7 +16,7 @@ import sys, shutil
 from pathlib import Path
 
 UI = Path("/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml")
-MARK = "// ravana-lockscreen-style v3"
+MARK = "// ravana-lockscreen-style v4"
 
 # Sharp wallpaper over Plasma's blurred one (macOS shows the wallpaper as it is)
 SHARP = '''
@@ -60,9 +60,9 @@ CHROME = '''
             spacing: 44
             Repeater {
                 model: [
-                    { label: i18nd("plasma_shell_org.kde.plasma.desktop", "&Shut Down").replace("&", ""), icon: "system-shutdown", act: 0, show: sessionManagement.canShutdown },
-                    { label: i18nd("plasma_shell_org.kde.plasma.desktop", "&Restart").replace("&", ""), icon: "system-reboot", act: 1, show: sessionManagement.canReboot },
-                    { label: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "Slee&p").replace("&", ""), icon: "system-suspend", act: 2, show: sessionManagement.canSuspend }
+                    { label: i18nd("plasma_shell_org.kde.plasma.desktop", "&Shut Down").replace("&", ""), icon: "system-shutdown", act: 0, show: true },
+                    { label: i18nd("plasma_shell_org.kde.plasma.desktop", "&Restart").replace("&", ""), icon: "system-reboot", act: 1, show: true },
+                    { label: i18ndc("plasma_shell_org.kde.plasma.desktop", "@action:button", "Slee&p").replace("&", ""), icon: "system-suspend", act: 2, show: true }
                 ]
                 Column {
                     id: powerItem

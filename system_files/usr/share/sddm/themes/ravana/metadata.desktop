@@ -1,0 +1,13 @@
+[SddmGreeterTheme]
+Name=Ravana
+Description=Ravana OS login: sharp wallpaper, round avatar, capsule password, Shut Down / Restart / Sleep
+Author=Ravana OS
+Copyright=(c) 2026 Ravana OS. All rights reserved.
+License=LicenseRef-Ravana-All-Rights-Reserved
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+Theme-Id=ravana
+Theme-API=2.0
+QtVersion=6

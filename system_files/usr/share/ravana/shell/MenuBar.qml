@@ -71,7 +71,7 @@ PanelWindow {
     property var net: ({})
     Process {
         id: netReader
-        command: ["/usr/libexec/ravana-cc", "status"]
+        command: ["/usr/libexec/ravana-cc", "net"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const s = {};
@@ -80,7 +80,7 @@ PanelWindow {
             }
         }
     }
-    Timer { interval: 15000; repeat: true; running: true; triggeredOnStart: true; onTriggered: netReader.running = true }
+    Timer { interval: 20000; repeat: true; running: true; triggeredOnStart: true; onTriggered: netReader.running = true }
     readonly property bool hasBattery: UPower.displayDevice && UPower.displayDevice.isLaptopBattery
 
     function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }

@@ -72,6 +72,10 @@ status() {
 
 case "${1:-status}" in
     status) status ;;
+    net)    # just what the menu bar's network icon needs (cheap, polled)
+        echo "wifi_on=$( [ "$(nmcli -t -f WIFI radio 2>/dev/null)" = enabled ] && echo 1 || echo 0)"
+        echo "wifi_name=$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | sed -n 's/^yes://p' | head -1)"
+        echo "net_wired=$(nmcli -t -f TYPE,STATE dev 2>/dev/null | grep -q '^ethernet:connected' && echo 1 || echo 0)" ;;
     wifi) nmcli radio wifi "$2" ;;
     bluetooth) bluetoothctl power "$2" >/dev/null ;;
     volume) wpctl set-mute "$SINK" 0; wpctl set-volume "$SINK" "$(awk -v v="$2" 'BEGIN {printf "%.2f", v / 100}')" ;;

@@ -41,3 +41,8 @@ for f in /usr/share/applications/systemsettings.desktop /usr/share/applications/
     [ -f "$f" ] && { grep -q '^NoDisplay=true' "$f" || sed -i '/^\[Desktop Entry\]/a NoDisplay=true' "$f"; }
 done
 test -x /usr/bin/ravana-settings
+
+# Ravana Settings runs on Ravana Shell's engine (app id org.quickshell): show it as
+# "System Settings" with the settings icon in the menu bar and the Dock
+$KW --file /etc/xdg/taskmanagerrulesrc --group Mapping --key org.quickshell org.ravana.settings
+$KW --file /etc/xdg/taskmanagerrulesrc --group Mapping --key quickshell org.ravana.settings

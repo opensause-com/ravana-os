@@ -15,7 +15,9 @@ useradd -m -s /bin/bash ravana 2>/dev/null || true
 install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
 chmod 666 /dev/dri/* 2>/dev/null || true
 # reference for Ravana's lock/logout screens: the exact Plasma greeter/logout code in this image
-tar czf "$OUT/breeze-lnf.tgz" -C /usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents lockscreen logout components 2>/dev/null || true
+{ find /usr/share /usr/lib64/qt6/qml -name 'LockScreen*.qml' -o -name 'Logout*.qml' -o -name 'MainBlock.qml' -o -name 'Greeter*.qml' 2>/dev/null;
+  ls -R /usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents | head -80; rpm -ql kscreenlocker plasma-workspace 2>/dev/null | grep -iE 'lockscreen|logout|greet' | head -60; } > "$OUT/lock-files.txt" 2>&1
+find /usr/share /usr/lib64/qt6/qml \( -path '*lockscreen*' -o -path '*logout*' -o -path '*kscreenlocker*' \) -name '*.qml' 2>/dev/null | tar czf "$OUT/lock-qml.tgz" -T - 2>/dev/null || true
 ls /usr/share/plasma/look-and-feel/ /usr/share/plasma-login-manager* /usr/share/sddm/themes 2>/dev/null > "$OUT/login-themes.txt"
 ls -la /dev/dri >> "$OUT/kwin-info.txt" 2>&1
 

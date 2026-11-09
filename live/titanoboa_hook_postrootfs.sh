@@ -496,6 +496,24 @@ if [[ $imageref == *-nvidia* ]]; then
         dnf -yq reinstall --allowerasing $pkg ||
             dnf -yq install --allowerasing $pkg
     done
+    # Bazzite's own Mesa build has no nouveau Vulkan driver, and Fedora's package can't be
+    # swapped in (different epoch). Take just the nouveau driver files from Fedora's package.
+    if ! compgen -G '/usr/share/vulkan/icd.d/nouveau_icd.*.json' >/dev/null; then
+        dnf -yq install cpio || true
+        rm -rf /tmp/mvd && mkdir -p /tmp/mvd
+        for arch in x86_64 i686; do
+            dnf -yq download --arch="$arch" --destdir=/tmp/mvd mesa-vulkan-drivers || true
+        done
+        for rpm in /tmp/mvd/*.rpm; do
+            (cd /tmp/mvd && rpm2cpio "$rpm" | cpio -idm --quiet \
+                './usr/share/vulkan/icd.d/nouveau_icd.*' './usr/lib*/libvulkan_nouveau.so')
+        done
+        cp -av /tmp/mvd/usr/share/vulkan/icd.d/nouveau_icd.* /usr/share/vulkan/icd.d/
+        for d in lib lib64; do
+            [ -f "/tmp/mvd/usr/$d/libvulkan_nouveau.so" ] && cp -av "/tmp/mvd/usr/$d/libvulkan_nouveau.so" "/usr/$d/"
+        done
+        rm -rf /tmp/mvd
+    fi
     # Ensure noveau vulkan icds exist
     (
         shopt -u nullglob

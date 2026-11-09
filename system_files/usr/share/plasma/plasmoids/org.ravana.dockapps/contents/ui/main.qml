@@ -42,7 +42,7 @@ PlasmoidItem {
         groupInline: false
         separateLaunchers: false
         launchInPlace: true
-        hideActivatedLaunchers: false
+        hideActivatedLaunchers: true   // an open app takes its pinned icon's place (no duplicate)
         filterByActivity: true
         activity: activityInfo.currentActivity
         filterByScreen: false

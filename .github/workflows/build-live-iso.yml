@@ -40,7 +40,8 @@ on:
 
 concurrency:
   group: live-iso-${{ github.event_name }}-${{ inputs.image || 'all' }}-${{ inputs.channel || github.event.workflow_run.head_branch || 'latest' }}
-  cancel-in-progress: true
+  # A failed or skipped image build must not cancel an ISO build that is already running
+  cancel-in-progress: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
 
 env:
   CHANNEL: ${{ inputs.channel || (github.event.workflow_run.head_branch == 'testing' && 'testing') || 'latest' }}

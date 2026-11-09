@@ -139,12 +139,21 @@ PopupWindow {
             }
             R.Glass {
                 Layout.fillWidth: true; Layout.preferredHeight: 68
-                visible: cc.flag("brightness_available")
                 ColumnLayout {
                     anchors.fill: parent; anchors.margins: R.Theme.pad; spacing: 8
-                    R.SectionLabel { text: qsTr("Display") }
+                    RowLayout {
+                        R.SectionLabel { text: qsTr("Display") }
+                        Item { Layout.fillWidth: true }
+                        Text {
+                            visible: !cc.flag("brightness_available")
+                            text: qsTr("Use the display's buttons")
+                            color: R.Theme.tertiaryText
+                            font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption
+                        }
+                    }
                     R.PillSlider {
                         Layout.fillWidth: true
+                        available: cc.flag("brightness_available")
                         iconName: "brightness-high-symbolic"
                         value: parseInt(cc.st.brightness || "50") / 100
                         onReleased: v => cc.act(["brightness", String(Math.round(v * 100))])

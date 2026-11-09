@@ -69,6 +69,7 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   pkill -f "qs -p /usr/share/ravana/settings" 2>/dev/null; pkill -f "quickshell -p /usr/share/ravana/settings" 2>/dev/null; sleep 1
   /usr/libexec/kscreenlocker_greet --testing >> "$OUT/lockscreen.log" 2>&1 &
   LK=$!; sleep 6; shot 38-lock-screen 1
+  grep -q "Failed to load lockscreen QML" "$OUT/lockscreen.log" && echo "LOCK SCREEN FELL BACK TO KDE'S BUILT-IN LOCKER" >> "$OUT/steps.log"
   kill $LK 2>/dev/null; sleep 1
   $QS power show restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1

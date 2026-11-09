@@ -31,8 +31,8 @@ PanelWindow {
                     later: qsTr("log you out"), call: "logout" }
     })[kind]
 
-    function show(k) { kind = k; secondsLeft = 60; visible = true; reveal = 0; bloom.restart(); }
-    function close() { visible = false; }
+    function present(k) { kind = k; secondsLeft = 60; visible = true; reveal = 0; bloom.restart(); }
+    function dismiss() { visible = false; }
     function confirm() {
         visible = false;
         act.command = ["dbus-send", "--session", "--type=method_call", "--dest=org.kde.Shutdown",
@@ -49,7 +49,7 @@ PanelWindow {
     Rectangle {      // dim the desktop
         anchors.fill: parent
         color: Qt.rgba(0, 0, 0, 0.35 * Math.min(1, dlg.reveal * 1.5))
-        MouseArea { anchors.fill: parent; onClicked: dlg.close() }
+        MouseArea { anchors.fill: parent; onClicked: dlg.dismiss() }
     }
 
     Item {
@@ -60,7 +60,7 @@ PanelWindow {
         scale: R.Theme.bloomFrom + (1 - R.Theme.bloomFrom) * dlg.reveal
         opacity: Math.min(1, dlg.reveal * 1.6)
         focus: true
-        Keys.onEscapePressed: dlg.close()
+        Keys.onEscapePressed: dlg.dismiss()
         Keys.onReturnPressed: dlg.confirm()
         Keys.onEnterPressed: dlg.confirm()
 
@@ -124,7 +124,7 @@ PanelWindow {
                             font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
                             font.weight: btn.modelData.primary ? Font.DemiBold : Font.Normal
                         }
-                        MouseArea { id: area; anchors.fill: parent; onClicked: btn.modelData.primary ? dlg.confirm() : dlg.close() }
+                        MouseArea { id: area; anchors.fill: parent; onClicked: btn.modelData.primary ? dlg.confirm() : dlg.dismiss() }
                     }
                 }
             }

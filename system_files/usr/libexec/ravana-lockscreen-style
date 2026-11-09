@@ -10,7 +10,7 @@ import sys, shutil
 from pathlib import Path
 
 UI = Path("/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml")
-MARK = "// ravana-lockscreen-style v1"
+MARK = "// ravana-lockscreen-style v2"
 
 CLOCK = '''
         // Ravana clock: the date above a large time, high on the screen like macOS
@@ -30,8 +30,8 @@ CLOCK = '''
                     source: "file:///usr/share/icons/hicolor/64x64/apps/ravana-logo-white.png"
                     sourceSize: Qt.size(30, 30)
                     opacity: 0.85
-                    bottomPadding: 14
                 }
+                Item { width: 1; height: 14 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: Qt.formatDate(ravanaClock.now, "dddd d MMMM")
@@ -64,13 +64,17 @@ def main():
     s = UI.read_text()
     if MARK in s:
         print("already Ravana-styled"); return 0
+    orig = UI.with_suffix(".qml.kde")
+    if "// ravana-lockscreen-style" in s and orig.exists():
+        s = orig.read_text()          # older Ravana style: start again from KDE's file
     for old, _ in EDITS:
         if s.count(old) != 1:
             print("WARNING: lock screen layout changed (anchor not found once):", old.splitlines()[0])
             print("leaving the stock lock screen untouched"); return 0
     for old, new in EDITS:
         s = s.replace(old, new)
-    shutil.copy2(UI, UI.with_suffix(".qml.kde"))
+    if not orig.exists():
+        shutil.copy2(UI, orig)
     UI.write_text(MARK + "\n" + s)
     print("lock screen: Ravana clock applied")
     return 0

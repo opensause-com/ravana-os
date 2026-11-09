@@ -42,10 +42,22 @@ for f in /usr/share/applications/systemsettings.desktop /usr/share/applications/
 done
 test -x /usr/bin/ravana-settings
 
-# Ravana Settings runs on Ravana Shell's engine (app id org.quickshell): show it as
-# "System Settings" with the settings icon in the menu bar and the Dock
-$KW --file /etc/xdg/taskmanagerrulesrc --group Mapping --key org.quickshell org.ravana.settings
-$KW --file /etc/xdg/taskmanagerrulesrc --group Mapping --key quickshell org.ravana.settings
+# Ravana Settings runs on Ravana Shell's engine, whose windows carry the app id
+# org.quickshell. The engine's own launcher entry becomes "System Settings", so the
+# Dock, menu bar and ⌘Tab show one Settings app with the right name and icon.
+Q=/usr/share/applications/org.quickshell.desktop
+cat > "$Q" <<'DESKTOP'
+[Desktop Entry]
+Type=Application
+Name=System Settings
+GenericName=Ravana Settings
+Comment=Wi-Fi, Bluetooth, Sound, Appearance, Displays and more
+Exec=ravana-settings
+Icon=preferences-system
+Categories=Settings;System;
+Keywords=settings;preferences;control;wifi;bluetooth;sound;display;appearance;
+StartupNotify=false
+DESKTOP
 
 # Lock screen: Ravana clock on Plasma's own (unchanged) unlock logic, Lanka wallpaper
 /usr/libexec/ravana-lockscreen-style

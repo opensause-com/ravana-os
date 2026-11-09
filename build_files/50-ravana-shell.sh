@@ -25,3 +25,8 @@ systemctl --global enable ravana-osd.service
 
 # Gesture plugin runtime libraries (the plugin itself is built in the Containerfile)
 dnf5 install -y --setopt=install_weak_deps=False yaml-cpp libevdev || true
+
+# Brightness for external monitors too (DDC/CI over the cable): KDE's brightness service
+# uses ddcutil; i2c-dev gives it the monitor's control channel, ddcutil's udev rule the access
+dnf5 install -y --setopt=install_weak_deps=False ddcutil || true
+echo i2c-dev > /usr/lib/modules-load.d/ravana-ddc.conf

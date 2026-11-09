@@ -63,7 +63,7 @@ PanelWindow {
         "preferred://browser",
         "applications:steam.desktop",
         "applications:org.kde.konsole.desktop",
-        "applications:org.ravana.settings.desktop"
+        "applications:org.quickshell.desktop"
     ]
     property bool pinsLoaded: false
     FileView {

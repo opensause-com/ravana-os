@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Ravana startup sound
-Comment=Plays the Ravana chime when you log in (turn off in System Settings > Autostart)
+Comment=Plays the Ravana temple bell (Ghanta) when you log in (turn off in System Settings > Autostart)
 Exec=sh -c 'command -v pw-play >/dev/null && exec pw-play --volume=0.7 /usr/share/sounds/ravana/startup.wav || exec paplay /usr/share/sounds/ravana/startup.wav'
 OnlyShowIn=KDE;
 X-KDE-autostart-phase=1

@@ -1,120 +1,106 @@
 #!/usr/bin/env python3
-"""Generate the Ravana startup sound: a short signature in Sri Lankan colours.
+"""Ravana startup sound: the Ghanta - a single kovil temple-bell strike.
 
-Original and synthesized (no samples, no recordings):
-  0.00 s  Geta Bera  - deep tuned drum stroke (pitch falls as the skin settles) + soft slap
-  0.00 s  Thalampata - small bright cymbal shimmer (inharmonic metal partials)
-  0.18 s  Ravanahatha - bowed string phrase gliding Sa -> komal Ri -> Ga -> Pa
-                        (Mayamalavagowla colour), with slides (meend) and vibrato
-  0.20 s  drone       - soft Sa + Pa underneath, like a tanpura bed
-  1.95 s  Udekki      - light hand-drum tap that closes the phrase
-Clean stereo reverb, gentle level. 48 kHz stereo 16-bit WAV, ~3.3 s.
+A bronze ghanta struck once: bell partials (hum, prime, tierce, quint, nominal and
+upper partials) that ring and beat slowly, with a soft clapper attack, in a stone
+temple-hall echo. Optional Thavil 'dhom' and Jalra underneath. Original, synthesized.
+
+Usage: gen-chime.py [out.wav] [--with-drums]   (default: the bell alone, Ravana's sound)
 """
-import math, random, struct, wave
+import math, random, struct, sys, wave
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent.parent / "system_files/usr/share/sounds/ravana/startup.wav"
-SR, DUR = 48000, 3.3
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+BELL_ONLY = "--with-drums" not in sys.argv
+OUT = Path(args[0]) if args else \
+    Path(__file__).resolve().parent.parent / "system_files/usr/share/sounds/ravana/startup.wav"
+SR, DUR = 48000, 4.2
 N = int(SR * DUR)
-random.seed(7)
+random.seed(5)
 L = [0.0] * N
 R = [0.0] * N
+TWO_PI = 2 * math.pi
 
 def add(n, v, pan):
     if 0 <= n < N:
         L[n] += v * (1 - pan)
         R[n] += v * pan
 
-SA = 293.66                      # D4 as Sa
-def note(semis): return SA * 2 ** (semis / 12)
+def noise(): return random.random() * 2 - 1
 
-# --- Geta Bera: low drum, pitch drops from ~95 to ~68 Hz, plus a short skin slap ---
-def drum(start, f0, f1, amp, decay, pan, slap=0.25):
-    s0 = int(start * SR)
-    phase = 0.0
-    for i in range(int(SR * 1.4)):
-        t = i / SR
-        f = f1 + (f0 - f1) * math.exp(-t * 18)
-        phase += 2 * math.pi * f / SR
-        e = math.exp(-t * decay) * (1 - math.exp(-t * 900))
-        v = amp * e * (math.sin(phase) + 0.18 * math.sin(2.02 * phase) * math.exp(-t * 9))
-        if t < 0.035:
-            v += slap * amp * (random.random() * 2 - 1) * math.exp(-t * 120)
-        add(s0 + i, v, pan)
+# Ghanta: bronze temple bell. (ratio, level, decay/s, beat Hz) - each partial is a slightly
+# split pair, which gives the slow 'wah-wah' shimmer of a real bronze bell.
+GHANTA = [(0.50, 0.55, 0.55, 0.9), (1.00, 1.00, 0.80, 1.3), (1.19, 0.62, 1.05, 1.7),
+          (1.50, 0.40, 1.30, 2.1), (2.00, 0.55, 1.45, 1.1), (2.52, 0.30, 2.0, 2.6),
+          (3.01, 0.22, 2.6, 3.0), (4.16, 0.12, 3.6, 3.4), (5.43, 0.07, 4.8, 4.0)]
 
-# --- Thalampata: small cymbals, inharmonic metallic partials, quick shimmer ---
-def cymbal(start, amp, pan):
-    s0 = int(start * SR)
-    partials = [(2350, 1.0), (3170, 0.7), (4410, 0.5), (5630, 0.35), (7020, 0.22)]
-    for i in range(int(SR * 1.3)):
-        t = i / SR
-        e = math.exp(-t * 3.2) * (1 - math.exp(-t * 2000))
-        v = sum(a * math.sin(2 * math.pi * f * t + a) for f, a in partials) / 2.8
-        v += 0.12 * (random.random() * 2 - 1) * math.exp(-t * 40)
-        add(s0 + i, amp * e * v, pan)
-
-# --- Ravanahatha: bowed string, gliding between notes with vibrato ---
-def bowed(start, path, amp, pan):
-    """path: list of (time_from_start, semitone) targets; glides between them."""
-    s0 = int(start * SR)
-    end = path[-1][0] + 1.25
-    phase = 0.0
-    harm = [(1, 1.0), (2, 0.55), (3, 0.38), (4, 0.22), (5, 0.16), (6, 0.09), (7, 0.06)]
-    for i in range(int(SR * end)):
-        t = i / SR
-        # current pitch: glide (meend) toward each target over 70 ms
-        semis = path[0][1]
-        for (tt, s), (tn, sn) in zip(path, path[1:]):
-            if t >= tn:
-                semis = sn
-            elif t >= tt:
-                k = min(1.0, (t - (tn - 0.07)) / 0.07) if t > tn - 0.07 else 0.0
-                semis = s + (sn - s) * (k * k * (3 - 2 * k))
-                break
-        vib = 0.18 * min(1.0, max(0.0, (t - 0.35) / 0.6)) * math.sin(2 * math.pi * 5.6 * t)
-        f = note(semis + vib)
-        phase += 2 * math.pi * f / SR
-        attack = 1 - math.exp(-t * 14)
-        release = 1.0 if t < end - 1.1 else math.exp(-(t - (end - 1.1)) * 3.2)
-        bow = 1 + 0.06 * math.sin(2 * math.pi * 3.1 * t)          # slight bow pressure sway
-        v = sum(a * math.sin(h * phase) for h, a in harm) / 2.6
-        v += 0.035 * (random.random() * 2 - 1)                     # bow hair noise
-        add(s0 + i, amp * attack * release * bow * v, pan)
-
-# --- Drone: Sa + Pa, soft and wide ---
-def drone(start, amp):
+def ghanta(start, f0, amp, pan):
     s0 = int(start * SR)
     for i in range(int(SR * (DUR - start))):
         t = i / SR
-        e = (1 - math.exp(-t * 3)) * math.exp(-t * 0.9)
-        v = (math.sin(2 * math.pi * SA / 2 * t) + 0.6 * math.sin(2 * math.pi * note(7) / 2 * t)
-             + 0.25 * math.sin(2 * math.pi * SA * t)) / 1.9
-        add(s0 + i, amp * e * v * 0.5, 0.35)
-        add(s0 + i, amp * e * v * 0.5, 0.65)
+        v = 0.0
+        for ratio, a, dec, beat in GHANTA:
+            f = f0 * ratio
+            v += a * math.exp(-t * dec) * (math.sin(TWO_PI * f * t)
+                                            + 0.6 * math.sin(TWO_PI * (f + beat) * t + 0.7))
+        if t < 0.006:
+            v += 1.1 * noise() * (1 - t / 0.006)            # clapper strike
+        att = 1 - math.exp(-t * 2500)
+        add(s0 + i, amp * att * v / 5.0, pan)
 
-drum(0.00, 95, 68, 0.95, 4.2, 0.45)                 # Geta Bera
-cymbal(0.00, 0.20, 0.70)                            # Thalampata
-drone(0.20, 0.22)
-bowed(0.18, [(0.00, -1), (0.10, 0), (0.42, 1), (0.62, 4), (0.95, 7)], 0.42, 0.52)  # Sa r G P
-drum(1.95, 210, 175, 0.35, 9.0, 0.60, slap=0.45)    # Udekki tap
-cymbal(1.95, 0.08, 0.30)
+def dhom(start, amp, pan):
+    s0 = int(start * SR); phase = 0.0
+    for i in range(int(SR * 1.6)):
+        t = i / SR
+        f = 58 + 46 * math.exp(-t * 20)
+        phase += TWO_PI * f / SR
+        e = math.exp(-t * 4.2) * (1 - math.exp(-t * 1200))
+        v = math.sin(phase) + 0.22 * math.sin(2.1 * phase) * math.exp(-t * 9)
+        if t < 0.02: v += 0.35 * noise() * math.exp(-t * 180)
+        add(s0 + i, amp * e * v, pan)
 
-# --- clean stereo reverb (decaying cross-fed taps) ---
-for delay_ms, gain in ((29, 0.30), (43, 0.25), (61, 0.20), (89, 0.16), (127, 0.12), (181, 0.08), (251, 0.05)):
-    d = int(SR * delay_ms / 1000)
-    for n in range(N - 1, d - 1, -1):
-        L[n] += gain * R[n - d]
-        R[n] += gain * L[n - d]
+def jalra(start, amp, pan):
+    s0 = int(start * SR)
+    parts = [(3120, 1.0), (4380, 0.8), (5710, 0.6), (7290, 0.4), (8830, 0.25)]
+    for i in range(int(SR * 1.2)):
+        t = i / SR
+        e = math.exp(-t * 4.5) * (1 - math.exp(-t * 3000))
+        v = sum(a * math.sin(TWO_PI * f * t + a) for f, a in parts) / 3 + 0.18 * noise() * math.exp(-t * 60)
+        add(s0 + i, amp * e * v, pan)
 
-peak = max(max(abs(x) for x in L), max(abs(x) for x in R))
-scale = 0.62 / peak
-fade = int(SR * 0.35)
+ghanta(0.02, 560, 0.85, 0.52)                 # main strike (deep, temple-sized bell)
+if not BELL_ONLY:
+    dhom(0.00, 0.55, 0.48)
+    jalra(0.00, 0.10, 0.30)
+
+def hall(x, combs, allpasses, fb=0.80, damp=0.32, wet=0.32):
+    out = [0.0] * len(x)
+    for d in combs:
+        buf = [0.0] * d; idx = 0; lp = 0.0
+        for n in range(len(x)):
+            y = buf[idx]; lp = y * (1 - damp) + lp * damp
+            buf[idx] = x[n] + lp * fb; idx = (idx + 1) % d
+            out[n] += y / len(combs)
+    for d in allpasses:
+        buf = [0.0] * d; idx = 0
+        for n in range(len(out)):
+            b = buf[idx]; y = -out[n] + b
+            buf[idx] = out[n] + b * 0.5; idx = (idx + 1) % d
+            out[n] = y
+    return [a * (1 - wet) + b * wet * 1.8 for a, b in zip(x, out)]
+
+L = hall(L, (1557, 1617, 1491, 1422), (225, 556))
+R = hall(R, (1580, 1640, 1514, 1445), (248, 579))
+
+peak = max(max(abs(v) for v in L), max(abs(v) for v in R))
+scale = 0.70 / peak
+fade = int(SR * 0.6)
 OUT.parent.mkdir(parents=True, exist_ok=True)
 with wave.open(str(OUT), "wb") as w:
     w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
-    out = bytearray()
+    buf = bytearray()
     for n in range(N):
         g = scale * (1.0 if n < N - fade else (N - n) / fade)
-        out += struct.pack("<hh", int(max(-1, min(1, L[n] * g)) * 32767), int(max(-1, min(1, R[n] * g)) * 32767))
-    w.writeframes(bytes(out))
-print("wrote", OUT.relative_to(OUT.parents[5]), f"{OUT.stat().st_size // 1024} KB, {DUR} s")
+        buf += struct.pack("<hh", int(max(-1, min(1, L[n] * g)) * 32767), int(max(-1, min(1, R[n] * g)) * 32767))
+    w.writeframes(bytes(buf))
+print("wrote", OUT, f"{OUT.stat().st_size // 1024} KB, {DUR} s")

@@ -3,6 +3,7 @@
 // Hover magnification, a dot under open apps, name bubble, Ravana pulse while launching.
 // Window list from KDE's task model (KWin), which also places minimize animations.
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -64,14 +65,24 @@ PanelWindow {
     function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }
     Process { id: runner }
 
+    // soft floating shadow under the dock
+    RectangularShadow {
+        anchors.fill: glass
+        radius: glass.radius
+        blur: 30
+        spread: -2
+        offset: Qt.vector2d(0, 10)
+        color: Qt.rgba(0, 0, 0, 0.45)
+    }
+
     GlassBackdrop {
         id: glass
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         width: row.width + 2 * dock.pad
         height: dock.baseHeight
-        radius: 22
-        tint: 0.30
+        radius: 24
+        tint: 0.26
         origin: Qt.point((dock.screen.width - width) / 2, dock.screen.height - dock.bottomGap - height)
         screenSize: Qt.size(dock.screen.width, dock.screen.height)
     }

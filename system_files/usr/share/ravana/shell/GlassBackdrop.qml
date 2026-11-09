@@ -32,7 +32,7 @@ Item {
         blurEnabled: true
         blur: 1.0
         blurMax: 48
-        saturation: 0.35
+        saturation: 0.6          // vibrancy: colours behind the glass glow through
         maskEnabled: true
         maskSource: mask
     }
@@ -43,11 +43,24 @@ Item {
         visible: false
         layer.enabled: true
     }
+    // tint, then a fine light rim (brighter along the top edge, like real glass)
     Rectangle {
         anchors.fill: parent
         radius: glass.radius
-        color: R.Theme.dark ? Qt.rgba(0.13, 0.12, 0.14, glass.tint) : Qt.rgba(0.98, 0.98, 0.99, glass.tint)
+        color: R.Theme.dark ? Qt.rgba(0.16, 0.15, 0.17, glass.tint) : Qt.rgba(0.98, 0.98, 0.99, glass.tint)
         border.width: 1
-        border.color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.6)
+        border.color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.65)
+    }
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: 1
+        radius: glass.radius - 1
+        color: "transparent"
+        border.width: 1
+        border.color: "transparent"
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, R.Theme.dark ? 0.07 : 0.25) }
+            GradientStop { position: 0.35; color: "transparent" }
+        }
     }
 }

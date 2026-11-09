@@ -46,7 +46,7 @@ PanelWindow {
         Image {
             id: bg
             anchors.fill: parent
-            source: Paths.wallpaper
+            source: R.Theme.wallpaper
             fillMode: Image.PreserveAspectCrop
             sourceSize: Qt.size(pad.width / 2, pad.height / 2)
             visible: false
@@ -126,10 +126,10 @@ PanelWindow {
                     opacity: cellMouse.containsMouse ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: R.Theme.fast } }
                 }
-                Kirigami.Icon {
+                R.AppIcon {
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: 14
-                    width: 84; height: 84
+                    size: 84
                     source: cellMouse.modelData.icon
                     scale: cellMouse.pressed ? 0.92 : 1
                     Behavior on scale { NumberAnimation { duration: 90 } }

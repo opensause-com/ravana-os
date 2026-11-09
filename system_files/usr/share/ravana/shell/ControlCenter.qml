@@ -34,6 +34,7 @@ PopupWindow {
         }
     }
     Process { id: action }
+    Process { id: appearance; command: ["/usr/libexec/ravana-appearance", "toggle"] }
     function act(args) { action.command = ["/usr/libexec/ravana-cc"].concat(args); action.running = true; refreshSoon.restart(); }
     Timer { id: refreshSoon; interval: 600; onTriggered: status.running = true }
     Timer { interval: 2500; repeat: true; running: cc.visible; triggeredOnStart: true; onTriggered: status.running = true }
@@ -95,11 +96,11 @@ PopupWindow {
                         Layout.fillWidth: true; Layout.preferredHeight: 56
                         R.ToggleRow {
                             anchors.fill: parent; anchors.margins: 6
-                            iconName: "weather-clear-night-symbolic"
-                            title: qsTr("Dark")
+                            iconName: on ? "weather-clear-night-symbolic" : "weather-clear-symbolic"
+                            title: on ? qsTr("Dark") : qsTr("Light")
                             status: qsTr("Appearance")
-                            on: true
-                            available: false
+                            on: cc.st.dark !== "0"
+                            onToggled: { appearance.running = true; refreshSoon.restart(); }
                         }
                     }
                 }

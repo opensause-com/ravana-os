@@ -7,7 +7,7 @@ import org.ravana.ui as R
 Item {
     id: s
     default property alias content: inner.data
-    property real radius: R.Theme.radiusLarge
+    property real radius: R.Theme.radiusCard
 
     RectangularShadow {
         anchors.fill: bg
@@ -15,16 +15,16 @@ Item {
         blur: 28
         spread: 0
         offset: Qt.vector2d(0, 8)
-        color: Qt.rgba(0, 0, 0, R.Theme.dark ? 0.55 : 0.22)
+        color: R.Theme.shadow
     }
     Rectangle {
         id: bg
         anchors.fill: parent
         anchors.margins: 14
         radius: s.radius
-        color: R.Theme.dark ? Qt.rgba(0.11, 0.105, 0.12, 0.94) : Qt.rgba(0.97, 0.97, 0.98, 0.96)
+        color: R.Theme.glassTint("thick")
         border.width: 1
-        border.color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.13) : Qt.rgba(0, 0, 0, 0.08)
+        border.color: R.Theme.glassRim
         Item { id: inner; anchors.fill: parent }
     }
 }

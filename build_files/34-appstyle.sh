@@ -4,31 +4,49 @@
 set -euxo pipefail
 dnf5 install -y --setopt=install_weak_deps=False \
     --repo=ravana-build-fedora --repo=ravana-build-updates kvantum
-SRC=/usr/share/Kvantum/KvMojave
-DST=/usr/share/Kvantum/RavanaGlass
-test -f "$SRC/KvMojave.kvconfig"
+
+build_theme() {   # build_theme <Kvantum base> <Ravana name> <dark|light>
+SRC="/usr/share/Kvantum/$1"
+DST="/usr/share/Kvantum/$2"
+MODE="$3"
+test -f "$SRC/$1.kvconfig"
 install -d "$DST"
-cp "$SRC/KvMojave.svg" "$DST/RavanaGlass.svg"
-cp "$SRC/KvMojave.kvconfig" "$DST/RavanaGlass.kvconfig"
+cp "$SRC/$1.svg" "$DST/$2.svg"
+cp "$SRC/$1.kvconfig" "$DST/$2.kvconfig"
 # KvMojave's blue accents -> Ravana red at the same lightness
 sed -i -e 's/#245fc4/#b81a33/gI' -e 's/#2664d0/#c41c37/gI' -e 's/#286adc/#d21f3c/gI' \
        -e 's/#295e9f/#9e1e33/gI' -e 's/#3273c3/#c3283f/gI' -e 's/#31a7e8/#e8455c/gI' \
        -e 's/#3daee9/#ec4a60/gI' -e 's/#436e99/#99303f/gI' -e 's/#4478ac/#ac3445/gI' \
        -e 's/#81c0ff/#ff8a99/gI' -e 's/#000356/#350008/gI' -e 's/#b74aff/#ff5a66/gI' \
-       "$DST/RavanaGlass.svg" "$DST/RavanaGlass.kvconfig"
-! grep -qiE '#(245fc4|2664d0|286adc|295e9f|3273c3|3daee9)' "$DST/RavanaGlass.svg"
+       "$DST/$2.svg" "$DST/$2.kvconfig"
+! grep -qiE '#(2664d0|286adc|3273c3)' "$DST/$2.svg" || echo "note: some base blues remain in $2"
 # Light-grey selections read badly with white text: selected items use Ravana red
 # (like macOS uses the accent colour), toggled/pressed toolbar buttons a dark grey.
 sed -i -e '/id="itemview-toggled/ s/#\(9e9ea0\|b1b1b3\|c3c3c6\)/#a51d34/gI' \
        -e '/id="itemview-pressed/ s/#\(9e9ea0\|b1b1b3\|c3c3c6\)/#c3283f/gI' \
        -e '/id="tbutton-\(toggled\|pressed\)/ s/#\(9e9ea0\|b1b1b3\|c3c3c6\)/#3d3d44/gI' \
-       "$DST/RavanaGlass.svg"
-grep -c 'a51d34' "$DST/RavanaGlass.svg"
+       "$DST/$2.svg"
+grep -c 'a51d34' "$DST/$2.svg" || true
 
-python3 - "$DST/RavanaGlass.kvconfig" <<'PY'
+python3 - "$DST/$2.kvconfig" "$MODE" <<'PY'
 import re, sys
 path = sys.argv[1]
+light = sys.argv[2] == "light"
 text = open(path, encoding="utf-8").read().splitlines()
+LIGHT_COLORS = {
+        "window.color": "#f2f1f4", "base.color": "#ffffff", "alt.base.color": "#f7f6f8",
+        "button.color": "#ffffff", "light.color": "#ffffff", "mid.light.color": "#ecebef",
+        "dark.color": "#c9c7ce", "mid.color": "#dedce2",
+        "highlight.color": "#d21f3c", "inactive.highlight.color": "#e7a3ae",
+        "text.color": "#1d1d1f", "window.text.color": "#1d1d1f", "button.text.color": "#1d1d1f",
+        "disabled.text.color": "#a1a1a8", "tooltip.text.color": "#1d1d1f",
+        "highlight.text.color": "#ffffff", "link.color": "#c8102e", "link.visited.color": "#8e4bab",
+        "progress.indicator.text.color": "#ffffff",
+        "inactive.window.color": "#f2f1f4", "inactive.base.color": "#ffffff",
+        "inactive.alt.base.color": "#f7f6f8", "inactive.text.color": "#3a3a3c",
+        "inactive.window.text.color": "#3a3a3c", "inactive.highlight.text.color": "#ffffff",
+        "tooltip.base.color": "#ffffff",
+}
 want = {
     "%General": {
         "author": "Ravana OS (based on KvMojave)",
@@ -47,7 +65,7 @@ want = {
         "scrollbar_in_view": "true",
         "tooltip_delay": "350",
     },
-    "GeneralColors": {
+    "GeneralColors": LIGHT_COLORS if light else {
         "window.color": "#1b1b1e",
         "base.color": "#151518",
         "alt.base.color": "#1e1e22",
@@ -105,27 +123,20 @@ for sec in want:
         out += [f"{k}={v}" for k, v in want[sec].items()]
 open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
 PY
-grep -E '^(highlight.color|window.color|popup_blurring|reduce_menu_opacity)=' "$DST/RavanaGlass.kvconfig"
-
-# Use it system-wide (Qt/KDE apps)
-install -d /etc/xdg/Kvantum
-printf '[General]\ntheme=RavanaGlass\n' > /etc/xdg/Kvantum/kvantum.kvconfig
-kwriteconfig6 --file /etc/xdg/kdeglobals --group KDE --key widgetStyle kvantum
-sed -i 's/^widgetStyle=Breeze$/widgetStyle=kvantum/' \
-    /usr/share/plasma/look-and-feel/org.ravana.desktop/contents/defaults
-test -f /usr/lib64/qt6/plugins/styles/libkvantum.so || test -f /usr/lib/qt6/plugins/styles/libkvantum.so
-sed -i "/^\[Desktop Entry\]/a NoDisplay=true" /usr/share/applications/kvantummanager.desktop 2>/dev/null || true
+grep -E '^(highlight.color|window.color|popup_blurring|reduce_menu_opacity)=' "$DST/$2.kvconfig"
 
 # --- Rounded selection pills in lists and sidebars (macOS System Settings style) ---
 # Kvantum draws selections from 9-slice SVG elements; replace KvMojave's square ones
 # (renamed out of the way) with rounded ones drawn off to the side of the canvas.
-python3 - "$DST/RavanaGlass.svg" <<'PY'
+python3 - "$DST/$2.svg" "$MODE" <<'PY'
 import re, sys
 path = sys.argv[1]
 s = open(path, encoding="utf-8").read()
 R = 7          # corner radius
 E = 4          # edge strip length
 states = {"toggled": "#a51d34", "pressed": "#c3283f", "focused": "#2e2e34"}   # focused = hover
+if len(sys.argv) > 2 and sys.argv[2] == "light":
+    states = {"toggled": "#d21f3c", "pressed": "#b81a33", "focused": "#e6e4ea"}
 s = re.sub(r'id="(itemview-(?:toggled|pressed|focused)(?:-[a-z]+)?)"', r'id="old-\1"', s)
 out = []
 for n, (state, col) in enumerate(states.items()):
@@ -149,7 +160,7 @@ open(path, "w", encoding="utf-8").write(s)
 print("rounded itemview selections:", len(out), "elements")
 PY
 # The frame border sizes must match the new corner size
-python3 - "$DST/RavanaGlass.kvconfig" <<'PY'
+python3 - "$DST/$2.kvconfig" <<'PY'
 import re, sys
 path = sys.argv[1]
 lines = open(path, encoding="utf-8").read().splitlines()
@@ -170,4 +181,18 @@ if sec == "ItemView":
     out += [f"{k}={v}" for k, v in want.items() if k not in done]
 open(path, "w", encoding="utf-8").write("\n".join(out) + "\n")
 PY
-grep -A12 '^\[ItemView\]' "$DST/RavanaGlass.kvconfig" | head -14
+grep -A12 '^\[ItemView\]' "$DST/$2.kvconfig" | head -14
+}
+
+build_theme KvMojave RavanaGlass dark
+build_theme KvMojaveLight RavanaGlassLight light
+
+# Use it system-wide (Qt/KDE apps)
+install -d /etc/xdg/Kvantum
+printf '[General]\ntheme=RavanaGlass\n' > /etc/xdg/Kvantum/kvantum.kvconfig
+kwriteconfig6 --file /etc/xdg/kdeglobals --group KDE --key widgetStyle kvantum
+sed -i 's/^widgetStyle=Breeze$/widgetStyle=kvantum/' \
+    /usr/share/plasma/look-and-feel/org.ravana.desktop/contents/defaults
+test -f /usr/lib64/qt6/plugins/styles/libkvantum.so || test -f /usr/lib/qt6/plugins/styles/libkvantum.so
+sed -i "/^\[Desktop Entry\]/a NoDisplay=true" /usr/share/applications/kvantummanager.desktop 2>/dev/null || true
+

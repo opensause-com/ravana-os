@@ -18,12 +18,14 @@ PanelWindow {
     exclusiveZone: implicitHeight
     color: "transparent"
 
-    GlassBackdrop {
+    // Clear glass: the menu bar is fully transparent, like macOS 26; a faint top
+    // gradient keeps text readable on busy wallpapers
+    Rectangle {
         anchors.fill: parent
-        radius: 0
-        tint: 0.35
-        origin: Qt.point(0, 0)
-        screenSize: Qt.size(bar.screen.width, bar.screen.height)
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: R.Theme.dark ? Qt.rgba(0, 0, 0, 0.28) : Qt.rgba(1, 1, 1, 0.30) }
+            GradientStop { position: 1.0; color: "transparent" }
+        }
     }
 
     TaskManager.TasksModel {
@@ -54,7 +56,7 @@ PanelWindow {
         }
         Text {
             text: bar.appName || "Ravana"
-            color: R.Theme.text
+            color: R.Theme.barText
             font.family: R.Theme.fontFamily
             font.pixelSize: 13
             font.weight: Font.Bold
@@ -69,7 +71,7 @@ PanelWindow {
         }
         Text {
             id: clockText
-            color: R.Theme.text
+            color: R.Theme.barText
             font.family: R.Theme.fontFamily
             font.pixelSize: 13
             font.weight: Font.Medium

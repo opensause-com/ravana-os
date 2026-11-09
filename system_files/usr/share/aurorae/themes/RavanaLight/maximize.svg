@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="14" viewBox="0 0 120 14">
+<g id="active-center"><rect x="0" width="14" height="14" fill="none"/><circle cx="7.0" cy="7.0" r="6" fill="#28c840" stroke="#1aab29" stroke-width="0.6"/></g>
+<g id="hover-center"><rect x="20" width="14" height="14" fill="none"/><circle cx="27.0" cy="7.0" r="6" fill="#28c840" stroke="#1aab29" stroke-width="0.6"/><g transform="translate(20,0)" stroke="#4d0000" stroke-opacity="0.75" stroke-width="1.3" stroke-linecap="round" fill="none"><path d="M4,7 L10,7 M7,4 L7,10"/></g></g>
+<g id="pressed-center"><rect x="40" width="14" height="14" fill="none"/><circle cx="47.0" cy="7.0" r="6" fill="#1aab29" stroke="#1aab29" stroke-width="0.6"/><g transform="translate(40,0)" stroke="#4d0000" stroke-opacity="0.75" stroke-width="1.3" stroke-linecap="round" fill="none"><path d="M4,7 L10,7 M7,4 L7,10"/></g></g>
+<g id="inactive-center"><rect x="60" width="14" height="14" fill="none"/><circle cx="67.0" cy="7.0" r="6" fill="#d6d4da" stroke="#c4c2c9" stroke-width="0.6"/></g>
+<g id="hover-inactive-center"><rect x="80" width="14" height="14" fill="none"/><circle cx="87.0" cy="7.0" r="6" fill="#28c840" stroke="#1aab29" stroke-width="0.6"/><g transform="translate(80,0)" stroke="#4d0000" stroke-opacity="0.75" stroke-width="1.3" stroke-linecap="round" fill="none"><path d="M4,7 L10,7 M7,4 L7,10"/></g></g>
+<g id="deactivated-center"><rect x="100" width="14" height="14" fill="none"/><circle cx="107.0" cy="7.0" r="6" fill="#d6d4da" stroke="#c4c2c9" stroke-width="0.6"/></g>
+</svg>

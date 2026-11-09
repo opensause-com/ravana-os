@@ -28,14 +28,13 @@ Item {
         NumberAnimation { to: 0; duration: 420; easing.type: Easing.InOutSine }
     }
 
-    Kirigami.Icon {
+    R.AppIcon {
         id: icon
-        width: dock.iconSize * it.s * (1 + it.pulse * 0.06)
-        height: width
+        size: dock.iconSize * it.s * (1 + it.pulse * 0.06)
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         source: it.iconSource
-        Behavior on width { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+        Behavior on size { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
     }
 
     Rectangle {   // open-app dot

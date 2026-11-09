@@ -25,6 +25,6 @@ MouseArea {
         width: 17; height: 17
         source: b.icon
         isMask: b.iconIsMask
-        color: R.Theme.text
+        color: R.Theme.barText
     }
 }

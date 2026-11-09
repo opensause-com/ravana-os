@@ -39,6 +39,14 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   $QS launchpad toggle >> "$OUT/steps.log" 2>&1; shot 20-shell-launchpad 2; $QS launchpad toggle >/dev/null 2>&1; sleep 1
   $QS menu toggle >> "$OUT/steps.log" 2>&1; shot 21-shell-menu 2; $QS menu toggle >/dev/null 2>&1; sleep 1
   $QS controlcenter toggle >> "$OUT/steps.log" 2>&1; shot 22-shell-control-center 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
+  notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1
+  shot 23-shell-notification 2
+  # Light mode
+  /usr/libexec/ravana-appearance light >> "$OUT/steps.log" 2>&1; sleep 4
+  shot 24-shell-light 2
+  $QS launchpad toggle >/dev/null 2>&1; shot 25-shell-light-launchpad 2; $QS launchpad toggle >/dev/null 2>&1; sleep 1
+  $QS controlcenter toggle >/dev/null 2>&1; shot 26-shell-light-control-center 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
+  /usr/libexec/ravana-appearance dark >> "$OUT/steps.log" 2>&1; sleep 3
 fi
 
 send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.activateLauncherMenu

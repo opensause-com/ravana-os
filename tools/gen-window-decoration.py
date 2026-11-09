@@ -189,7 +189,41 @@ def write(name: str, text: str) -> None:
     print("wrote", p.relative_to(OUT.parents[5]))
 
 
+VARIANTS = {
+    "Ravana": dict(active=dict(bar="#0e0e10", top_hl=0.10, shadow=0.55, line="#26262b"),
+                   inactive=dict(bar="#151518", top_hl=0.05, shadow=0.30, line="#202024"),
+                   text=("235,235,240", "130,130,138"), dim=("#3c3c42", "#4a4a50")),
+    "RavanaLight": dict(active=dict(bar="#f2f1f4", top_hl=0.55, shadow=0.30, line="#d9d7de"),
+                        inactive=dict(bar="#f7f6f8", top_hl=0.40, shadow=0.16, line="#e3e1e7"),
+                        text=("29,29,31", "150,150,158"), dim=("#d6d4da", "#c4c2c9")),
+}
+
+
+def generate(name: str, v: dict) -> None:
+    global OUT, ACTIVE, INACTIVE
+    OUT = OUT.parent / name
+    ACTIVE, INACTIVE = v["active"], v["inactive"]
+    dim_fill, dim_ring = v["dim"]
+    def btn(color, ring, glyph):
+        return button_svg(color, ring, glyph).replace("#3c3c42", dim_fill).replace("#4a4a50", dim_ring)
+    write("decoration.svg", decoration_svg())
+    write("close.svg", btn("#ff5f57", "#e0443e", f'<path d="{GLYPH_X}"/>'))
+    write("minimize.svg", btn("#febc2e", "#dea123", f'<path d="{GLYPH_MIN}"/>'))
+    write("maximize.svg", btn("#28c840", "#1aab29", f'<path d="{GLYPH_MAX}"/>'))
+    write("restore.svg", btn("#28c840", "#1aab29", f'<path d="{GLYPH_RESTORE}"/>'))
+    write(f"{name}rc", rc().replace("ActiveTextColor=235,235,240", f"ActiveTextColor={v['text'][0]}")
+                         .replace("InactiveTextColor=130,130,138", f"InactiveTextColor={v['text'][1]}"))
+    meta = METADATA.replace("X-KDE-PluginInfo-Name=Ravana\n", f"X-KDE-PluginInfo-Name={name}\n")
+    meta = meta.replace("\nName=Ravana\n", f"\nName={'Ravana Light' if name == 'RavanaLight' else 'Ravana'}\n")
+    write("metadata.desktop", meta)
+
+
 if __name__ == "__main__":
+    for name, v in VARIANTS.items():
+        generate(name, v)
+
+
+def _unused():
     write("decoration.svg", decoration_svg())
     write("close.svg", button_svg("#ff5f57", "#e0443e", f'<path d="{GLYPH_X}"/>'))
     write("minimize.svg", button_svg("#febc2e", "#dea123", f'<path d="{GLYPH_MIN}"/>'))

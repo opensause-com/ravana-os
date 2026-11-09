@@ -3,6 +3,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import org.ravana.ui as R
 
 PanelWindow {
     id: win
@@ -14,7 +15,7 @@ PanelWindow {
 
     Image {
         anchors.fill: parent
-        source: Paths.wallpaper
+        source: R.Theme.wallpaper
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         smooth: true

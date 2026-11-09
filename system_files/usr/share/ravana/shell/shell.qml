@@ -19,6 +19,9 @@ ShellRoot {
         }
     }
 
+    // Ravana Shell is the notification server
+    Notifications { screen: Quickshell.screens[0] }
+
     // One Launchpad, on the first screen
     Launchpad { id: launchpad; screen: Quickshell.screens[0] }
 

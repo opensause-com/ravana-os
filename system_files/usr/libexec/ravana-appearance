@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Ravana appearance: switch the whole desktop between light and dark.
+#   ravana-appearance light | dark | toggle | status
+# Changes colours, app style (Kvantum), icons, window frames, GTK / libadwaita / Flatpak
+# apps and the Plasma glass; Ravana Shell's glass and wallpaper follow the colours.
+set -u
+KW="$(command -v kwriteconfig6 || ls /usr/bin/kwriteconfig6 /usr/sbin/kwriteconfig6 2>/dev/null | head -1)"
+KR="$(command -v kreadconfig6 || ls /usr/bin/kreadconfig6 /usr/sbin/kreadconfig6 2>/dev/null | head -1)"
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+current() { "$KR" --file kdeglobals --group General --key ColorScheme 2>/dev/null | grep -qi light && echo light || echo dark; }
+
+apply() {
+    local mode="$1" scheme kv icons frame gtk prefer
+    if [ "$mode" = light ]; then
+        scheme=RavanaLight kv=RavanaGlassLight icons=Colloid-Red-Light frame=RavanaLight gtk=WhiteSur-Light prefer=false
+    else
+        scheme=RavanaDark kv=RavanaGlass icons=Colloid-Red-Dark frame=Ravana gtk=WhiteSur-Dark prefer=true
+    fi
+    # Colours (writes the colour groups into kdeglobals and tells running apps)
+    plasma-apply-colorscheme "$scheme" >/dev/null 2>&1 || "$KW" --file kdeglobals --group General --key ColorScheme "$scheme"
+    # App style
+    mkdir -p "$CFG/Kvantum"
+    printf '[General]\ntheme=%s\n' "$kv" > "$CFG/Kvantum/kvantum.kvconfig"
+    # Icons
+    "$KW" --file kdeglobals --group Icons --key Theme "$icons"
+    # Window frames (red/yellow/green buttons stay; the bar follows light/dark)
+    "$KW" --file kwinrc --group org.kde.kdecoration2 --key theme "__aurorae__svg__$frame"
+    # GTK 3 / 4, libadwaita, Flatpaks
+    for v in 3.0 4.0; do
+        mkdir -p "$CFG/gtk-$v"
+        f="$CFG/gtk-$v/settings.ini"
+        [ -f "$f" ] || printf '[Settings]\n' > "$f"
+        sed -i "/^gtk-theme-name=/d; /^gtk-icon-theme-name=/d; /^gtk-application-prefer-dark-theme=/d" "$f"
+        sed -i "/^\[Settings\]/a gtk-theme-name=$gtk\ngtk-icon-theme-name=$icons\ngtk-application-prefer-dark-theme=$prefer" "$f"
+    done
+    css=/usr/share/ravana/gtk-4.0
+    if [ "$mode" = light ] && [ -f "$css/gtk-Light.css" ]; then cp "$css/gtk-Light.css" "$CFG/gtk-4.0/gtk.css"
+    elif [ -f "$css/gtk-Dark.css" ]; then cp "$css/gtk-Dark.css" "$CFG/gtk-4.0/gtk.css"; fi
+    command -v gsettings >/dev/null && {
+        gsettings set org.gnome.desktop.interface color-scheme "$([ "$mode" = light ] && echo default || echo prefer-dark)" 2>/dev/null
+        gsettings set org.gnome.desktop.interface gtk-theme "$gtk" 2>/dev/null
+        gsettings set org.gnome.desktop.interface icon-theme "$icons" 2>/dev/null
+    } || true
+    flatpak override --user --env=GTK_THEME="$gtk" >/dev/null 2>&1 || true
+    # Let KWin and running apps pick it up
+    dbus-send --session --type=signal /KWin org.kde.KWin.reloadConfig 2>/dev/null || true
+    dbus-send --session --type=method_call --dest=org.kde.KWin /KWin org.kde.KWin.reconfigure 2>/dev/null || true
+    dbus-send --session --type=signal /KGlobalSettings org.kde.KGlobalSettings.notifyChange int32:2 int32:0 2>/dev/null || true
+    "$KW" --file ravanarc --group Appearance --key Mode "$mode"
+}
+
+case "${1:-status}" in
+    light|dark) apply "$1" ;;
+    toggle) [ "$(current)" = dark ] && apply light || apply dark ;;
+    status) current ;;
+    *) echo "usage: ravana-appearance light|dark|toggle|status" >&2; exit 2 ;;
+esac

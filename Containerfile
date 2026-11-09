@@ -21,6 +21,22 @@ RUN dnf -y install --setopt=install_weak_deps=False gcc make && \
     install -Dm644 data/sysusers.d /out/usr/lib/sysusers.d/keyd.conf && \
     install -Dm644 LICENSE /out/usr/share/licenses/keyd/LICENSE
 
+# macOS-style GTK theme for GTK/libadwaita apps, Flatpaks, Firefox and Chrome
+# (WhiteSur, MIT, github.com/vinceliuice/WhiteSur-gtk-theme), red accent, pinned.
+FROM registry.fedoraproject.org/fedora:${FEDORA_VERSION} AS gtktheme
+ARG WS_VERSION=2026-09-10
+ARG WS_SHA256=65516c8f45da45c602471e31b4de0b6e9aed6eb3fc3820df16161d077245a1a2
+RUN dnf -y install --setopt=install_weak_deps=False sassc glib2-devel libxml2 bc which findutils xz && \
+    curl -fsSL -o /tmp/ws.tar.gz "https://github.com/vinceliuice/WhiteSur-gtk-theme/archive/refs/tags/${WS_VERSION}.tar.gz" && \
+    echo "${WS_SHA256}  /tmp/ws.tar.gz" | sha256sum -c - && \
+    tar xzf /tmp/ws.tar.gz -C /tmp && cd "/tmp/WhiteSur-gtk-theme-${WS_VERSION}" && \
+    mkdir -p /out/usr/share/themes && \
+    ./install.sh -d /out/usr/share/themes -t red -c dark -c light -o normal && \
+    ./install.sh -l -t red -c dark && \
+    install -d /out/usr/share/ravana/gtk-4.0 && cp -rL /root/.config/gtk-4.0/. /out/usr/share/ravana/gtk-4.0/ && \
+    install -Dm644 COPYING /out/usr/share/licenses/whitesur-gtk-theme/COPYING && \
+    ls /out/usr/share/themes /out/usr/share/ravana/gtk-4.0
+
 # Rounded window corners on every window, macOS style (KDE-Rounded-Corners, GPL-3.0).
 # Built against the base image's exact KWin so the plugin matches it. If Fedora has
 # no matching kwin-devel, the stage installs nothing and windows keep square bottoms.
@@ -55,6 +71,7 @@ ARG IMAGE_FLAVOR=main
 
 COPY --from=keyd /out/ /
 COPY --from=roundcorners /out/ /
+COPY --from=gtktheme /out/ /
 
 RUN --mount=type=tmpfs,dst=/tmp \
     --mount=type=bind,from=ctx,source=/,target=/run/context \

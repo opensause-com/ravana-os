@@ -60,6 +60,9 @@ shot 06-settings 8
 kinfocenter >/dev/null 2>&1 &
 shot 07-about 8
 
+command -v gnome-disks >/dev/null && { gnome-disks >/dev/null 2>&1 & }
+shot 09-gtk-app 6
+
 # Registered desktop shortcuts (are the Mac ones active?)
 dbus-send --session --print-reply --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.allShortcutInfos > "$OUT/shortcuts-kwin.txt" 2>&1
 dbus-send --session --print-reply --dest=org.kde.kglobalaccel /component/org_kde_spectacle_desktop org.kde.kglobalaccel.Component.allShortcutInfos > "$OUT/shortcuts-spectacle.txt" 2>&1

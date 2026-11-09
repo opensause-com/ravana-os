@@ -48,6 +48,7 @@ Item {
         blurEnabled: true
         blur: 1.0
         blurMax: 48
+        autoPaddingEnabled: false   // keep the blur inside the glass shape
         saturation: Theme.vibrancy
         maskEnabled: true
         maskSource: shape

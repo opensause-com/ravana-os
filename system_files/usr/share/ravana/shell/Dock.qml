@@ -95,7 +95,7 @@ PanelWindow {
         spacing: 0
 
         DockIcon {
-            dock: dock
+            host: dock
             iconSource: "ravana-launchpad"
             label: qsTr("Launchpad")
             onClicked: dock.launchpadRequested()
@@ -106,7 +106,7 @@ PanelWindow {
             DockIcon {
                 required property int index
                 required property var model
-                dock: dock
+                host: dock
                 iconSource: model.decoration
                 label: model.display || model.AppName || ""
                 running: !model.IsLauncher && !model.IsStartup
@@ -126,7 +126,7 @@ PanelWindow {
         }
 
         DockIcon {
-            dock: dock
+            host: dock
             iconSource: "user-trash"
             label: qsTr("Trash")
             onClicked: dock.run("dolphin trash:/")

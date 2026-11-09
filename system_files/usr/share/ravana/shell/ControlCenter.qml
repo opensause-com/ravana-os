@@ -13,7 +13,7 @@ PopupWindow {
     anchor.window: barWindow
     anchor.rect.x: barWindow ? barWindow.width - implicitWidth + 6 : 0
     anchor.rect.y: barWindow ? barWindow.height : 0
-    grabFocus: true
+    grabFocus: Quickshell.env("RAVANA_SHELL_TEST") !== "1"   // no pointer in the cloud test
     visible: false
     color: "transparent"
     implicitWidth: 340 + 28

@@ -6,7 +6,7 @@ import org.ravana.ui as R
 
 Item {
     id: it
-    property var dock
+    property var host                 // the Dock window (sizes, magnification)
     property var iconSource
     property string label
     property bool running: false
@@ -14,9 +14,9 @@ Item {
     signal clicked()
     signal middleClicked()
 
-    readonly property real s: dock.scaleFor(mapToItem(dock.contentItem, width / 2, 0).x)
-    width: dock.cell * (1 + (s - 1) * 0.85)
-    height: dock.iconSize
+    readonly property real s: host.scaleFor(mapToItem(host.contentItem, width / 2, 0).x)
+    width: host.cell * (1 + (s - 1) * 0.85)
+    height: host.iconSize
     Behavior on width { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
 
     property real pulse: 0
@@ -30,7 +30,7 @@ Item {
 
     R.AppIcon {
         id: icon
-        size: dock.iconSize * it.s * (1 + it.pulse * 0.06)
+        size: host.iconSize * it.s * (1 + it.pulse * 0.06)
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         source: it.iconSource

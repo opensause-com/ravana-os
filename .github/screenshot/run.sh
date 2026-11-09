@@ -27,7 +27,7 @@ for d in /usr/libexec/kactivitymanagerd /usr/lib64/libexec/kactivitymanagerd; do
 sleep 2
 if [ -f /usr/share/ravana/shell/shell.qml ] && command -v quickshell >/dev/null; then
   RAVANA_SHELL=1
-  quickshell -p /usr/share/ravana/shell >"$OUT/plasmashell.log" 2>&1 &
+  RAVANA_SHELL_TEST=1 quickshell -p /usr/share/ravana/shell >"$OUT/plasmashell.log" 2>&1 &
   log "started Ravana Shell"
 else
   plasmashell --no-respawn >"$OUT/plasmashell.log" 2>&1 &

@@ -78,7 +78,7 @@ ShellRoot {
         id: win
         title: qsTr("Ravana Settings")
         implicitWidth: 860
-        implicitHeight: 620
+        implicitHeight: 680
         color: R.Theme.dark ? "#1c1b1e" : "#f2f1f4"
         onVisibleChanged: if (!visible) Qt.quit()
 
@@ -122,11 +122,11 @@ ShellRoot {
                     required property var modelData
                     required property int index
                     readonly property bool gap: index > 0 && app.shown[index - 1].group !== modelData.group
-                    width: nav.width; height: 30 + (gap ? 10 : 0)
+                    width: nav.width; height: 28 + (gap ? 8 : 0)
                     MouseArea {
                         id: navArea
                         anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
-                        height: 30
+                        height: 28
                         hoverEnabled: true
                         onClicked: app.page = navItem.modelData.id
                         Rectangle {
@@ -203,7 +203,7 @@ ShellRoot {
                 }
                 Text { Layout.alignment: Qt.AlignHCenter; text: app.about.name || "Ravana OS"; color: R.Theme.text
                     font.family: R.Theme.fontFamily; font.pixelSize: 26; font.weight: Font.Bold }
-                Text { Layout.alignment: Qt.AlignHCenter; text: app.about.image || app.about.version || ""; color: R.Theme.secondaryText
+                Text { Layout.alignment: Qt.AlignHCenter; text: (app.about.version ? qsTr("Version %1").arg(app.about.version) : "") + (app.about.base ? "  ·  " + app.about.base : ""); color: R.Theme.secondaryText
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody }
             }
             SettingsGroup {

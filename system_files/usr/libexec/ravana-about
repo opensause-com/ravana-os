@@ -3,8 +3,9 @@
 # Facts for Ravana Settings > About (key=value lines).
 . /etc/os-release 2>/dev/null
 echo "name=${NAME:-Ravana OS}"
-echo "version=${VERSION:-${VERSION_ID:-}}"
-echo "image=$(sed -n 's/^Version=//p' /etc/xdg/kcm-about-distrorc 2>/dev/null | head -1)"
+echo "version=${IMAGE_VERSION:-${VERSION:-}}"
+echo "base=Fedora ${REDHAT_SUPPORT_PRODUCT_VERSION:-${VERSION_ID:-}}"
+echo "image=Ravana OS ${IMAGE_VERSION:-}"
 echo "kernel=$(uname -r)"
 echo "chip=$(sed -n 's/^model name[[:space:]]*: //p' /proc/cpuinfo | head -1)"
 echo "cores=$(nproc)"

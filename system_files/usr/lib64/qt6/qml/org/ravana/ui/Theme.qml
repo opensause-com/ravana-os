@@ -90,6 +90,12 @@ QtObject {
     readonly property int sizeDisplay: 26
     readonly property int sizeClock: 96
 
+    // Technical tools and duplicates kept out of Launchpad and Spotlight (name prefixes)
+    readonly property var hiddenApps: ["Nested Desktop", "Nested Steam Gamemode", "KDE System Settings",
+        "Help Center", "Bazzite Portal", "ROM Properties", "KDE Connect Indicator", "Cardwire",
+        "Input Remapper", "Reset Ravana Look", "Firewall", "KDebugSettings", "Menu Editor",
+        "Journald Browser", "KWalletManager", "KWrite", "KFind", "Kvantum Manager"]
+
     // Menu bar text sits on clear glass: always readable with a soft shadow
     readonly property color barText: dark ? "#ffffff" : "#1d1d1f"
 }

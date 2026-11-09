@@ -187,5 +187,10 @@ PanelWindow {
             return bar.menus.map(m => m.label).join(" ");
         }
         function close(): void { openMenu.visible = false; }
+        // focused window: name | app id | launcher (tests)
+        function info(): string {
+            return bar.appName + " | " + bar.activeRole(TaskManager.AbstractTasksModel.AppId)
+                 + " | " + bar.activeRole(TaskManager.AbstractTasksModel.LauncherUrlWithoutIcon);
+        }
     }
 }

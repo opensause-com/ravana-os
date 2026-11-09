@@ -32,10 +32,7 @@ PanelWindow {
     Timer { id: closeTimer; interval: R.Theme.normal; onTriggered: pad.visible = false }
 
     // Technical tools and duplicates stay out of the grid (still searchable in Spotlight)
-    readonly property var hidden: ["Nested Desktop", "Nested Steam Gamemode", "KDE System Settings",
-        "Help Center", "Bazzite Portal", "ROM Properties", "KDE Connect Indicator", "Cardwire",
-        "Input Remapper", "Reset Ravana Look", "Firewall", "KDebugSettings", "Menu Editor",
-        "Journald Browser", "KWalletManager", "KWrite", "KFind", "Kvantum Manager"]
+    readonly property var hidden: R.Theme.hiddenApps
     readonly property var apps: {
         const q = search.text.trim().toLowerCase();
         return DesktopEntries.applications.values

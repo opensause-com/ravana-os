@@ -62,6 +62,7 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   TB=$!; shot 34-shell-app-switcher 4; kill $TB 2>/dev/null; sleep 1
   ravana-settings appearance >/dev/null 2>&1 &
   sleep 5; shot 35-settings-appearance 1
+  { echo "settings window: $($QS appmenu info 2>&1)"; rpm -ql quickshell 2>/dev/null | grep -i '\.desktop'; } >> "$OUT/appid.txt"
   SQ="qs ipc -p /usr/share/ravana/settings call settings open"
   $SQ about >> "$OUT/steps.log" 2>&1; shot 36-settings-about 2
   $SQ trackpad >/dev/null 2>&1; shot 37-settings-trackpad 2

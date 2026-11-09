@@ -45,7 +45,8 @@ PanelWindow {
                  : n.includes(q) ? 2 : 3;
         };
         return DesktopEntries.applications.values
-            .filter(e => !e.noDisplay && e.name && (e.name.toLowerCase().includes(q)
+            .filter(e => !e.noDisplay && e.name && !R.Theme.hiddenApps.some(h => e.name.startsWith(h)))
+            .filter(e => (e.name.toLowerCase().includes(q)
                      || (e.genericName || "").toLowerCase().includes(q)
                      || (e.keywords || []).some(k => k.toLowerCase().includes(q))))
             .sort((a, b) => score(a) - score(b) || a.name.localeCompare(b.name))

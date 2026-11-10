@@ -16,7 +16,7 @@ import sys, shutil
 from pathlib import Path
 
 UI = Path("/usr/share/plasma/shells/org.kde.plasma.desktop/contents/lockscreen/LockScreenUi.qml")
-MARK = "// ravana-lockscreen-style v4"
+MARK = "// ravana-lockscreen-style v5"
 
 # Sharp wallpaper over Plasma's blurred one (macOS shows the wallpaper as it is)
 SHARP = '''
@@ -115,6 +115,11 @@ EDITS = [
     ("visible: sessionManagement.canHibernate", "visible: false"),
     ("visible: sessionManagement.canSwitchUser", "visible: false"),
     ("        RowLayout {\n            id: footer", "        RowLayout {\n            id: footer\n            visible: false"),
+    # like macOS, the avatar and password stay on screen (no hiding after 10 idle seconds);
+    # Esc and the normal screen-off timeout still blank the screen
+    ("        property bool uiVisible: false\n", "        property bool uiVisible: true\n"),
+    ("                    mainBlock.mainPasswordBox.showPassword = false;\n                    lockScreenRoot.uiVisible = false;\n",
+     "                    mainBlock.mainPasswordBox.showPassword = false;\n"),
 ]
 
 SHELL = Path("/usr/share/plasma/shells/org.kde.plasma.desktop/contents")

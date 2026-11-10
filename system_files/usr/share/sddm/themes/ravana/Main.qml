@@ -71,7 +71,7 @@ Rectangle {
             required property string icon
             readonly property bool current: ListView.isCurrentItem
             // SDDM's stock face means "no photo set": draw Ravana's default instead
-            readonly property bool hasPhoto: icon.length > 0 && icon.indexOf("/usr/share/sddm/faces/") !== 0
+            readonly property bool hasPhoto: icon.length > 0 && icon.indexOf("sddm/faces") < 0
             width: 160; height: users.height
             opacity: current ? 1 : 0.6
             scale: current ? 1 : 0.75

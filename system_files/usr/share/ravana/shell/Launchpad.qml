@@ -25,6 +25,7 @@ PanelWindow {
         if (visible) { hide(); return; }
         search.text = "";
         pages.currentIndex = 0;
+        openFolder = null;
         visible = true; shown = 1;
         search.forceActiveFocus();
     }
@@ -42,6 +43,23 @@ PanelWindow {
                      || (e.keywords || []).some(k => k.toLowerCase().includes(q)))
             .sort((a, b) => a.name.localeCompare(b.name));
     }
+
+    // Mac-style folders: system tools live in "Utilities" (search still shows them flat)
+    readonly property var keepOut: ["Dolphin", "Files", "Konsole", "System Settings", "Steam", "Lutris",
+        "Bazaar", "Kate", "Firefox", "Google Chrome", "Chromium", "Discord", "Spotify", "VLC"]
+    function isUtility(e) {
+        if (keepOut.some(k => e.name.startsWith(k))) return false;
+        const c = e.categories || [];
+        return c.includes("System") || c.includes("Utility") || c.includes("Settings") || c.includes("Monitor");
+    }
+    readonly property var tiles: {
+        if (search.text.trim()) return apps;
+        const main = apps.filter(e => !isUtility(e));
+        const utils = apps.filter(e => isUtility(e));
+        return utils.length > 1 ? main.concat([{ folder: true, name: qsTr("Utilities"), apps: utils }]) : apps;
+    }
+    property var openFolder: null
+    function openUtilities() { if (!visible) toggle(); openFolder = tiles.find(t => t.folder) || null; }
 
     // blurred, dimmed wallpaper
     Item {
@@ -70,7 +88,7 @@ PanelWindow {
         // Ravana zoom: apps settle in from slightly larger, like stepping back to see them all
         opacity: pad.shown
         scale: 1.07 - 0.07 * pad.shown
-        Keys.onEscapePressed: pad.hide()
+        Keys.onEscapePressed: pad.openFolder ? pad.openFolder = null : pad.hide()
 
         // search pill
         Rectangle {
@@ -97,7 +115,7 @@ PanelWindow {
                 onTextChanged: pages.currentIndex = 0
                 Keys.onLeftPressed: e => { if (!search.text) pages.decrementCurrentIndex(); else e.accepted = false; }
                 Keys.onRightPressed: e => { if (!search.text) pages.incrementCurrentIndex(); else e.accepted = false; }
-                Keys.onEscapePressed: search.text ? search.text = "" : pad.hide()
+                Keys.onEscapePressed: search.text ? search.text = "" : (pad.openFolder ? pad.openFolder = null : pad.hide())
                 Keys.onReturnPressed: if (pad.apps.length) { pad.apps[0].execute(); pad.hide(); }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -121,7 +139,7 @@ PanelWindow {
             readonly property int columns: Math.max(4, Math.min(7, Math.floor((pad.width - 160) / 150)))
             readonly property int rows: Math.max(2, Math.min(5, Math.floor(height / 140)))
             readonly property int perPage: columns * rows
-            readonly property int pageCount: Math.max(1, Math.ceil(pad.apps.length / perPage))
+            readonly property int pageCount: Math.max(1, Math.ceil(pad.tiles.length / perPage))
         }
         ListView {
             id: pages
@@ -151,13 +169,13 @@ PanelWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     columns: area.columns
                     Repeater {
-                        model: pad.apps.slice(page.index * area.perPage, (page.index + 1) * area.perPage)
+                        model: pad.tiles.slice(page.index * area.perPage, (page.index + 1) * area.perPage)
                         delegate: MouseArea {
                             id: cellMouse
                             required property var modelData
                             width: 150; height: 140
                             hoverEnabled: true
-                            onClicked: { modelData.execute(); pad.hide(); }
+                            onClicked: modelData.folder ? pad.openFolder = modelData : (modelData.execute(), pad.hide())
                             Rectangle {
                                 anchors.fill: parent; anchors.margins: 6
                                 radius: R.Theme.radiusLarge
@@ -166,12 +184,30 @@ PanelWindow {
                                 Behavior on opacity { NumberAnimation { duration: R.Theme.fast } }
                             }
                             R.AppIcon {
+                                visible: !cellMouse.modelData.folder
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 y: 14
                                 size: 84
-                                source: cellMouse.modelData.icon
+                                source: cellMouse.modelData.folder ? "" : cellMouse.modelData.icon
                                 scale: cellMouse.pressed ? 0.92 : 1
                                 Behavior on scale { NumberAnimation { duration: 90 } }
+                            }
+                            Rectangle {       // folder: frosted squircle with a 3×3 preview
+                                visible: !!cellMouse.modelData.folder
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: 18
+                                width: 76; height: 76; radius: 18
+                                color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.55)
+                                border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.22)
+                                scale: cellMouse.pressed ? 0.92 : 1
+                                Grid {
+                                    anchors.centerIn: parent
+                                    columns: 3; spacing: 4
+                                    Repeater {
+                                        model: cellMouse.modelData.folder ? cellMouse.modelData.apps.slice(0, 9) : []
+                                        Kirigami.Icon { required property var modelData; width: 18; height: 18; source: modelData.icon }
+                                    }
+                                }
                             }
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -186,6 +222,67 @@ PanelWindow {
                                 font.family: R.Theme.fontFamily
                                 font.pixelSize: 13
                                 renderType: Text.NativeRendering
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // open folder: frosted panel over a dimmed Launchpad, click outside to close
+        Item {
+            id: folderView
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: pad.openFolder ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: R.Theme.normal; easing.type: Easing.OutCubic } }
+            MouseArea { anchors.fill: parent; onClicked: pad.openFolder = null }
+            Rectangle {
+                id: folderPanel
+                readonly property var list: pad.openFolder ? pad.openFolder.apps : []
+                readonly property int cols: Math.min(5, Math.max(3, list.length))
+                width: cols * 130 + 60
+                height: Math.ceil(list.length / cols) * 130 + 110
+                anchors.centerIn: parent
+                radius: 34
+                color: R.Theme.dark ? Qt.rgba(0.16, 0.15, 0.17, 0.72) : Qt.rgba(0.97, 0.97, 0.98, 0.78)
+                border.width: 1; border.color: R.Theme.glassRim
+                scale: pad.openFolder ? 1 : 0.85
+                Behavior on scale { NumberAnimation { duration: R.Theme.bloom; easing.type: Easing.OutBack; easing.overshoot: R.Theme.bloomOvershoot } }
+                MouseArea { anchors.fill: parent }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: 22
+                    text: pad.openFolder ? pad.openFolder.name : ""
+                    color: R.Theme.text
+                    font.family: R.Theme.fontFamily; font.pixelSize: 22; font.weight: Font.DemiBold
+                }
+                Grid {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: 72
+                    columns: folderPanel.cols
+                    Repeater {
+                        model: folderPanel.list
+                        MouseArea {
+                            id: fcell
+                            required property var modelData
+                            width: 130; height: 130
+                            hoverEnabled: true
+                            onClicked: { modelData.execute(); pad.openFolder = null; pad.hide(); }
+                            R.AppIcon {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: 10; size: 72
+                                source: fcell.modelData.icon
+                                scale: fcell.pressed ? 0.92 : 1
+                            }
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: 92; width: 120
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                                text: fcell.modelData.name
+                                color: R.Theme.text
+                                font.family: R.Theme.fontFamily; font.pixelSize: 12
                             }
                         }
                     }

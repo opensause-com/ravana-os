@@ -51,6 +51,7 @@ ShellRoot {
     IpcHandler {
         target: "launchpad"
         function toggle(): void { launchpad.toggle(); }
+        function utilities(): void { launchpad.openUtilities(); }
     }
 
     // App menus: KDE's menu registrar lives in kded; make sure it's loaded (Plasma's shell did this)

@@ -55,6 +55,7 @@ shot 01-desktop 1
 if [ -n "${RAVANA_SHELL:-}" ]; then
   QS="qs ipc -p /usr/share/ravana/shell call"
   $QS launchpad toggle >> "$OUT/steps.log" 2>&1; shot 20-shell-launchpad 2; $QS launchpad toggle >/dev/null 2>&1; sleep 1
+  $QS launchpad utilities >> "$OUT/steps.log" 2>&1; shot 45-launchpad-folder 2; $QS launchpad toggle >/dev/null 2>&1; sleep 1
   $QS menu toggle >> "$OUT/steps.log" 2>&1; shot 21-shell-menu 2; $QS menu toggle >/dev/null 2>&1; sleep 1
   $QS controlcenter toggle >> "$OUT/steps.log" 2>&1; shot 22-shell-control-center 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
   $QS spotlight search "fi" >> "$OUT/steps.log" 2>&1; shot 29-shell-spotlight 3; $QS spotlight toggle >/dev/null 2>&1; sleep 1

@@ -25,7 +25,7 @@ on:
       channel:
         description: Image channel
         type: choice
-        options: [latest, testing]
+        options: [latest, testing, shell]
         default: latest
       sourceforge:
         description: Upload to Cloudflare R2 / SourceForge (when set up)

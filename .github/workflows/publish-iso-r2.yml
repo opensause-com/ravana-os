@@ -10,7 +10,7 @@ on:
       channel:
         description: Folder in the bucket
         type: choice
-        options: [testing, latest]
+        options: [testing, latest, shell]
         default: testing
 
 jobs:

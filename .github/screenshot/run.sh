@@ -104,6 +104,9 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   shot 46-focus-on 1; /usr/libexec/ravana-cc focus off >/dev/null 2>&1; sleep 1
   $QS controlcenter join "Ravana Home" >> "$OUT/steps.log" 2>&1; shot 47-wifi-password 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
   $QS polkit preview >> "$OUT/steps.log" 2>&1; shot 48-admin-password 2; $QS polkit close >/dev/null 2>&1; sleep 1
+  # memory: what each process uses once the desktop has settled (screenshots taken)
+  { echo "== top processes by RAM (MB) =="; ps -eo rss=,comm= --sort=-rss | head -25 | awk '{printf "%7.1f  %s\n", $1/1024, $2}';
+    echo "== totals =="; free -m; echo "== ravana shell =="; ps -o rss=,args= -C quickshell,qs | awk '{printf "%7.1f MB  %s\n", $1/1024, $0}' | cut -c1-140; } > "$OUT/memory.txt" 2>&1
   $QS power ask restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1

@@ -71,19 +71,20 @@ PopupWindow {
                         onClicked: { pop.visible = false; pop.openFile(modelData[0]); }
                         Rectangle { anchors.fill: parent; anchors.margins: 2; radius: 10; color: R.Theme.hover; opacity: cell.containsMouse ? 1 : 0 }
                         Image {
-                            visible: pop.isPicture(cell.modelData[1])
+                            id: thumb
+                            visible: pop.isPicture(cell.modelData[1]) && status === Image.Ready
                             anchors.horizontalCenter: parent.horizontalCenter; y: 8
                             width: 52; height: 52
-                            source: visible ? "file://" + cell.modelData[0] : ""
+                            source: pop.isPicture(cell.modelData[1]) ? "file://" + cell.modelData[0] : ""
                             sourceSize: Qt.size(104, 104)
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                         }
                         Kirigami.Icon {
-                            visible: !pop.isPicture(cell.modelData[1])
+                            visible: !thumb.visible
                             anchors.horizontalCenter: parent.horizontalCenter; y: 8
                             width: 52; height: 52
-                            source: pop.iconFor(cell.modelData[1])
+                            source: pop.isPicture(cell.modelData[1]) ? "image-x-generic" : pop.iconFor(cell.modelData[1])
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter; y: 66

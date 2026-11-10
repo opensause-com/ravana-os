@@ -143,6 +143,8 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   qs ipc -p /usr/share/ravana/shell call appmenu first >/dev/null 2>&1; shot 76-light-app-menu 2; qs ipc -p /usr/share/ravana/shell call appmenu close >/dev/null 2>&1
   pkill dolphin 2>/dev/null; sleep 1
   /usr/libexec/ravana-appearance dark >> "$OUT/steps.log" 2>&1; sleep 3
+  # idle memory: nothing open for 25 s (on-demand screens freed)
+  sleep 25; { echo "== idle: top processes by RAM (MB) =="; ps -eo rss=,comm= --sort=-rss | head -8 | awk '{printf "%7.1f  %s\n", $1/1024, $2}'; } > "$OUT/memory-idle.txt" 2>&1
 fi
 
 send --dest=org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.activateLauncherMenu

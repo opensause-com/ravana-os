@@ -159,7 +159,10 @@ PanelWindow {
             for (const c of row.children) if (c.taskIndex === index) { dock.openMenu(c, index); return; }
         }
         function close(): void { dockMenu.visible = false; stack.visible = false; }
-        function showDownloads(): void { dock.openDownloads(downloads); }
+        function showDownloads(): string {
+            dock.openDownloads(downloads);
+            return "stack visible=" + stack.visible + " anchor=" + (stack.anchorItem !== null) + " size=" + stack.implicitWidth + "x" + stack.implicitHeight;
+        }
     }
 
     function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }

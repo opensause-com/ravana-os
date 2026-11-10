@@ -79,7 +79,9 @@ PanelWindow {
     readonly property var settingsHits: {
         const q = query.toLowerCase();
         if (q.length < 2) return [];
-        return settingsPages.filter(p => p[1].toLowerCase().includes(q) || p[3].includes(q)).slice(0, 3);
+        // a page matches when its name or one of its words starts with what you typed
+        const starts = t => t.toLowerCase().split(/[^a-z0-9]+/).some(w => w.startsWith(q));
+        return settingsPages.filter(p => starts(p[1]) || starts(p[3])).slice(0, 3);
     }
     property var files: []
     Process {

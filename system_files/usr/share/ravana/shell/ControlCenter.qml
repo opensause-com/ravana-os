@@ -33,7 +33,7 @@ PopupWindow {
     }
     function openPage(p) {
         page = p; listRows = [];
-        lister.command = ["/usr/libexec/ravana-cc", p === "wifi" ? "wifi-list" : "bt-list"];
+        lister.command = ["/usr/libexec/ravana-cc", p === "wifi" ? "wifi-list" : p === "sound" ? "sinks" : "bt-list"];
         lister.running = true;
     }
     property real pageShift: 0
@@ -183,7 +183,15 @@ PopupWindow {
                 Layout.fillWidth: true; Layout.preferredHeight: 68
                 ColumnLayout {
                     anchors.fill: parent; anchors.margins: R.Theme.pad; spacing: 8
-                    R.SectionLabel { text: qsTr("Sound") }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        R.SectionLabel { text: qsTr("Sound") }
+                        Item { Layout.fillWidth: true }
+                        Text {      // choose the output (speakers, headphones, HDMI, Bluetooth)
+                            text: "›"; color: R.Theme.secondaryText; font.pixelSize: 16
+                            MouseArea { anchors.fill: parent; anchors.margins: -8; onClicked: cc.openPage("sound") }
+                        }
+                    }
                     R.PillSlider {
                         Layout.fillWidth: true
                         available: cc.flag("sound_available")
@@ -234,11 +242,12 @@ PopupWindow {
                 }
                 Text {
                     Layout.fillWidth: true; leftPadding: 6
-                    text: cc.page === "wifi" ? qsTr("Wi-Fi") : qsTr("Bluetooth")
+                    text: cc.page === "wifi" ? qsTr("Wi-Fi") : cc.page === "sound" ? qsTr("Sound Output") : qsTr("Bluetooth")
                     color: R.Theme.text
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody + 2; font.weight: Font.Bold
                 }
                 Rectangle {     // the module's own switch
+                    visible: cc.page !== "sound"
                     readonly property bool on: cc.page === "wifi" ? cc.flag("wifi_on") : cc.flag("bt_on")
                     implicitWidth: 38; implicitHeight: 22; radius: 11
                     color: on ? R.Theme.accent : R.Theme.sliderTrack
@@ -257,13 +266,13 @@ PopupWindow {
             }
             R.SectionLabel {
                 Layout.topMargin: 4
-                text: cc.page === "wifi" ? qsTr("Networks") : qsTr("My Devices")
+                text: cc.page === "wifi" ? qsTr("Networks") : cc.page === "sound" ? qsTr("Output") : qsTr("My Devices")
                 color: R.Theme.secondaryText
                 font.pixelSize: R.Theme.sizeCaption
             }
             Text {
                 visible: cc.listRows.length === 0
-                text: lister.running ? qsTr("Searching…") : (cc.page === "wifi" ? qsTr("No networks found") : qsTr("No paired devices"))
+                text: lister.running ? qsTr("Searching…") : (cc.page === "wifi" ? qsTr("No networks found") : cc.page === "sound" ? qsTr("No outputs") : qsTr("No paired devices"))
                 color: R.Theme.tertiaryText
                 font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
                 Layout.leftMargin: 6
@@ -274,6 +283,7 @@ PopupWindow {
                     id: net
                     required property var modelData
                     readonly property bool wifi: cc.page === "wifi"
+                    readonly property bool sound: cc.page === "sound"
                     readonly property bool active: wifi ? modelData[0] === "*" : modelData[2] === "1"
                     readonly property string name: wifi ? modelData[1] : modelData[1]
                     Layout.fillWidth: true
@@ -282,6 +292,7 @@ PopupWindow {
                     readonly property bool secured: wifi && (modelData[3] || "--") !== "--" && modelData[3] !== ""
                     readonly property bool known: wifi && modelData[4] === "1"
                     onClicked: {
+                        if (sound) { cc.act(["sink", modelData[0]]); listRefresh.restart(); return; }
                         if (wifi && !active && secured && !known) { cc.askSsid = name; cc.joinError = ""; return; }
                         cc.act(wifi ? ["wifi-connect", name] : ["bt-device", modelData[0]]);
                         listRefresh.restart();
@@ -295,7 +306,7 @@ PopupWindow {
                             Kirigami.Icon {
                                 anchors.centerIn: parent; width: 14; height: 14; isMask: true
                                 color: net.active ? R.Theme.textOnAccent : R.Theme.text
-                                source: !net.wifi ? "network-bluetooth-symbolic"
+                                source: !net.wifi ? (net.sound ? "audio-speakers-symbolic" : "network-bluetooth-symbolic")
                                     : parseInt(net.modelData[2]) > 66 ? "network-wireless-signal-excellent-symbolic"
                                     : parseInt(net.modelData[2]) > 33 ? "network-wireless-signal-good-symbolic"
                                     : "network-wireless-signal-weak-symbolic"
@@ -368,10 +379,10 @@ PopupWindow {
             MouseArea {
                 Layout.fillWidth: true; implicitHeight: 28
                 onClicked: { cc.visible = false; settingsRun.running = true; }
-                Process { id: settingsRun; command: ["systemsettings", cc.page === "wifi" ? "kcm_networkmanagement" : "kcm_bluetooth"] }
+                Process { id: settingsRun; command: ["systemsettings", cc.page === "wifi" ? "kcm_networkmanagement" : cc.page === "sound" ? "kcm_pulseaudio" : "kcm_bluetooth"] }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter; leftPadding: 6
-                    text: cc.page === "wifi" ? qsTr("Wi-Fi Settings…") : qsTr("Bluetooth Settings…")
+                    text: cc.page === "wifi" ? qsTr("Wi-Fi Settings…") : cc.page === "sound" ? qsTr("Sound Settings…") : qsTr("Bluetooth Settings…")
                     color: R.Theme.text
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
                 }

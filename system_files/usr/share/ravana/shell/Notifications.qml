@@ -50,6 +50,9 @@ Scope {
         persistenceSupported: true
         onNotification: n => {
             n.tracked = true;
+            // keep Notification Center's history to the newest 50 (memory over long sessions)
+            const kept = server.trackedNotifications.values;
+            for (let i = 0; i < kept.length - 50; i++) kept[i].dismiss();
             // Focus (Do Not Disturb): keep it for Notification Center, show no banner,
             // except critical alerts (low battery, failures) which always come through
             if (root.focusOn && n.urgency !== 2) return;

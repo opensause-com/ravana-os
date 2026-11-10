@@ -10,6 +10,7 @@ PopupWindow {
     property Item anchorItem
     property var entries: []          // [{ label, action, separator? }]
     signal chosen(string action)
+    onVisibleChanged: if (visible) { col.cur = -1; col.forceActiveFocus(); }
 
     anchor.item: anchorItem
     anchor.rect.x: anchorItem ? anchorItem.width / 2 - implicitWidth / 2 : 0
@@ -28,6 +29,18 @@ PopupWindow {
             anchors.fill: parent
             anchors.margins: 6
             spacing: 0
+            focus: true
+            property int cur: -1
+            readonly property var rows: Array.from(children).map(c => c.item).filter(r => r && r.keyFocus !== undefined)
+            function moveTo(i) {
+                const n = rows.length; if (!n) return;
+                cur = (i + n) % n;
+                rows.forEach((r, k) => r.keyFocus = (k === cur));
+            }
+            Keys.onDownPressed: moveTo(cur + 1)
+            Keys.onUpPressed: moveTo(cur < 0 ? -1 : cur - 1)
+            Keys.onReturnPressed: if (cur >= 0) rows[cur].activate()
+            Keys.onEscapePressed: pop.visible = false
             Repeater {
                 model: pop.entries
                 Loader {
@@ -42,18 +55,20 @@ PopupWindow {
                             implicitHeight: 26
                             implicitWidth: label.implicitWidth + 40
                             hoverEnabled: true
-                            onClicked: { pop.visible = false; pop.chosen(modelData.action); }
+                            property bool keyFocus: false
+                            function activate() { pop.visible = false; pop.chosen(modelData.action); }
+                            onClicked: activate()
                             Rectangle {
                                 anchors.fill: parent
                                 radius: R.Theme.radiusHighlight
                                 color: R.Theme.accent
-                                opacity: row.containsMouse ? 1 : 0
+                                opacity: row.containsMouse || row.keyFocus ? 1 : 0
                             }
                             Text {
                                 id: label
                                 x: 12; anchors.verticalCenter: parent.verticalCenter
                                 text: (modelData.checked ? "✓  " : "") + modelData.label
-                                color: row.containsMouse ? R.Theme.textOnAccent : R.Theme.text
+                                color: row.containsMouse || row.keyFocus ? R.Theme.textOnAccent : R.Theme.text
                                 font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
                             }
                         }

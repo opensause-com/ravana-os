@@ -59,6 +59,28 @@ PanelWindow {
             return (typeof v === "number" && isFinite(v)) ? String(Math.round(v * 1e10) / 1e10) : "";
         } catch (e) { return ""; }
     }
+    // Settings pages (Ravana Settings), found by name and common words
+    readonly property var settingsPages: [
+        ["wifi", qsTr("Wi-Fi"), "network-wireless-symbolic", "wireless internet network"],
+        ["bluetooth", qsTr("Bluetooth"), "network-bluetooth-symbolic", "headphones pair devices"],
+        ["sound", qsTr("Sound"), "audio-volume-high-symbolic", "volume speakers output"],
+        ["displays", qsTr("Displays"), "video-display-symbolic", "screen brightness resolution monitor"],
+        ["appearance", qsTr("Appearance"), "preferences-desktop-theme-global-symbolic", "dark light mode theme"],
+        ["desktop", qsTr("Desktop & Dock"), "preferences-desktop-symbolic", "dock size magnification hide shortcuts"],
+        ["focus", qsTr("Focus"), "notifications-disabled-symbolic", "do not disturb"],
+        ["notifications", qsTr("Notifications"), "notifications-symbolic", "alerts banners"],
+        ["trackpad", qsTr("Trackpad"), "input-touchpad-symbolic", "gestures touchpad"],
+        ["keyboard", qsTr("Keyboard"), "input-keyboard-symbolic", "layout language typing"],
+        ["update", qsTr("Software Update"), "update-none", "upgrade new version"],
+        ["about", qsTr("About This Computer"), "help-about-symbolic", "version specs system"],
+        ["battery", qsTr("Battery & Power"), "battery-good-symbolic", "sleep energy"],
+        ["users", qsTr("Users & Groups"), "system-users-symbolic", "account password"]
+    ]
+    readonly property var settingsHits: {
+        const q = query.toLowerCase();
+        if (q.length < 2) return [];
+        return settingsPages.filter(p => p[1].toLowerCase().includes(q) || p[3].includes(q)).slice(0, 3);
+    }
     property var files: []
     Process {
         id: finder
@@ -83,6 +105,7 @@ PanelWindow {
         apps.forEach((a, i) => r.push({ group: i === 0 ? qsTr("Top Hit") : qsTr("Applications"),
                                         top: i === 0, title: a.name, sub: a.genericName || "", icon: a.icon, app: a }));
         if (calc) r.splice(apps.length ? 1 : 0, 0, { group: qsTr("Calculator"), title: calc, sub: query + " =", icon: "accessories-calculator", copy: calc });
+        settingsHits.forEach(p => r.push({ group: qsTr("System Settings"), title: p[1], sub: "", icon: p[2], page: p[0] }));
         files.forEach(f => r.push({ group: qsTr("Files"), title: f.split("/").pop(), sub: f.replace(Quickshell.env("HOME"), "~"), icon: "document-open", path: f }));
         if (query) r.push({ group: qsTr("Web"), title: qsTr("Search the web for “%1”").arg(query), sub: "", icon: "internet-web-browser", web: query });
         return r;
@@ -94,6 +117,7 @@ PanelWindow {
         if (r.app) r.app.execute();
         else if (r.copy) runner.exec(["wl-copy", r.copy]);
         else if (r.path) runner.exec(["xdg-open", r.path]);
+        else if (r.page) runner.exec(["ravana-settings", r.page]);
         else if (r.web) runner.exec(["xdg-open", "https://duckduckgo.com/?q=" + encodeURIComponent(r.web)]);
         hide();
     }

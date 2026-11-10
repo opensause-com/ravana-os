@@ -7,6 +7,8 @@ MouseArea {
     id: e
     property alias text: label.text
     signal activated()
+    property bool keyFocus: false          // highlighted from the keyboard
+    readonly property bool lit: containsMouse || keyFocus
     Layout.fillWidth: true
     implicitHeight: 28
     hoverEnabled: true
@@ -15,14 +17,14 @@ MouseArea {
         anchors.fill: parent
         radius: 6
         color: R.Theme.accent
-        opacity: e.containsMouse ? 1 : 0
+        opacity: e.lit ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 90 } }
     }
     Text {
         id: label
         anchors.verticalCenter: parent.verticalCenter
         x: 12
-        color: e.containsMouse ? R.Theme.textOnAccent : R.Theme.text
+        color: e.lit ? R.Theme.textOnAccent : R.Theme.text
         font.family: R.Theme.fontFamily
         font.pixelSize: 13
         renderType: Text.NativeRendering

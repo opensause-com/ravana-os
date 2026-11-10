@@ -80,6 +80,25 @@ case "${1:-status}" in
         # entries are ("short" "variant" "long") triples after the count
         short="$(grep -o '"[^"]*"' <<<"$list" | sed -n "$(( ${cur:-0} * 3 + 1 ))p" | tr -d '"')"
         echo "current=${short}" ;;
+    sinks)  # sound outputs: id<TAB>name<TAB>default(1/0)
+        wpctl status 2>/dev/null | awk '
+            /Sinks:/ { on = 1; next }
+            on && /(Sources|Filters|Streams):/ { exit }
+            on && /[0-9]+\./ {
+                line = $0; def = (line ~ /\*/) ? 1 : 0
+                sub(/^[^0-9]*/, "", line); id = line; sub(/\..*/, "", id)
+                name = line; sub(/^[0-9]+\. */, "", name); sub(/ *\[.*$/, "", name)
+                if (name != "") printf "%s\t%s\t%s\n", id, name, def
+            }' ;;
+    sink)   # make an output the default
+        [[ "$2" =~ ^[0-9]+$ ]] && wpctl set-default "$2" ;;
+    staged) # a new OS version is installed and waits for a restart
+        if rpm-ostree status --json 2>/dev/null | grep -Eq '"staged" *: *true' \
+           || grep -q '"state": *"ready"' /run/ravana-update/status.json 2>/dev/null; then
+            echo staged=1
+        else
+            echo staged=0
+        fi ;;
     mic)    # privacy: how many apps are recording from a microphone right now
         n=$(pactl list short source-outputs 2>/dev/null | grep -vc 'monitor' || true)
         echo "mic=${n:-0}" ;;

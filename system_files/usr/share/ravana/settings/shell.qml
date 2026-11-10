@@ -562,7 +562,33 @@ ShellRoot {
     Component {
         id: desktopPage
         ColumnLayout {
+            id: dk
             spacing: 18
+            property var cfg: ({ size: 50, magnify: true, autohide: false })
+            FileView {
+                id: dkFile
+                path: Quickshell.env("HOME") + "/.config/ravana-dock-settings.json"
+                printErrors: false
+                onLoaded: { try { dk.cfg = Object.assign({ size: 50, magnify: true, autohide: false }, JSON.parse(text())); } catch (e) {} }
+            }
+            Process { id: dkWriter }
+            function set(key, value) {
+                const c = Object.assign({}, dk.cfg); c[key] = value; dk.cfg = c;
+                dkWriter.command = ["sh", "-c", 'mkdir -p "$(dirname "$2")" && printf "%s" "$1" > "$2"', "sh",
+                                    JSON.stringify(c), dkFile.path];
+                dkWriter.running = true;
+            }
+            R.SettingsGroup {
+                title: qsTr("Dock")
+                R.SettingsRow { label: qsTr("Size")
+                    R.PillSlider { implicitWidth: 220; iconName: "transform-scale"
+                        value: ((dk.cfg.size || 50) - 36) / 36
+                        onReleased: v => dk.set("size", Math.round(36 + v * 36)) } }
+                R.SettingsRow { label: qsTr("Magnification")
+                    R.ToggleSwitch { on: dk.cfg.magnify !== false; onToggled: dk.set("magnify", !on) } }
+                R.SettingsRow { label: qsTr("Automatically hide and show the Dock"); last: true
+                    R.ToggleSwitch { on: !!dk.cfg.autohide; onToggled: dk.set("autohide", !on) } }
+            }
             R.SettingsGroup {
                 title: qsTr("Keyboard shortcuts")
                 R.SettingsRow { label: qsTr("Spotlight"); detail: "⌘ Space" }

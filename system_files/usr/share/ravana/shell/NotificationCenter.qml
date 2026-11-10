@@ -141,6 +141,7 @@ PanelWindow {
                 Card {
                     id: group
                     required property var modelData
+                    property bool expanded: false
                     Layout.fillWidth: true
                     implicitHeight: gcol.implicitHeight + 20
                     ColumnLayout {
@@ -163,7 +164,7 @@ PanelWindow {
                             }
                         }
                         Repeater {
-                            model: group.modelData.items.slice(0, 4)
+                            model: group.expanded ? group.modelData.items : group.modelData.items.slice(0, 4)
                             MouseArea {
                                 id: item
                                 required property var modelData
@@ -195,6 +196,13 @@ PanelWindow {
                                     }
                                 }
                             }
+                        }
+                        Text {      // stack: show the rest / show less
+                            visible: group.modelData.items.length > 4
+                            text: group.expanded ? qsTr("Show less") : qsTr("Show %1 more").arg(group.modelData.items.length - 4)
+                            color: R.Theme.accent
+                            font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption; font.weight: Font.DemiBold
+                            MouseArea { anchors.fill: parent; anchors.margins: -4; onClicked: group.expanded = !group.expanded }
                         }
                     }
                 }

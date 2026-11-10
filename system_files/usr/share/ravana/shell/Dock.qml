@@ -16,9 +16,19 @@ PanelWindow {
     id: dock
     signal launchpadRequested()
 
-    readonly property int iconSize: 50
+    // Desktop & Dock settings (Settings app writes ~/.config/ravana-dock-settings.json)
+    property var cfg: ({ size: 50, magnify: true, autohide: false })
+    FileView {
+        id: cfgFile
+        path: Quickshell.env("HOME") + "/.config/ravana-dock-settings.json"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: { try { const c = JSON.parse(text()); dock.cfg = Object.assign({ size: 50, magnify: true, autohide: false }, c); } catch (e) {} }
+    }
+    readonly property int iconSize: Math.max(32, Math.min(80, cfg.size || 50))
     readonly property int cell: iconSize + 10
-    readonly property real magnify: 0.55          // extra size at the pointer
+    readonly property real magnify: cfg.magnify === false ? 0 : 0.55     // extra size at the pointer
     readonly property int pad: 8
     readonly property int baseHeight: iconSize + 2 * pad + 8
     readonly property int bottomGap: 8
@@ -27,12 +37,25 @@ PanelWindow {
     WlrLayershell.namespace: "ravana-dock"
     anchors { bottom: true }
     margins.bottom: bottomGap
-    exclusiveZone: baseHeight
+    exclusiveZone: cfg.autohide ? 0 : baseHeight
     color: "transparent"
     // tall enough for magnified icons; only the dock itself takes clicks
     implicitWidth: row.width + 2 * pad + 40
     implicitHeight: baseHeight + iconSize * magnify + 34
-    mask: Region { item: glass }
+    mask: Region { item: dock.revealed ? glass : edge }
+
+    // auto-hide: slides away, comes back when the pointer touches the bottom edge
+    readonly property bool revealed: !cfg.autohide || hover.hovered || edgeHover.hovered || menuOpen || stay.running
+    Timer { id: stay; interval: 600 }
+    onRevealedChanged: if (revealed) stay.restart()
+    property real hideOffset: revealed ? 0 : baseHeight + bottomGap + 12
+    Behavior on hideOffset { NumberAnimation { duration: R.Theme.normal; easing.type: Easing.OutCubic } }
+    Item {
+        id: edge
+        anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
+        height: 3
+        HoverHandler { id: edgeHover }
+    }
 
     property real mouseX: -1000
     function scaleFor(itemCenterX) {
@@ -80,8 +103,25 @@ PanelWindow {
         dock.pinsLoaded = true;
     }
 
+    // ---- Downloads stack: newest files in a glass grid ----
+    property var recent: []
+    Process {
+        id: recentReader
+        command: ["sh", "-c", 'd="$(xdg-user-dir DOWNLOAD 2>/dev/null || echo "$HOME/Downloads")"; ls -t1 -- "$d" 2>/dev/null | head -12 | while IFS= read -r f; do printf "%s\t%s\n" "$d/$f" "$f"; done']
+        stdout: StdioCollector { onStreamFinished: dock.recent = text.split("\n").filter(l => l).map(l => l.split("\t")) }
+    }
+    function openDownloads(item) { recentReader.running = true; stack.anchorItem = item; stack.visible = !stack.visible; }
+    Process { id: opener }
+    DownloadsStack {
+        id: stack
+        visible: false
+        files: dock.recent
+        onOpenFile: f => { opener.command = ["xdg-open", f]; opener.running = true; }   // no shell: names can't run code
+        onOpenFolder: dock.run('dolphin "$(xdg-user-dir DOWNLOAD 2>/dev/null || echo "$HOME/Downloads")"')
+    }
+
     // ---- right-click menu ----
-    property bool menuOpen: dockMenu.visible
+    property bool menuOpen: dockMenu.visible || stack.visible
     property int menuIndex: -1
     function openMenu(item, index) {
         const i = tasks.makeModelIndex(index);
@@ -118,7 +158,8 @@ PanelWindow {
         function menu(index: int): void {
             for (const c of row.children) if (c.taskIndex === index) { dock.openMenu(c, index); return; }
         }
-        function close(): void { dockMenu.visible = false; }
+        function close(): void { dockMenu.visible = false; stack.visible = false; }
+        function showDownloads(): void { dock.openDownloads(downloads); }
     }
 
     function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }
@@ -128,6 +169,7 @@ PanelWindow {
         id: glass
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: -dock.hideOffset
         width: row.width + 2 * dock.pad
         height: dock.baseHeight
         kind: "regular"
@@ -150,7 +192,7 @@ PanelWindow {
         id: row
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: dock.pad + 6
+        anchors.bottomMargin: dock.pad + 6 - dock.hideOffset
         spacing: 0
 
         DockIcon {
@@ -185,6 +227,14 @@ PanelWindow {
                 width: 1; height: dock.iconSize * 0.72
                 color: R.Theme.text; opacity: 0.25
             }
+        }
+
+        DockIcon {
+            id: downloads
+            host: dock
+            iconSource: "folder-download"
+            label: qsTr("Downloads")
+            onClicked: dock.openDownloads(downloads)
         }
 
         DockIcon {

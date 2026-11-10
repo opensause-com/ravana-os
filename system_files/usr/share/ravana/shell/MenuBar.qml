@@ -68,45 +68,13 @@ PanelWindow {
     onMenuServiceChanged: reloadMenus()
     onMenuPathChanged: reloadMenus()
 
-    // ---- status ----
-    property var net: ({})
-    Process {
-        id: netReader
-        command: ["/usr/libexec/ravana-cc", "net"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const s = {};
-                text.split("\n").forEach(l => { const i = l.indexOf("="); if (i > 0) s[l.slice(0, i)] = l.slice(i + 1); });
-                bar.net = s;
-            }
-        }
-    }
-    Timer { interval: 20000; repeat: true; running: true; triggeredOnStart: true; onTriggered: netReader.running = true }
+    // ---- status (shared SystemStatus from the shell; one set of checks for all screens) ----
+    property var sys
+    readonly property var net: sys ? sys.net : ({})
+    readonly property var kbd: sys ? sys.kbd : ({})
+    readonly property bool micInUse: sys ? sys.micInUse : false
     property bool focusOn: false            // Focus (Do Not Disturb), from the notification server
 
-    // privacy: an orange dot while any app records from a microphone (like macOS)
-    property bool micInUse: false
-    Process {
-        id: micReader
-        command: ["/usr/libexec/ravana-cc", "mic"]
-        stdout: StdioCollector { onStreamFinished: bar.micInUse = /mic=([1-9])/.test(text) }
-    }
-    Timer { interval: 6000; repeat: true; running: true; triggeredOnStart: true; onTriggered: micReader.running = true }
-
-    // keyboard layout (shown only with more than one layout)
-    property var kbd: ({})
-    Process {
-        id: kbdReader
-        command: ["/usr/libexec/ravana-cc", "kbd"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const s = {};
-                text.split("\n").forEach(l => { const i = l.indexOf("="); if (i > 0) s[l.slice(0, i)] = l.slice(i + 1); });
-                bar.kbd = s;
-            }
-        }
-    }
-    Timer { interval: 30000; repeat: true; running: true; triggeredOnStart: true; onTriggered: kbdReader.running = true }
     readonly property bool hasBattery: UPower.displayDevice && UPower.displayDevice.isLaptopBattery
 
     function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }
@@ -175,7 +143,7 @@ PanelWindow {
             rightPadding: 8
             MouseArea {
                 anchors.fill: parent
-                onClicked: { bar.run("busctl --user call org.kde.keyboard /Layouts org.kde.KeyboardLayouts switchToNextLayout"); kbdReader.running = true; }
+                onClicked: { bar.run("busctl --user call org.kde.keyboard /Layouts org.kde.KeyboardLayouts switchToNextLayout"); if (bar.sys) bar.sys.refreshKbd(); }
             }
         }
         Text {

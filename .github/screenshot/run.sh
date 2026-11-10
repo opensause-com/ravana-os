@@ -16,6 +16,10 @@ OUT=/shots
 useradd -m -s /bin/bash ravana 2>/dev/null || true
 install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
 chmod 666 /dev/dri/* 2>/dev/null || true
+# sample Software Update progress for the screenshot (the test can't download a real update)
+mkdir -p /run/ravana-update && chmod 755 /run/ravana-update
+printf '{"state":"downloading","size":1288490188,"done":431964160,"speed":6815744,"current":"20261110-11849e5","channel":"shell","version":"20261111-a1b2c3d"}' > /run/ravana-update/status.json
+chmod 644 /run/ravana-update/status.json
 find /usr/share/icons/Colloid-Red-Dark /usr/share/icons/breeze-dark -name 'system-shutdown*' -o -name 'system-reboot*' -o -name 'system-suspend*' -o -name 'user-identity*' 2>/dev/null | head -40 > "$OUT/power-icons.txt"
 ls -R /usr/lib64/qt6/qml/Quickshell/Services 2>/dev/null | grep -iE "polkit|qmldir|^/" > "$OUT/qs-services.txt" 2>&1
 cp /usr/lib64/qt6/qml/Quickshell/Services/Polkit/quickshell-service-polkit.qmltypes "$OUT/" 2>/dev/null; rpm -q quickshell >> "$OUT/qs-services.txt" 2>&1
@@ -76,6 +80,8 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   SQ="qs ipc -p /usr/share/ravana/settings call settings open"
   $SQ about >> "$OUT/steps.log" 2>&1; shot 36-settings-about 2
   $SQ trackpad >/dev/null 2>&1; shot 37-settings-trackpad 2
+  # Software Update page with sample download numbers (the cloud test can't download an update)
+  $SQ update >/dev/null 2>&1; sleep 3; shot 49-software-update 1
   pkill -f "qs -p /usr/share/ravana/settings" 2>/dev/null; pkill -f "quickshell -p /usr/share/ravana/settings" 2>/dev/null; sleep 1
   /usr/libexec/kscreenlocker_greet --testing >> "$OUT/lockscreen.log" 2>&1 &
   LK=$!; sleep 6; shot 38-lock-screen 1

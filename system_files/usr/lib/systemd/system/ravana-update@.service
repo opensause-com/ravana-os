@@ -1,0 +1,11 @@
+[Unit]
+Description=Ravana Software Update (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/ravana-updater %i
+# updates are signature-checked by /etc/containers/policy.json; keep the engine contained
+Nice=10
+IOSchedulingClass=idle

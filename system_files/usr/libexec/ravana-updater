@@ -1,0 +1,135 @@
+#!/usr/bin/python3 -I
+# Copyright (c) 2026 Ravana OS. All rights reserved.
+"""Ravana Software Update engine (runs as root via ravana-update@check / @apply).
+
+check  - compare the installed system with the newest signed image on its channel and
+         work out the real download (only layers this PC doesn't have yet)
+apply  - download and stage the update with `bootc upgrade` (signature-checked by the
+         system policy), reporting MB, speed and time left; then update Flatpak apps
+
+Progress goes to /run/ravana-update/status.json (readable by everyone, no secrets).
+Nothing here changes user files; a staged update applies at the next restart and the
+previous version stays available in the boot menu."""
+import json, os, subprocess, sys, time, threading
+
+RUN = "/run/ravana-update"
+STATUS = os.path.join(RUN, "status.json")
+
+def write(**st):
+    os.makedirs(RUN, exist_ok=True)
+    os.chmod(RUN, 0o755)
+    st["time"] = int(time.time())
+    tmp = STATUS + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(st, f)
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, STATUS)
+
+def sh(*cmd, timeout=600):
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+
+def bootc_status():
+    r = sh("bootc", "status", "--format=json")
+    return json.loads(r.stdout) if r.returncode == 0 else {}
+
+def image_of(d):
+    try:
+        return d["image"]
+    except (KeyError, TypeError):
+        return None
+
+def describe(st):
+    s = st.get("status", {})
+    booted, staged = image_of(s.get("booted")), image_of(s.get("staged"))
+    ref = booted["image"]["image"] if booted else None
+    return ref, (booted or {}).get("imageDigest"), (staged or {}).get("imageDigest"), (booted or {}).get("version")
+
+def local_layers():
+    r = sh("ostree", "refs", "--repo=/sysroot/ostree/repo", "ostree/container/blob")
+    have = set()
+    for line in r.stdout.split():
+        name = line.rsplit("/", 1)[-1]                 # sha256_3A_<hex>
+        if "_3A_" in name:
+            have.add(name.split("_3A_", 1)[1])
+    return have
+
+def remote(ref):
+    r = sh("skopeo", "inspect", "--no-tags", f"docker://{ref}", timeout=120)
+    if r.returncode != 0:
+        raise RuntimeError(r.stderr.strip().splitlines()[-1] if r.stderr.strip() else "registry unreachable")
+    return json.loads(r.stdout)
+
+def check():
+    write(state="checking")
+    ref, booted, staged, version = describe(bootc_status())
+    if not ref:
+        write(state="error", message="This system isn't installed from a Ravana OS image."); return 1
+    try:
+        info = remote(ref)
+    except Exception as e:
+        write(state="error", message=f"Couldn't reach the update server ({e})."); return 1
+    digest = info.get("Digest")
+    labels = info.get("Labels") or {}
+    new_version = labels.get("org.opencontainers.image.version") or info.get("Created", "")[:10]
+    base = dict(current=version or "", channel=ref.rsplit(":", 1)[-1], version=new_version)
+    if digest and digest == staged:
+        write(state="ready", **base); return 0
+    if digest and digest == booted:
+        write(state="uptodate", **base); return 0
+    have = local_layers()
+    need = sum(l.get("Size", 0) for l in info.get("LayersData", []) or []
+               if l.get("Digest", "").split(":", 1)[-1] not in have)
+    write(state="available", size=need, **base)
+    return 0
+
+def rx_bytes():
+    total = 0
+    for dev in os.listdir("/sys/class/net"):
+        if dev == "lo":
+            continue
+        try:
+            total += int(open(f"/sys/class/net/{dev}/statistics/rx_bytes").read())
+        except OSError:
+            pass
+    return total
+
+def apply():
+    try:
+        prev = json.load(open(STATUS))
+    except Exception:
+        prev = {}
+    total = int(prev.get("size") or 0)
+    base = {k: prev.get(k, "") for k in ("current", "channel", "version")}
+    write(state="downloading", size=total, done=0, speed=0, **base)
+
+    proc = subprocess.Popen(["bootc", "upgrade"], stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True)
+    out = []
+    t = threading.Thread(target=lambda: out.extend(proc.stdout), daemon=True); t.start()
+    start = rx_bytes(); last = start; last_t = time.time(); speed = 0.0
+    while proc.poll() is None:
+        time.sleep(1)
+        now = rx_bytes(); dt = max(0.2, time.time() - last_t)
+        speed = 0.6 * speed + 0.4 * ((now - last) / dt)          # smoothed bytes/s
+        last, last_t = now, time.time()
+        done = now - start
+        if total:
+            done = min(done, int(total * 0.99))
+        write(state="downloading", size=total, done=done, speed=int(speed), **base)
+    t.join(timeout=2)
+    if proc.returncode != 0:
+        msg = (out[-1].strip() if out else "") or "The update didn't finish."
+        write(state="error", message=msg, **base); return 1
+
+    write(state="apps", size=total, done=total, **base)
+    sh("flatpak", "update", "--system", "-y", "--noninteractive", timeout=3600)
+    _, _, staged, _ = describe(bootc_status())
+    write(state="ready" if staged else "uptodate", **base)
+    return 0
+
+if __name__ == "__main__":
+    mode = sys.argv[1] if len(sys.argv) > 1 else "check"
+    try:
+        sys.exit(apply() if mode == "apply" else check())
+    except Exception as e:
+        write(state="error", message=str(e)); sys.exit(1)

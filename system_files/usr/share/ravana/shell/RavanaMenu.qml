@@ -37,7 +37,7 @@ PopupWindow {
             MenuSeparator {}
             MenuEntry { text: qsTr("System Settings…"); onActivated: menu.run("ravana-settings") }
             MenuEntry { text: qsTr("App Store…"); onActivated: menu.run("gtk-launch io.github.kolunmi.Bazaar || plasma-discover") }
-            MenuEntry { text: qsTr("Software Update…"); onActivated: menu.run("gtk-launch ravana-update") }
+            MenuEntry { text: qsTr("Software Update…"); onActivated: menu.run("ravana-settings update") }
             MenuSeparator {}
             MenuEntry { text: qsTr("Force Quit…"); onActivated: menu.run("dbus-send --session --type=method_call --dest=org.kde.KWin /KWin org.kde.KWin.killWindow") }
             MenuSeparator {}

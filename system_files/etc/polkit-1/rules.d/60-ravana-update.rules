@@ -1,0 +1,12 @@
+// Ravana Software Update: people who can administer this PC may check for and install
+// signed Ravana OS updates from the Software Update page without a password prompt
+// (like macOS). Only these two units; everything else still asks.
+polkit.addRule(function (action, subject) {
+    if (action.id === "org.freedesktop.systemd1.manage-units" &&
+        action.lookup("verb") === "start" &&
+        (action.lookup("unit") === "ravana-update@check.service" ||
+         action.lookup("unit") === "ravana-update@apply.service") &&
+        subject.local && subject.active && subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});

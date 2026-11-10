@@ -2,9 +2,9 @@ name: Build Ravana OS image
 
 on:
   push:
-    branches: [main, testing]   # main -> :latest, testing -> :testing
-    # ravana-shell -> :shell is built only on request (Actions > Run workflow on ravana-shell);
-    # day-to-day shell changes go through the fast lane in screenshot.yml
+    branches: [main, testing, ravana-shell]   # main -> :latest, testing -> :testing, ravana-shell -> :shell
+    # Every push becomes an update for installed PCs on that channel. The fast lane in
+    # screenshot.yml still shows UI changes within ~10 minutes while this builds.
     paths-ignore:
       - '**/*.md'
       - 'docs/**'

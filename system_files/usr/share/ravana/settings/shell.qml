@@ -223,15 +223,169 @@ ShellRoot {
     Component {
         id: updatePage
         ColumnLayout {
+            id: up
             spacing: 18
-            R.SettingsGroup {
-                footer: qsTr("Ravana updates arrive as a whole, tested system image. Your files and apps are never touched, and the previous version stays available at startup.")
-                R.SettingsRow { label: qsTr("Version"); detail: app.about.image || app.about.version || "—" }
-                R.SettingsRow { label: qsTr("Update channel"); detail: app.about.channel || "—"; last: true }
+            // engine status (ravana-updater writes it; readable by everyone)
+            property var st: ({ state: "checking" })
+            FileView {
+                id: upFile
+                path: "/run/ravana-update/status.json"
+                watchChanges: true
+                printErrors: false
+                onFileChanged: reload()
+                onLoaded: { try { up.st = JSON.parse(text()); } catch (e) {} }
             }
+            Timer {     // live numbers while working
+                interval: 1000; repeat: true
+                running: up.st.state === "downloading" || up.st.state === "checking" || up.st.state === "apps"
+                onTriggered: upFile.reload()
+            }
+            Process { id: upRun }
+            function start(mode) {
+                up.st = ({ state: mode === "apply" ? "downloading" : "checking", size: up.st.size || 0, done: 0, speed: 0,
+                           version: up.st.version || "", current: up.st.current || "" });
+                upRun.command = ["systemctl", "start", "--no-block", "ravana-update@" + mode + ".service"];
+                upRun.running = true;
+            }
+            Component.onCompleted: start("check")
+
+            function size(b) {
+                b = Number(b || 0);
+                return b >= 1e9 ? (b / 1e9).toFixed(2) + " GB" : b >= 1e6 ? Math.round(b / 1e6) + " MB" : Math.round(b / 1e3) + " KB";
+            }
+            readonly property real fraction: up.st.size > 0 ? Math.min(1, up.st.done / up.st.size) : 0
+            readonly property string eta: {
+                const left = (up.st.size || 0) - (up.st.done || 0), sp = up.st.speed || 0;
+                if (sp < 1 || left <= 0) return "";
+                const s = left / sp;
+                return s < 60 ? qsTr("less than a minute left") : qsTr("about %1 min left").arg(Math.ceil(s / 60));
+            }
+
+            // header: crown, name, version
             RowLayout {
-                Item { Layout.fillWidth: true }
-                R.PushButton { text: qsTr("Check for Updates…"); primary: true; onClicked: app.run(["gtk-launch", "ravana-update"]) }
+                spacing: 16
+                Image {
+                    source: R.Theme.dark ? "file:///usr/share/icons/hicolor/128x128/apps/ravana-logo-white.png"
+                                         : "file:///usr/share/icons/hicolor/128x128/apps/ravana-logo.png"
+                    sourceSize: Qt.size(64, 64)
+                }
+                ColumnLayout {
+                    spacing: 2
+                    Text { text: "Ravana OS"; color: R.Theme.text
+                        font.family: R.Theme.fontFamily; font.pixelSize: 18; font.weight: Font.Bold }
+                    Text {
+                        text: qsTr("Version %1").arg(up.st.current || app.about.version || "—")
+                              + (up.st.channel ? "  ·  " + qsTr("%1 channel").arg(up.st.channel) : "")
+                        color: R.Theme.secondaryText
+                        font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
+                    }
+                }
+            }
+
+            // the state card
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: card.implicitHeight + 36
+                radius: 12
+                color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.05) : "#ffffff"
+                border.width: 1
+                border.color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.07)
+                ColumnLayout {
+                    id: card
+                    anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
+                    anchors.margins: 18
+                    spacing: 10
+
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: R.Theme.text
+                        font.family: R.Theme.fontFamily; font.pixelSize: 15; font.weight: Font.DemiBold
+                        text: ({
+                            checking: qsTr("Checking for updates…"),
+                            uptodate: qsTr("Ravana OS is up to date"),
+                            available: qsTr("An update is available"),
+                            downloading: qsTr("Downloading update…"),
+                            apps: qsTr("Updating apps…"),
+                            ready: qsTr("Restart to finish updating"),
+                            error: qsTr("The update couldn't be completed")
+                        })[up.st.state] || ""
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: R.Theme.secondaryText
+                        font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
+                        visible: text.length > 0
+                        text: up.st.state === "available" ? qsTr("Ravana OS %1  ·  %2 to download").arg(up.st.version).arg(up.size(up.st.size))
+                            : up.st.state === "uptodate" ? qsTr("You have the newest version for this channel.")
+                            : up.st.state === "ready" ? qsTr("Ravana OS %1 is installed and starts the next time you restart. Your previous version stays available in the startup menu.").arg(up.st.version)
+                            : up.st.state === "error" ? (up.st.message || "")
+                            : ""
+                    }
+
+                    // progress: thin red bar, percentage, MB and speed
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        visible: up.st.state === "downloading" || up.st.state === "apps"
+                        spacing: 6
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: 6; radius: 3
+                            color: R.Theme.sliderTrack
+                            Rectangle {
+                                height: parent.height; radius: 3
+                                width: parent.width * (up.st.state === "apps" ? 1 : up.fraction)
+                                color: R.Theme.accent
+                                Behavior on width { NumberAnimation { duration: 900; easing.type: Easing.OutCubic } }
+                            }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                text: up.st.state === "apps" ? qsTr("Almost done")
+                                      : Math.floor(up.fraction * 100) + "%  ·  " + up.size(up.st.done) + qsTr(" of ") + up.size(up.st.size)
+                                color: R.Theme.text
+                                font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption
+                                font.features: { "tnum": 1 }
+                            }
+                            Item { Layout.fillWidth: true }
+                            Text {
+                                visible: up.st.state === "downloading"
+                                text: up.size(up.st.speed) + "/s" + (up.eta ? "  ·  " + up.eta : "")
+                                color: R.Theme.secondaryText
+                                font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption
+                                font.features: { "tnum": 1 }
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 4
+                        Item { Layout.fillWidth: true }
+                        R.PushButton {
+                            visible: up.st.state === "uptodate" || up.st.state === "error"
+                            text: up.st.state === "error" ? qsTr("Try Again") : qsTr("Check Again")
+                            onClicked: up.start("check")
+                        }
+                        R.PushButton {
+                            visible: up.st.state === "available"
+                            text: qsTr("Update Now"); primary: true
+                            onClicked: up.start("apply")
+                        }
+                        R.PushButton {
+                            visible: up.st.state === "ready"
+                            text: qsTr("Restart Now"); primary: true
+                            onClicked: app.run(["qs", "ipc", "-p", "/usr/share/ravana/shell", "call", "power", "ask", "restart"])
+                        }
+                    }
+                }
+            }
+
+            R.SettingsGroup {
+                footer: qsTr("Updates are complete, tested system images signed by Ravana OS. Your files and apps are never touched, updates skip metered connections, and the previous version stays available at startup.")
+                R.SettingsRow { label: qsTr("Automatic updates"); detail: qsTr("Weekly, on Sunday morning"); last: true }
             }
         }
     }

@@ -8,7 +8,7 @@
 #   ravana-cc brightness <0-100>
 #   ravana-cc focus on|off            (Do Not Disturb)
 #   ravana-cc wifi-list               -> in-use<TAB>ssid<TAB>signal<TAB>security
-#   ravana-cc wifi-connect <ssid>     (known or open networks; otherwise opens Network settings)
+#   ravana-cc wifi-connect <ssid> [--password-stdin]   (password read from stdin)
 #   ravana-cc bt-list                 -> mac<TAB>name<TAB>connected
 #   ravana-cc bt-device <mac>         (connect / disconnect)
 set -u
@@ -101,12 +101,23 @@ case "${1:-status}" in
         else
             "$KW" --file plasmanotifyrc --group DoNotDisturb --key Until --delete
         fi ;;
-    wifi-list)
+    wifi-list)   # in-use<TAB>ssid<TAB>signal<TAB>security<TAB>known(1/0)
+        known="$(nmcli -t -f NAME,TYPE con show 2>/dev/null | sed -n 's/:802-11-wireless$//p')"
         nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list --rescan auto 2>/dev/null \
-            | sed 's/\\:/\x01/g; s/:/\t/g; s/\x01/:/g' | awk -F'\t' '$2 != "" && !seen[$2]++' | head -12 ;;
+            | sed 's/\\:/\x01/g; s/:/\t/g; s/\x01/:/g' | awk -F'\t' '$2 != "" && !seen[$2]++' | head -12 \
+            | while IFS=$'\t' read -r use ssid sig sec; do
+                printf '%s\t%s\t%s\t%s\t%s\n' "$use" "$ssid" "$sig" "$sec" "$(grep -qxF "$ssid" <<<"$known" && echo 1 || echo 0)"
+              done ;;
     wifi-connect)
-        nmcli con up id "$2" >/dev/null 2>&1 || nmcli dev wifi connect "$2" >/dev/null 2>&1 \
-            || (setsid systemsettings kcm_networkmanagement >/dev/null 2>&1 &) ;;
+        # known or open network: just connect. Secured new network: the password comes
+        # on stdin (never on the command line, so other programs can't read it).
+        if nmcli con up id "$2" >/dev/null 2>&1; then exit 0; fi
+        if [ "${3:-}" = "--password-stdin" ]; then
+            IFS= read -r pw
+            printf '%s\n' "$pw" | nmcli --ask dev wifi connect "$2" >/dev/null 2>&1; rc=$?
+            unset pw; exit $rc
+        fi
+        nmcli dev wifi connect "$2" >/dev/null 2>&1 ;;
     bt-list)
         conn="$(bluetoothctl devices Connected 2>/dev/null | awk '{print $2}')"
         bluetoothctl devices Paired 2>/dev/null | while read -r _ mac name; do

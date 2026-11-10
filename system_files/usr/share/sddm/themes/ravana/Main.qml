@@ -48,7 +48,10 @@ Rectangle {
         }
     }
 
-    // ---- users: the chosen one big in the middle, others small beside ----
+    // ---- users: the chosen one in the middle, others small beside ----
+    // Same geometry as the Ravana lock screen: 120 px avatar centred at 43 % of the
+    // height, the name 22 px below it, the 200 x 30 capsule at 57 %.
+    readonly property int avatarSize: 120
     ListView {
         id: users
         model: userModel
@@ -56,11 +59,10 @@ Rectangle {
         orientation: ListView.Horizontal
         interactive: false
         spacing: 36
-        width: Math.min(root.width - 80, count * 150 + (count - 1) * 36)
-        height: 180
+        width: Math.min(root.width - 80, count * 160 + (count - 1) * 36)
+        height: root.avatarSize + 60
         anchors.horizontalCenter: parent.horizontalCenter
-        y: Math.round(root.height * 0.36) - 60
-        highlightRangeMode: ListView.ApplyRange
+        y: Math.round(root.height * 0.4324 - root.avatarSize / 2)
         delegate: Item {
             id: person
             required property int index
@@ -68,26 +70,49 @@ Rectangle {
             required property string realName
             required property string icon
             readonly property bool current: ListView.isCurrentItem
-            width: 150; height: 180
-            opacity: current ? 1 : 0.65
-            scale: current ? 1 : 0.8
+            // SDDM's stock face means "no photo set": draw Ravana's default instead
+            readonly property bool hasPhoto: icon.length > 0 && icon.indexOf("/usr/share/sddm/faces/") !== 0
+            width: 160; height: users.height
+            opacity: current ? 1 : 0.6
+            scale: current ? 1 : 0.75
+            transformOrigin: Item.Top
             Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutBack } }
             Behavior on opacity { NumberAnimation { duration: 220 } }
             onCurrentChanged: if (current) { root.userName = name; root.realName = realName || name; root.userIcon = icon; }
             Component.onCompleted: if (current) { root.userName = name; root.realName = realName || name; root.userIcon = icon; }
 
-            Rectangle {       // round avatar with a soft rim
+            Rectangle {       // white rim
                 id: avatar
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: 104; height: 104; radius: 52
-                color: "#d21f3c"
-                border.width: 2; border.color: Qt.rgba(1, 1, 1, 0.55)
+                width: root.avatarSize; height: width; radius: width / 2
+                color: "white"
+                Rectangle {   // default: white figure on Ravana red
+                    id: fallback
+                    anchors.fill: parent; anchors.margins: 3
+                    radius: width / 2
+                    color: "#d21f3c"
+                    visible: !person.hasPhoto || face.status !== Image.Ready
+                    clip: true
+                    Rectangle {   // head
+                        width: parent.width * 0.30; height: width; radius: width / 2
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: parent.height * 0.24
+                        color: "white"
+                    }
+                    Rectangle {   // shoulders
+                        width: parent.width * 0.56; height: parent.height * 0.34
+                        radius: width * 0.42
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: parent.height * 0.58
+                        color: "white"
+                    }
+                }
                 Image {
                     id: face
-                    anchors.fill: parent; anchors.margins: 2
-                    source: person.icon
+                    anchors.fill: parent; anchors.margins: 3
+                    source: person.hasPhoto ? person.icon : ""
                     fillMode: Image.PreserveAspectCrop
-                    sourceSize: Qt.size(208, 208)
+                    sourceSize: Qt.size(240, 240)
                     visible: false
                 }
                 Rectangle {
@@ -102,32 +127,25 @@ Rectangle {
                     source: face
                     maskEnabled: true
                     maskSource: faceMask
-                    visible: face.status === Image.Ready
-                }
-                Text {
-                    anchors.centerIn: parent
-                    visible: face.status !== Image.Ready
-                    text: (person.realName || person.name).charAt(0).toUpperCase()
-                    color: "white"; font.family: root.fontFamily; font.pixelSize: 44; font.weight: Font.DemiBold
+                    visible: person.hasPhoto && face.status === Image.Ready
                 }
             }
             Text {
-                anchors.top: avatar.bottom; anchors.topMargin: 14
+                anchors.top: avatar.bottom; anchors.topMargin: 22
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: person.realName || person.name
-                color: "white"; font.family: root.fontFamily; font.pixelSize: 20; font.weight: Font.Bold
-                style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.25)
+                color: "white"; font.family: root.fontFamily; font.pixelSize: 18
             }
             MouseArea { anchors.fill: parent; onClicked: { root.userIndex = person.index; password.forceActiveFocus(); } }
         }
     }
 
-    // ---- password capsule ----
+    // ---- password capsule (exactly centred; the arrow sits outside it on the right) ----
     Item {
         id: passwordRow
-        width: 236; height: 30
+        width: 200; height: 30
         anchors.horizontalCenter: parent.horizontalCenter
-        y: users.y + 192
+        y: Math.round(root.height * 0.567)
         property real shake: 0
         transform: Translate { x: passwordRow.shake }
         SequentialAnimation {
@@ -140,7 +158,8 @@ Rectangle {
 
         Rectangle {
             id: capsule
-            width: 200; height: 30; radius: 15
+            anchors.fill: parent
+            radius: 15
             color: Qt.rgba(1, 1, 1, password.activeFocus ? 0.26 : 0.18)
             border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.25)
             TextInput {
@@ -148,8 +167,10 @@ Rectangle {
                 anchors.fill: parent
                 anchors.leftMargin: 14; anchors.rightMargin: 14
                 verticalAlignment: TextInput.AlignVCenter
+                horizontalAlignment: TextInput.AlignHCenter
                 echoMode: TextInput.Password
-                passwordCharacter: "●"
+                passwordCharacter: "\u25cf"
+                cursorVisible: activeFocus && text.length > 0
                 color: "white"
                 font.family: root.fontFamily; font.pixelSize: 13
                 focus: true
@@ -167,14 +188,14 @@ Rectangle {
                 font.family: root.fontFamily; font.pixelSize: 13
             }
         }
-        Rectangle {      // round arrow
+        Rectangle {      // round arrow, outside the capsule so the capsule stays centred
             anchors.left: capsule.right; anchors.leftMargin: 6
             anchors.verticalCenter: capsule.verticalCenter
             width: 30; height: 30; radius: 15
             visible: password.text.length > 0
             color: Qt.rgba(1, 1, 1, arrowArea.containsMouse ? 0.32 : 0.18)
             border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.25)
-            Text { anchors.centerIn: parent; text: "→"; color: "white"; font.pixelSize: 15 }
+            Text { anchors.centerIn: parent; text: "\u2192"; color: "white"; font.pixelSize: 15 }
             MouseArea { id: arrowArea; anchors.fill: parent; hoverEnabled: true; onClicked: root.login() }
         }
     }

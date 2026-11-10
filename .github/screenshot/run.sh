@@ -93,6 +93,7 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   /usr/libexec/ravana-cc focus on >/dev/null 2>&1; sleep 3
   notify-send -a Messages "Quiet please" "This banner should not appear while Focus is on" 2>/dev/null; sleep 2
   shot 46-focus-on 1; /usr/libexec/ravana-cc focus off >/dev/null 2>&1; sleep 1
+  $QS controlcenter join "Ravana Home" >> "$OUT/steps.log" 2>&1; shot 47-wifi-password 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
   $QS power ask restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
   $QS dock menu 0 >> "$OUT/steps.log" 2>&1; shot 28-shell-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
   notify-send -a "Ravana OS" -i ravana-os "Welcome to Ravana" "Notifications now come from Ravana Shell." >> "$OUT/steps.log" 2>&1

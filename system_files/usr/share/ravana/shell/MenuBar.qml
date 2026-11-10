@@ -233,6 +233,7 @@ PanelWindow {
         target: "controlcenter"; enabled: bar.primary
         function toggle(): void { controlCenter.visible = !controlCenter.visible; }
         function page(name: string): void { controlCenter.showPage(name); }
+        function join(ssid: string): void { controlCenter.showPage("wifi"); controlCenter.askSsid = ssid; }
     }
     IpcHandler {
         target: "appmenu"; enabled: bar.primary

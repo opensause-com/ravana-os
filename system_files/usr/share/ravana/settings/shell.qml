@@ -255,7 +255,9 @@ ShellRoot {
                         detail: modelData[0] === "*" ? qsTr("Connected") : ((modelData[3] || "--") !== "--" ? "🔒" : "")
                         chevron: modelData[0] !== "*"
                         last: index === app.rows.length - 1
-                        onClicked: app.cc(["wifi-connect", modelData[1]])
+                        onClicked: ((modelData[3] || "--") !== "--" && modelData[4] !== "1")
+                            ? app.run(["qs", "ipc", "-p", "/usr/share/ravana/shell", "call", "controlcenter", "join", modelData[1]])
+                            : app.cc(["wifi-connect", modelData[1]])
                     }
                 }
             }

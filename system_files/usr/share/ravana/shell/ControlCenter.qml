@@ -20,7 +20,7 @@ PopupWindow {
     color: "transparent"
     implicitWidth: 340 + 28
     implicitHeight: (page ? detail.implicitHeight : col.implicitHeight) + 2 * R.Theme.pad + 28
-    onVisibleChanged: if (!visible) page = ""
+    onVisibleChanged: if (!visible) { page = ""; askSsid = ""; }
 
     // Expanded module ("" = the grid of modules)
     property string page: ""
@@ -56,6 +56,25 @@ PopupWindow {
     }
     Process { id: action }
     function showPage(p) { visible = true; openPage(p); }
+
+    // joining a new secured Wi-Fi: the password goes to the helper on stdin only
+    property string askSsid: ""
+    property string joinError: ""
+    Process {
+        id: joiner
+        stdinEnabled: true
+        onStarted: { write(wifiPassword.text + "\n"); wifiPassword.text = ""; }
+        onExited: code => {
+            if (code === 0) { cc.askSsid = ""; cc.joinError = ""; }
+            else cc.joinError = qsTr("Couldn't join. Check the password and try again.");
+            cc.openPage("wifi"); refreshSoon.restart();
+        }
+    }
+    function join() {
+        if (!wifiPassword.text || joiner.running) return;
+        joiner.command = ["/usr/libexec/ravana-cc", "wifi-connect", cc.askSsid, "--password-stdin"];
+        joiner.running = true;
+    }
     Process { id: appearance; command: ["/usr/libexec/ravana-appearance", "toggle"] }
     function act(args) { action.command = ["/usr/libexec/ravana-cc"].concat(args); action.running = true; refreshSoon.restart(); }
     Timer { id: refreshSoon; interval: 600; onTriggered: status.running = true }
@@ -260,7 +279,10 @@ PopupWindow {
                     Layout.fillWidth: true
                     implicitHeight: 34
                     hoverEnabled: true
+                    readonly property bool secured: wifi && (modelData[3] || "--") !== "--" && modelData[3] !== ""
+                    readonly property bool known: wifi && modelData[4] === "1"
                     onClicked: {
+                        if (wifi && !active && secured && !known) { cc.askSsid = name; cc.joinError = ""; return; }
                         cc.act(wifi ? ["wifi-connect", name] : ["bt-device", modelData[0]]);
                         listRefresh.restart();
                     }
@@ -294,6 +316,54 @@ PopupWindow {
                     }
                 }
             }
+            // Ravana password prompt for a new secured network
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: cc.page === "wifi" && cc.askSsid.length > 0
+                spacing: 8
+                Text {
+                    Layout.leftMargin: 6
+                    text: qsTr("Password for “%1”").arg(cc.askSsid)
+                    color: R.Theme.text
+                    font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.DemiBold
+                }
+                Rectangle {
+                    Layout.fillWidth: true; implicitHeight: 30; radius: 15
+                    color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0, 0, 0, 0.06)
+                    border.width: 1; border.color: R.Theme.blockBorder
+                    TextInput {
+                        id: wifiPassword
+                        anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14
+                        verticalAlignment: TextInput.AlignVCenter
+                        echoMode: TextInput.Password
+                        passwordCharacter: "\u25cf"
+                        color: R.Theme.text
+                        font.family: R.Theme.fontFamily; font.pixelSize: 13
+                        Keys.onReturnPressed: cc.join()
+                        Keys.onEscapePressed: cc.askSsid = ""
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter; x: 14
+                        visible: !wifiPassword.text
+                        text: qsTr("Password"); color: R.Theme.tertiaryText
+                        font.family: R.Theme.fontFamily; font.pixelSize: 13
+                    }
+                }
+                Text {
+                    visible: cc.joinError.length > 0
+                    Layout.leftMargin: 6
+                    text: cc.joinError
+                    color: R.Theme.accent
+                    font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Item { Layout.fillWidth: true }
+                    R.PushButton { text: qsTr("Cancel"); onClicked: { cc.askSsid = ""; wifiPassword.text = ""; } }
+                    R.PushButton { text: joiner.running ? qsTr("Joining…") : qsTr("Join"); primary: true; onClicked: cc.join() }
+                }
+            }
+
             MenuSeparator { Layout.fillWidth: true }
             MouseArea {
                 Layout.fillWidth: true; implicitHeight: 28

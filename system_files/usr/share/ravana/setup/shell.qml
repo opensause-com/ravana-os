@@ -28,6 +28,25 @@ ShellRoot {
     Process { id: lister; command: ["/usr/libexec/ravana-cc", "wifi-list"]
         stdout: StdioCollector { onStreamFinished: app.nets = text.split("\n").filter(l => l.length).map(l => l.split("\t")) } }
     Process { id: runner }
+
+    // joining a new secured Wi-Fi: the password reaches the helper on stdin only
+    property string askSsid: ""
+    property string joinError: ""
+    Process {
+        id: joiner
+        stdinEnabled: true
+        onStarted: { write(setupPassword.text + "\n"); setupPassword.text = ""; }
+        onExited: code => {
+            if (code === 0) { app.askSsid = ""; app.joinError = ""; }
+            else app.joinError = qsTr("Couldn't join. Check the password.");
+            status.running = true; lister.running = true;
+        }
+    }
+    function join() {
+        if (!setupPassword.text || joiner.running) return;
+        joiner.command = ["/usr/libexec/ravana-cc", "wifi-connect", askSsid, "--password-stdin"];
+        joiner.running = true;
+    }
     function run(args) { runner.command = args; runner.running = true; refresh.restart(); }
     Timer { id: refresh; interval: 1200; onTriggered: { status.running = true; if (app.step === 2) lister.running = true; } }
     onStepChanged: if (step === 2) lister.running = true
@@ -157,11 +176,42 @@ ShellRoot {
                                     detail: modelData[0] === "*" ? qsTr("Connected") : ((modelData[3] || "--") !== "--" ? "🔒" : "")
                                     chevron: modelData[0] !== "*"
                                     last: index === Math.min(4, app.nets.length - 1)
-                                    onClicked: app.run(["/usr/libexec/ravana-cc", "wifi-connect", modelData[1]])
+                                    onClicked: ((modelData[3] || "--") !== "--" && modelData[4] !== "1")
+                            ? (app.askSsid = modelData[1], app.joinError = "")
+                            : app.run(["/usr/libexec/ravana-cc", "wifi-connect", modelData[1]])
                                 }
                             }
                         }
+                        RowLayout {
+                            Layout.fillWidth: true; Layout.topMargin: 10
+                            visible: app.askSsid.length > 0
+                            spacing: 8
+                            Rectangle {
+                                Layout.fillWidth: true; implicitHeight: 30; radius: 15
+                                color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0, 0, 0, 0.06)
+                                border.width: 1; border.color: R.Theme.blockBorder
+                                TextInput {
+                                    id: setupPassword
+                                    anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    echoMode: TextInput.Password
+                                    passwordCharacter: "\u25cf"
+                                    color: R.Theme.text
+                                    font.family: R.Theme.fontFamily; font.pixelSize: 13
+                                    Keys.onReturnPressed: app.join()
+                                }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter; x: 14
+                                    visible: !setupPassword.text
+                                    text: app.joinError || qsTr("Password for “%1”").arg(app.askSsid)
+                                    color: app.joinError ? R.Theme.accent : R.Theme.tertiaryText
+                                    font.family: R.Theme.fontFamily; font.pixelSize: 13
+                                }
+                            }
+                            R.PushButton { text: joiner.running ? qsTr("Joining…") : qsTr("Join"); primary: true; onClicked: app.join() }
+                        }
                     }
+                    // (password for a new secured network, shown on the Wi-Fi step)
                     // 3 — Gestures and keys
                     Page {
                         Heading { text: qsTr("Move like a pro") }

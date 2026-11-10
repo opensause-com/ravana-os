@@ -237,6 +237,7 @@ PanelWindow {
             opacity: pad.openFolder ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: R.Theme.normal; easing.type: Easing.OutCubic } }
             MouseArea { anchors.fill: parent; onClicked: pad.openFolder = null }
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, R.Theme.dark ? 0.45 : 0.2) }   // dim the page behind
             Rectangle {
                 id: folderPanel
                 readonly property var list: pad.openFolder ? pad.openFolder.apps : []
@@ -245,7 +246,7 @@ PanelWindow {
                 height: Math.ceil(list.length / cols) * 130 + 110
                 anchors.centerIn: parent
                 radius: 34
-                color: R.Theme.dark ? Qt.rgba(0.16, 0.15, 0.17, 0.72) : Qt.rgba(0.97, 0.97, 0.98, 0.78)
+                color: R.Theme.dark ? Qt.rgba(0.16, 0.15, 0.17, 0.88) : Qt.rgba(0.97, 0.97, 0.98, 0.9)
                 border.width: 1; border.color: R.Theme.glassRim
                 scale: pad.openFolder ? 1 : 0.85
                 Behavior on scale { NumberAnimation { duration: R.Theme.bloom; easing.type: Easing.OutBack; easing.overshoot: R.Theme.bloomOvershoot } }

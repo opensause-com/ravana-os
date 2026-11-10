@@ -19,6 +19,7 @@ chmod 666 /dev/dri/* 2>/dev/null || true
 # reference for Ravana's lock/logout screens: the exact Plasma greeter/logout code in this image
 { find /usr/share /usr/lib64/qt6/qml -name 'LockScreen*.qml' -o -name 'Logout*.qml' -o -name 'MainBlock.qml' -o -name 'Greeter*.qml' 2>/dev/null;
   ls -R /usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents | head -80; rpm -ql kscreenlocker plasma-workspace 2>/dev/null | grep -iE 'lockscreen|logout|greet' | head -60; } > "$OUT/lock-files.txt" 2>&1
+cp /usr/lib64/qt6/qml/org/kde/plasma/extras/PasswordField.qml "$OUT/PasswordField.qml" 2>/dev/null || find /usr/lib64/qt6/qml -name 'PasswordField.qml' -exec cp {} "$OUT/" \; 2>/dev/null
 find /usr/share /usr/lib64/qt6/qml \( -path '*lockscreen*' -o -path '*logout*' -o -path '*kscreenlocker*' \) -name '*.qml' 2>/dev/null | tar czf "$OUT/lock-qml.tgz" -T - 2>/dev/null || true
 { ls -la /etc/systemd/system/display-manager.service; rpm -qa | grep -iE "sddm|plasma-login|plasmalogin|gdm|greetd|lightdm" ;
   ls /etc/plasmalogin* /etc/sddm* 2>&1; rpm -ql plasma-login-manager 2>/dev/null | grep -iE "qml|conf|theme|service" | head -60;

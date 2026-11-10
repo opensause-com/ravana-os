@@ -146,21 +146,36 @@ def logout():
 
 # Password row, macOS style: a frosted capsule field and a round arrow button
 MAINBLOCK = SHELL / "lockscreen/MainBlock.qml"
-MB_MARK = "// ravana-mainblock-style v1"
+MB_MARK = "// ravana-mainblock-style v2"
 MB_EDITS = [
     ('"@info:placeholder in text field", "Password")',
      '"@info:placeholder in text field", "Enter Password")'),
+    # same capsule as the Ravana login screen: 200 x 30, centred text, 13 px
+    ("            font.pointSize: Kirigami.Theme.defaultFont.pointSize + 1\n",
+     "            font.pixelSize: 13\n"
+     "            font.family: \"Inter\"\n"),
     ("            cursorVisible: visible\n",
      "            cursorVisible: visible\n"
-     "            implicitWidth: 220\n"
-     "            leftPadding: 16; rightPadding: 16\n"
+     "            Layout.preferredWidth: 200\n"
+     "            Layout.preferredHeight: 30\n"
+     "            Layout.alignment: Qt.AlignHCenter\n"
+     "            horizontalAlignment: TextInput.AlignHCenter\n"
+     "            leftPadding: 14; rightPadding: 14; topPadding: 0; bottomPadding: 0\n"
      "            color: \"white\"\n"
+     "            placeholderTextColor: Qt.rgba(1, 1, 1, 0.6)\n"
+     "            passwordCharacter: \"\u25cf\"\n"
      "            background: Rectangle {\n"
-     "                radius: height / 2\n"
-     "                color: Qt.rgba(1, 1, 1, passwordBox.activeFocus ? 0.24 : 0.16)\n"
+     "                radius: 15\n"
+     "                color: Qt.rgba(1, 1, 1, passwordBox.activeFocus ? 0.26 : 0.18)\n"
      "                border.width: 1\n"
-     "                border.color: Qt.rgba(1, 1, 1, 0.22)\n"
+     "                border.color: Qt.rgba(1, 1, 1, 0.25)\n"
      "            }\n"),
+    ("            Layout.fillWidth: true\n            text: PasswordSync.password\n",
+     "            Layout.fillWidth: false\n            text: PasswordSync.password\n"),
+    # the round arrow appears once you type, like the login screen
+    ("            Layout.preferredWidth: loginButton.Layout.preferredHeight\n",
+     "            Layout.preferredWidth: 30\n"
+     "            visible: passwordBox.text.length > 0\n"),
     ("            onClicked: sessionManager.startLogin()\n",
      "            onClicked: sessionManager.startLogin()\n"
      "            background: Rectangle {\n"

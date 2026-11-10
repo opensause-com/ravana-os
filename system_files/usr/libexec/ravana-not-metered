@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Copyright (c) 2026 Ravana OS. All rights reserved.
+# Exit 0 when the current connection is NOT metered (so background updates may run).
+# NetworkManager Metered: 0 unknown, 1 yes, 2 no, 3 guessed yes, 4 guessed no.
+m=$(busctl get-property org.freedesktop.NetworkManager /org/freedesktop/NetworkManager \
+    org.freedesktop.NetworkManager Metered 2>/dev/null | awk '{print $2}')
+case "$m" in
+    1|3) echo "metered connection: skipping background updates"; exit 1 ;;
+    *)   exit 0 ;;
+esac

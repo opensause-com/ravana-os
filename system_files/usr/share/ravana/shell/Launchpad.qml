@@ -150,7 +150,7 @@ PanelWindow {
             highlightMoveDuration: R.Theme.normal * 2
             boundsBehavior: Flickable.StopAtBounds
             clip: true
-            model: area.pageCount
+            model: pad.visible ? area.pageCount : 0
             Keys.onLeftPressed: decrementCurrentIndex()
             Keys.onRightPressed: incrementCurrentIndex()
             WheelHandler {

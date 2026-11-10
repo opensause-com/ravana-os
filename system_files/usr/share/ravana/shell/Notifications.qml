@@ -32,6 +32,11 @@ Scope {
     }
     Timer { interval: 60000; repeat: true; running: true; onTriggered: root.readFocus() }   // timed Focus ends
 
+    Process {
+        id: chime
+        command: ["pw-play", "--volume=0.55", "/usr/share/sounds/ravana/stereo/message-new-instant.wav"]
+    }
+
     // banners currently on screen
     ListModel { id: banners }
 
@@ -49,6 +54,13 @@ Scope {
             // except critical alerts (low battery, failures) which always come through
             if (root.focusOn && n.urgency !== 2) return;
             banners.insert(0, { note: n });
+            // Ravana chime (apps can ask for silence; quiet notifications stay quiet)
+            const quiet = n.urgency === 0 || (n.hints && n.hints["suppress-sound"]);
+            if (!quiet && !chime.running) {
+                chime.command = ["pw-play", "--volume=0.55", "/usr/share/sounds/ravana/stereo/"
+                                 + (n.urgency === 2 ? "dialog-warning.wav" : "message-new-instant.wav")];
+                chime.running = true;
+            }
             if (banners.count > 4) banners.remove(banners.count - 1);
         }
     }

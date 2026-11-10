@@ -69,3 +69,11 @@ for f in /etc/xdg/autostart/org.kde.plasma-welcome.desktop /usr/share/autostart/
     [ -f "$f" ] && { grep -q '^Hidden=true' "$f" || echo "Hidden=true" >> "$f"; }
 done
 test -x /usr/libexec/ravana-setup
+
+# Ravana sound theme (bronze bell family) for apps' event sounds, KDE and GTK alike
+$KW --file /etc/xdg/kdeglobals --group Sounds --key Theme ravana
+for g in /etc/xdg/gtk-3.0/settings.ini /etc/xdg/gtk-4.0/settings.ini; do
+    $KW --file "$g" --group Settings --key gtk-sound-theme-name ravana
+    $KW --file "$g" --group Settings --key gtk-enable-event-sounds 1
+done
+test -f /usr/share/sounds/ravana/index.theme

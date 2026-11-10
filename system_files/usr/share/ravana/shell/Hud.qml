@@ -47,9 +47,14 @@ PanelWindow {
              : kind === "microphone" ? qsTr("Microphone") : qsTr("Sound");
     }
 
+    Process { id: tap; command: ["pw-play", "--volume=0.5", "/usr/share/sounds/ravana/stereo/audio-volume-change.wav"] }
+
     IpcHandler {
         target: "hud"
-        function level(kind: string, percent: int): void { hud.kind = kind; hud.level = percent; hud.present(); }
+        function level(kind: string, percent: int): void {
+            hud.kind = kind; hud.level = percent; hud.present();
+            if (kind === "volume" && !tap.running) tap.running = true;     // macOS-style volume feedback
+        }
         function text(icon: string, message: string): void { hud.kind = "text"; hud.icon = icon; hud.message = message; hud.present(); }
     }
 

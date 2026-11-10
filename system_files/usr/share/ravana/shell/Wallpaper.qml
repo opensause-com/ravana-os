@@ -19,5 +19,8 @@ PanelWindow {
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         smooth: true
+        // decode at the screen's size, not the 4K file's (≈8 MB instead of ≈33 MB on 1080p)
+        sourceSize: Qt.size(win.width > 0 ? win.width : 1920, win.height > 0 ? win.height : 1080)
+        cache: true
     }
 }

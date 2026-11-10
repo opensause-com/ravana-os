@@ -1,0 +1,8 @@
+[Sound Theme]
+Name=Ravana
+Comment=Ravana OS system sounds (bronze bell family)
+Inherits=freedesktop
+Directories=stereo
+
+[stereo]
+OutputProfile=stereo

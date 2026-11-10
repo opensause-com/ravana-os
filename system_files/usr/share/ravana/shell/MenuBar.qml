@@ -82,6 +82,17 @@ PanelWindow {
         }
     }
     Timer { interval: 20000; repeat: true; running: true; triggeredOnStart: true; onTriggered: netReader.running = true }
+    property bool focusOn: false            // Focus (Do Not Disturb), from the notification server
+
+    // privacy: an orange dot while any app records from a microphone (like macOS)
+    property bool micInUse: false
+    Process {
+        id: micReader
+        command: ["/usr/libexec/ravana-cc", "mic"]
+        stdout: StdioCollector { onStreamFinished: bar.micInUse = /mic=([1-9])/.test(text) }
+    }
+    Timer { interval: 6000; repeat: true; running: true; triggeredOnStart: true; onTriggered: micReader.running = true }
+
     // keyboard layout (shown only with more than one layout)
     property var kbd: ({})
     Process {
@@ -95,7 +106,7 @@ PanelWindow {
             }
         }
     }
-    Timer { interval: 8000; repeat: true; running: true; triggeredOnStart: true; onTriggered: kbdReader.running = true }
+    Timer { interval: 30000; repeat: true; running: true; triggeredOnStart: true; onTriggered: kbdReader.running = true }
     readonly property bool hasBattery: UPower.displayDevice && UPower.displayDevice.isLaptopBattery
 
     function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }
@@ -144,6 +155,18 @@ PanelWindow {
             TrayItem { barWindow: bar }
         }
 
+        Rectangle {     // microphone in use
+            visible: bar.micInUse
+            Layout.alignment: Qt.AlignVCenter
+            Layout.rightMargin: 8
+            implicitWidth: 7; implicitHeight: 7; radius: 3.5
+            color: "#ff9f0a"
+        }
+        BarButton {     // Focus is on
+            visible: bar.focusOn
+            icon: "weather-clear-night-symbolic"
+            onClicked: controlCenter.visible = !controlCenter.visible
+        }
         Text {      // keyboard layout, click to switch
             visible: parseInt(bar.kbd.count || "0") > 1
             text: (bar.kbd.current || "").toUpperCase()

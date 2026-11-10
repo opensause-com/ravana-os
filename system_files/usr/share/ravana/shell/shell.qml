@@ -4,6 +4,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.UPower
 
 ShellRoot {
     id: shell
@@ -14,7 +15,7 @@ ShellRoot {
             id: perScreen
             required property var modelData
             Wallpaper { screen: perScreen.modelData }
-            MenuBar { screen: perScreen.modelData }
+            MenuBar { screen: perScreen.modelData; focusOn: notifications.focusOn }
             Dock { screen: perScreen.modelData; onLaunchpadRequested: launchpad.toggle() }
         }
     }
@@ -25,6 +26,17 @@ ShellRoot {
     IpcHandler {
         target: "notifications"
         function toggle(): void { notificationCenter.toggle(); }
+    }
+
+    // Power connected: a short rising chime (laptops)
+    Process { id: plugSound; command: ["pw-play", "--volume=0.6", "/usr/share/sounds/ravana/stereo/power-plug.wav"] }
+    Connections {
+        target: UPower.displayDevice
+        function onStateChanged() {
+            const d = UPower.displayDevice;
+            if (d && d.isLaptopBattery && d.state === UPowerDeviceState.Charging && !plugSound.running)
+                plugSound.running = true;
+        }
     }
 
     // Restart / Shut Down / Log Out alert

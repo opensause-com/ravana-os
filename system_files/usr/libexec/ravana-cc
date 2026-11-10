@@ -80,6 +80,9 @@ case "${1:-status}" in
         # entries are ("short" "variant" "long") triples after the count
         short="$(grep -o '"[^"]*"' <<<"$list" | sed -n "$(( ${cur:-0} * 3 + 1 ))p" | tr -d '"')"
         echo "current=${short}" ;;
+    mic)    # privacy: how many apps are recording from a microphone right now
+        n=$(pactl list short source-outputs 2>/dev/null | grep -vc 'monitor' || true)
+        echo "mic=${n:-0}" ;;
     net)    # just what the menu bar's network icon needs (cheap, polled)
         echo "wifi_on=$( [ "$(nmcli -t -f WIFI radio 2>/dev/null)" = enabled ] && echo 1 || echo 0)"
         echo "wifi_name=$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | sed -n 's/^yes://p' | head -1)"

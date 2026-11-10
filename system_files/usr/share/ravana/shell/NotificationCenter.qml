@@ -67,12 +67,12 @@ PanelWindow {
                 SystemClock { id: clock; precision: SystemClock.Minutes }
                 Text {
                     text: Qt.formatDate(clock.date, "dddd")
-                    color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.3)
+                    color: R.Theme.dark ? "white" : "#1d1d1f"; style: R.Theme.dark ? Text.Raised : Text.Normal; styleColor: Qt.rgba(0, 0, 0, 0.3)
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.DemiBold
                 }
                 Text {
                     text: Qt.formatDate(clock.date, "d MMMM")
-                    color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.3)
+                    color: R.Theme.dark ? "white" : "#1d1d1f"; style: R.Theme.dark ? Text.Raised : Text.Normal; styleColor: Qt.rgba(0, 0, 0, 0.3)
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeDisplay; font.weight: Font.Bold
                 }
             }
@@ -114,7 +114,7 @@ PanelWindow {
                 Text {
                     Layout.fillWidth: true
                     text: qsTr("Notifications")
-                    color: "white"; style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.3)
+                    color: R.Theme.dark ? "white" : "#1d1d1f"; style: R.Theme.dark ? Text.Raised : Text.Normal; styleColor: Qt.rgba(0, 0, 0, 0.3)
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.Bold
                 }
                 Rectangle {

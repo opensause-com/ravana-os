@@ -16,8 +16,9 @@ OUT=/shots
 useradd -m -s /bin/bash ravana 2>/dev/null || true
 install -d -m 700 -o ravana -g ravana /tmp/xdg-ravana
 chmod 666 /dev/dri/* 2>/dev/null || true
+find /usr/share/icons/Colloid-Red-Dark /usr/share/icons/breeze-dark -name 'system-shutdown*' -o -name 'system-reboot*' -o -name 'system-suspend*' -o -name 'user-identity*' 2>/dev/null | head -40 > "$OUT/power-icons.txt"
 ls -R /usr/lib64/qt6/qml/Quickshell/Services 2>/dev/null | grep -iE "polkit|qmldir|^/" > "$OUT/qs-services.txt" 2>&1
-grep -rl -i polkit /usr/lib64/qt6/qml/Quickshell 2>/dev/null >> "$OUT/qs-services.txt"
+cp /usr/lib64/qt6/qml/Quickshell/Services/Polkit/quickshell-service-polkit.qmltypes "$OUT/" 2>/dev/null; rpm -q quickshell >> "$OUT/qs-services.txt" 2>&1
 # reference for Ravana's lock/logout screens: the exact Plasma greeter/logout code in this image
 { find /usr/share /usr/lib64/qt6/qml -name 'LockScreen*.qml' -o -name 'Logout*.qml' -o -name 'MainBlock.qml' -o -name 'Greeter*.qml' 2>/dev/null;
   ls -R /usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents | head -80; rpm -ql kscreenlocker plasma-workspace 2>/dev/null | grep -iE 'lockscreen|logout|greet' | head -60; } > "$OUT/lock-files.txt" 2>&1

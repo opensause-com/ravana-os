@@ -108,9 +108,20 @@ PanelWindow {
     Process {
         id: recentReader
         command: ["sh", "-c", 'd="$(xdg-user-dir DOWNLOAD 2>/dev/null || echo "$HOME/Downloads")"; ls -t1 -- "$d" 2>/dev/null | head -12 | while IFS= read -r f; do printf "%s\t%s\n" "$d/$f" "$f"; done']
-        stdout: StdioCollector { onStreamFinished: dock.recent = text.split("\n").filter(l => l).map(l => l.split("\t")) }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                dock.recent = text.split("\n").filter(l => l).map(l => l.split("\t"));
+                if (dock.stackPending) { dock.stackPending = false; stack.visible = true; }   // open once the list is in
+            }
+        }
     }
-    function openDownloads(item) { recentReader.running = true; stack.anchorItem = item; stack.visible = !stack.visible; }
+    property bool stackPending: false
+    function openDownloads(item) {
+        if (stack.visible) { stack.visible = false; return; }
+        stack.anchorItem = item;
+        stackPending = true;
+        recentReader.running = true;
+    }
     Process { id: opener }
     DownloadsStack {
         id: stack
@@ -161,7 +172,7 @@ PanelWindow {
         function close(): void { dockMenu.visible = false; stack.visible = false; }
         function showDownloads(): string {
             dock.openDownloads(downloads);
-            return "stack visible=" + stack.visible + " anchor=" + (stack.anchorItem !== null) + " size=" + stack.implicitWidth + "x" + stack.implicitHeight;
+            return "downloads stack requested";
         }
     }
 

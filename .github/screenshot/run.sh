@@ -109,7 +109,7 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
     echo "== totals =="; free -m; echo "== ravana shell =="; ps -o rss=,args= -C quickshell,qs | awk '{printf "%7.1f MB  %s\n", $1/1024, $0}' | cut -c1-140; } > "$OUT/memory.txt" 2>&1
   $QS power ask restart >> "$OUT/steps.log" 2>&1; shot 39-power-dialog 2; $QS power close >/dev/null 2>&1; sleep 1
   mkdir -p "$HOME/Downloads"; for f in ravana-os-live.iso notes.pdf wallpaper.png song.mp3 setup.rpm; do : > "$HOME/Downloads/$f"; done
-  $QS dock showDownloads >> "$OUT/steps.log" 2>&1; shot 50-dock-downloads 2; $QS dock close >/dev/null 2>&1; sleep 1
+  $QS dock showDownloads >> "$OUT/steps.log" 2>&1; sleep 2; shot 50-dock-downloads 2; $QS dock close >/dev/null 2>&1; sleep 1
   $QS controlcenter page sound >> "$OUT/steps.log" 2>&1; shot 51-cc-sound-output 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
   $QS spotlight search "dock" >> "$OUT/steps.log" 2>&1; shot 52-spotlight-settings 3; $QS spotlight toggle >/dev/null 2>&1; sleep 1
   ravana-settings desktop >/dev/null 2>&1 & sleep 5; shot 53-settings-dock 1; pkill -f "share/ravana/settings" 2>/dev/null; sleep 1

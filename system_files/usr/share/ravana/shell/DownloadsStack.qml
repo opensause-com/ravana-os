@@ -20,7 +20,8 @@ PopupWindow {
     grabFocus: Quickshell.env("RAVANA_SHELL_TEST") !== "1"
     color: "transparent"
     implicitWidth: 4 * 96 + 28 + 24
-    implicitHeight: col.implicitHeight + 28 + 24
+    // one fixed size (title, 3 rows of 4, button): a popup must not resize while open
+    implicitHeight: 3 * 92 + 120
 
     function iconFor(name) {
         const ext = (name.split(".").pop() || "").toLowerCase();

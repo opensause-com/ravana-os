@@ -72,6 +72,14 @@ status() {
 
 case "${1:-status}" in
     status) status ;;
+    kbd)    # keyboard layouts (KWin): how many, and the current one's short name
+        list="$(busctl --user call org.kde.keyboard /Layouts org.kde.KeyboardLayouts getLayoutsList 2>/dev/null)"
+        cur="$(busctl --user call org.kde.keyboard /Layouts org.kde.KeyboardLayouts getLayout 2>/dev/null | awk '{print $2}')"
+        count="$(awk '{print $2}' <<<"$list")"
+        echo "count=${count:-0}"
+        # entries are ("short" "variant" "long") triples after the count
+        short="$(grep -o '"[^"]*"' <<<"$list" | sed -n "$(( ${cur:-0} * 3 + 1 ))p" | tr -d '"')"
+        echo "current=${short}" ;;
     net)    # just what the menu bar's network icon needs (cheap, polled)
         echo "wifi_on=$( [ "$(nmcli -t -f WIFI radio 2>/dev/null)" = enabled ] && echo 1 || echo 0)"
         echo "wifi_name=$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | sed -n 's/^yes://p' | head -1)"

@@ -8,6 +8,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.UPower
+import Quickshell.Services.SystemTray
 import org.kde.taskmanager as TaskManager
 import org.kde.kirigami as Kirigami
 import org.ravana.ui as R
@@ -81,6 +82,20 @@ PanelWindow {
         }
     }
     Timer { interval: 20000; repeat: true; running: true; triggeredOnStart: true; onTriggered: netReader.running = true }
+    // keyboard layout (shown only with more than one layout)
+    property var kbd: ({})
+    Process {
+        id: kbdReader
+        command: ["/usr/libexec/ravana-cc", "kbd"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const s = {};
+                text.split("\n").forEach(l => { const i = l.indexOf("="); if (i > 0) s[l.slice(0, i)] = l.slice(i + 1); });
+                bar.kbd = s;
+            }
+        }
+    }
+    Timer { interval: 8000; repeat: true; running: true; triggeredOnStart: true; onTriggered: kbdReader.running = true }
     readonly property bool hasBattery: UPower.displayDevice && UPower.displayDevice.isLaptopBattery
 
     function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }
@@ -123,6 +138,23 @@ PanelWindow {
         }
         Item { Layout.fillWidth: true }
 
+        // menu-bar extras from apps' tray icons (on the primary screen, like macOS)
+        Repeater {
+            model: bar.primary ? SystemTray.items : []
+            TrayItem { barWindow: bar }
+        }
+
+        Text {      // keyboard layout, click to switch
+            visible: parseInt(bar.kbd.count || "0") > 1
+            text: (bar.kbd.current || "").toUpperCase()
+            color: R.Theme.barText
+            font.family: R.Theme.fontFamily; font.pixelSize: 12; font.weight: Font.DemiBold
+            rightPadding: 8
+            MouseArea {
+                anchors.fill: parent
+                onClicked: { bar.run("busctl --user call org.kde.keyboard /Layouts org.kde.KeyboardLayouts switchToNextLayout"); kbdReader.running = true; }
+            }
+        }
         Text {
             visible: bar.hasBattery
             text: bar.hasBattery ? Math.round(UPower.displayDevice.percentage * (UPower.displayDevice.percentage <= 1 ? 100 : 1)) + "%" : ""

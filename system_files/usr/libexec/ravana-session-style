@@ -146,7 +146,7 @@ def logout():
 
 # Password row, macOS style: a frosted capsule field and a round arrow button
 MAINBLOCK = SHELL / "lockscreen/MainBlock.qml"
-MB_MARK = "// ravana-mainblock-style v4"
+MB_MARK = "// ravana-mainblock-style v5"
 MB_EDITS = [
     # centre the row under the avatar; a spacer the size of the arrow keeps the
     # capsule itself exactly centred when the arrow appears on its right
@@ -162,7 +162,7 @@ MB_EDITS = [
      "            font.pixelSize: 13\n"
      "            font.family: \"Inter\"\n"),
     ("            cursorVisible: visible\n",
-     "            cursorVisible: visible\n"
+     "            cursorVisible: visible && text.length > 0\n"
      "            Layout.preferredWidth: 200\n"
      "            Layout.preferredHeight: 30\n"
      "            Layout.alignment: Qt.AlignHCenter\n"

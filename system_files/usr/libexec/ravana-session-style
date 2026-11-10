@@ -146,8 +146,15 @@ def logout():
 
 # Password row, macOS style: a frosted capsule field and a round arrow button
 MAINBLOCK = SHELL / "lockscreen/MainBlock.qml"
-MB_MARK = "// ravana-mainblock-style v3"
+MB_MARK = "// ravana-mainblock-style v4"
 MB_EDITS = [
+    # centre the row under the avatar; a spacer the size of the arrow keeps the
+    # capsule itself exactly centred when the arrow appears on its right
+    ("    RowLayout {\n        id: passwordLayout\n        Layout.fillWidth: true\n",
+     "    RowLayout {\n        id: passwordLayout\n        Layout.fillWidth: false\n"
+     "        Layout.alignment: Qt.AlignHCenter\n"
+     "        spacing: 6\n"
+     "        Item { visible: loginButton.visible; Layout.preferredWidth: 30; Layout.preferredHeight: 30 }\n"),
     ('"@info:placeholder in text field", "Password")',
      '"@info:placeholder in text field", "Enter Password")'),
     # same capsule as the Ravana login screen: 200 x 30, centred text, 13 px

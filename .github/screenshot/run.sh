@@ -116,6 +116,27 @@ if [ -n "${RAVANA_SHELL:-}" ]; then
   shot 24-shell-light 2
   $QS launchpad toggle >/dev/null 2>&1; shot 25-shell-light-launchpad 2; $QS launchpad toggle >/dev/null 2>&1; sleep 1
   $QS controlcenter toggle >/dev/null 2>&1; shot 26-shell-light-control-center 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
+  # every other Ravana screen in light mode
+  $QS menu toggle >/dev/null 2>&1; shot 60-light-ravana-menu 2; $QS menu toggle >/dev/null 2>&1; sleep 1
+  $QS spotlight search "fi" >/dev/null 2>&1; shot 61-light-spotlight 3; $QS spotlight toggle >/dev/null 2>&1; sleep 1
+  $QS launchpad utilities >/dev/null 2>&1; shot 62-light-launchpad-folder 2; $QS launchpad toggle >/dev/null 2>&1; sleep 1
+  $QS controlcenter page wifi >/dev/null 2>&1; shot 63-light-cc-wifi 2; $QS controlcenter toggle >/dev/null 2>&1; sleep 1
+  notify-send -a Steam -i steam "Download complete" "Your game is ready to play." 2>/dev/null; sleep 2; shot 64-light-notification 1; sleep 5
+  $QS notifications toggle >/dev/null 2>&1; shot 65-light-notification-center 2; $QS notifications toggle >/dev/null 2>&1; sleep 1
+  $QS dock menu 0 >/dev/null 2>&1; shot 66-light-dock-menu 2; $QS dock close >/dev/null 2>&1; sleep 1
+  $QS hud level volume 65 >/dev/null 2>&1; shot 67-light-hud 1
+  $QS power ask restart >/dev/null 2>&1; shot 68-light-power 2; $QS power close >/dev/null 2>&1; sleep 1
+  $QS polkit preview >/dev/null 2>&1; shot 69-light-admin 2; $QS polkit close >/dev/null 2>&1; sleep 1
+  /usr/libexec/kwin-tabbox-preview /usr/share/kwin/tabbox/ravana/contents/ui/main.qml >/dev/null 2>&1 & TB2=$!; shot 70-light-app-switcher 4; kill $TB2 2>/dev/null; sleep 1
+  ravana-settings appearance >/dev/null 2>&1 & sleep 5; shot 71-light-settings 1
+  qs ipc -p /usr/share/ravana/settings call settings open update >/dev/null 2>&1; shot 72-light-software-update 2
+  pkill -f "share/ravana/settings" 2>/dev/null; sleep 1
+  /usr/libexec/ravana-setup --force >/dev/null 2>&1 & sleep 5; shot 73-light-setup 1
+  qs ipc -p /usr/share/ravana/setup call setup go 1 >/dev/null 2>&1; sleep 1; shot 74-light-setup-look 1
+  pkill -f "share/ravana/setup" 2>/dev/null; sleep 1
+  dolphin /usr/share >/dev/null 2>&1 & sleep 5; shot 75-light-window 1
+  qs ipc -p /usr/share/ravana/shell call appmenu first >/dev/null 2>&1; shot 76-light-app-menu 2; qs ipc -p /usr/share/ravana/shell call appmenu close >/dev/null 2>&1
+  pkill dolphin 2>/dev/null; sleep 1
   /usr/libexec/ravana-appearance dark >> "$OUT/steps.log" 2>&1; sleep 3
 fi
 
@@ -194,7 +215,7 @@ export WAYLAND_DISPLAY=wayland-ravana
 sleep 4
 /home/ravana/session.sh &
 SPID=$!
-for i in $(seq 1 300); do
+for i in $(seq 1 480); do
   if ! kill -0 $KPID 2>/dev/null; then
     wait $KPID; echo "[$(date +%T)] kwin exited with code $? after ${i}s" >> "$OUT/steps.log"; break
   fi
@@ -207,7 +228,7 @@ WRAP
 chmod +x /home/ravana/wrapper.sh
 chown ravana:ravana /home/ravana/wrapper.sh
 
-timeout 360 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ravana \
+timeout 600 runuser -u ravana -- env -i HOME=/home/ravana USER=ravana LOGNAME=ravana \
   PATH=/usr/local/bin:/usr/bin:/bin XDG_RUNTIME_DIR=/tmp/xdg-ravana \
   XDG_SESSION_TYPE=wayland XDG_CURRENT_DESKTOP=KDE KDE_FULL_SESSION=true KDE_SESSION_VERSION=6 \
   QT_QPA_PLATFORM=wayland LANG=en_US.UTF-8 KWIN_SCREENSHOT_NO_PERMISSION_CHECKS=1 \

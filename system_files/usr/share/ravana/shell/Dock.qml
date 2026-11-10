@@ -107,7 +107,7 @@ PanelWindow {
     property var recent: []
     Process {
         id: recentReader
-        command: ["sh", "-c", 'd="$(xdg-user-dir DOWNLOAD 2>/dev/null || echo "$HOME/Downloads")"; ls -t1 -- "$d" 2>/dev/null | head -12 | while IFS= read -r f; do printf "%s\t%s\n" "$d/$f" "$f"; done']
+        command: ["sh", "-c", 'd="$(xdg-user-dir DOWNLOAD 2>/dev/null)"; [ -z "$d" ] || [ "$d" = "$HOME" ] && d="$HOME/Downloads"; ls -t1 -- "$d" 2>/dev/null | head -12 | while IFS= read -r f; do printf "%s\t%s\n" "$d/$f" "$f"; done']
         stdout: StdioCollector {
             onStreamFinished: {
                 dock.recent = text.split("\n").filter(l => l).map(l => l.split("\t"));
@@ -128,7 +128,7 @@ PanelWindow {
         visible: false
         files: dock.recent
         onOpenFile: f => { opener.command = ["xdg-open", f]; opener.running = true; }   // no shell: names can't run code
-        onOpenFolder: dock.run('dolphin "$(xdg-user-dir DOWNLOAD 2>/dev/null || echo "$HOME/Downloads")"')
+        onOpenFolder: dock.run('d="$(xdg-user-dir DOWNLOAD 2>/dev/null)"; [ -z "$d" ] || [ "$d" = "$HOME" ] && d="$HOME/Downloads"; dolphin "$d"')
     }
 
     // ---- right-click menu ----

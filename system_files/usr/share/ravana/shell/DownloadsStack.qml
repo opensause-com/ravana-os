@@ -59,6 +59,7 @@ PopupWindow {
                 font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption
             }
             Grid {
+                Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
                 columns: 4
                 Repeater {
                     model: pop.files
@@ -96,6 +97,7 @@ PopupWindow {
                     }
                 }
             }
+            Item { Layout.fillHeight: true }     // files at the top, button at the bottom
             R.PushButton {
                 Layout.alignment: Qt.AlignRight
                 text: qsTr("Open in Files")

@@ -39,6 +39,14 @@ ShellRoot {
         }
     }
 
+    // Administrator password sheet (Polkit agent)
+    PolkitDialog { id: polkit; screen: Quickshell.screens[0] }
+    IpcHandler {
+        target: "polkit"
+        function preview(): void { polkit.preview = true; }
+        function close(): void { polkit.preview = false; }
+    }
+
     // Restart / Shut Down / Log Out alert
     PowerDialog { id: powerDialog; screen: Quickshell.screens[0] }
     IpcHandler {

@@ -50,3 +50,11 @@ SDDM
 systemctl disable plasmalogin.service 2>/dev/null || true
 systemctl enable sddm.service
 ls -la /etc/systemd/system/display-manager.service
+
+# Administrator password sheet: Ravana Shell is the Polkit agent. KDE's agent is switched
+# off (only one agent can register); Ravana Shell starts it itself if its own can't register.
+systemctl --global mask plasma-polkit-agent.service 2>/dev/null || true
+for f in /etc/xdg/autostart/polkit-kde-authentication-agent-1.desktop; do
+    [ -f "$f" ] && { grep -q '^Hidden=true' "$f" || echo 'Hidden=true' >> "$f"; }
+done
+ls /usr/libexec/kf6/polkit-kde-authentication-agent-1 /usr/libexec/polkit-kde-authentication-agent-1 2>/dev/null || true

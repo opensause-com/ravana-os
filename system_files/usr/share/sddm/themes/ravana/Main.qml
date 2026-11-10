@@ -231,9 +231,9 @@ Rectangle {
         spacing: 44
         Repeater {
             model: [
-                { label: "Shut Down", glyph: "⏻", act: 0, show: true },
-                { label: "Restart", glyph: "↻", act: 1, show: true },
-                { label: "Sleep", glyph: "☾", act: 2, show: true }
+                { label: "Shut Down", icon: "system-shutdown", act: 0, show: true },
+                { label: "Restart", icon: "system-reboot", act: 1, show: true },
+                { label: "Sleep", icon: "system-suspend", act: 2, show: true }
             ]
             Column {
                 id: power
@@ -245,7 +245,12 @@ Rectangle {
                     width: 44; height: 44; radius: 22
                     color: Qt.rgba(1, 1, 1, powerArea.containsMouse ? 0.30 : 0.18)
                     border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.25)
-                    Text { anchors.centerIn: parent; text: power.modelData.glyph; color: "white"; font.pixelSize: 18 }
+                    Image {     // the same icon set as the lock screen
+                        anchors.centerIn: parent
+                        width: 20; height: 20
+                        sourceSize: Qt.size(40, 40)
+                        source: "file:///usr/share/icons/Colloid-Red-Dark/actions/24/" + power.modelData.icon + ".svg"
+                    }
                     MouseArea {
                         id: powerArea
                         anchors.fill: parent; hoverEnabled: true

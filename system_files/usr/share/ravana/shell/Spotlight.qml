@@ -28,6 +28,12 @@ PanelWindow {
         visible = true; shown = 1; bloomIn.restart(); field.forceActiveFocus();
     }
     function hide() { shown = 0; closeTimer.restart(); }
+    // Open an app; one that needs a terminal (htop, …) opens inside one
+    function launch(e) {
+        if (e.runInTerminal && e.command && e.command.length)
+            Quickshell.execDetached(["sh", "-c", 'if command -v konsole >/dev/null; then exec konsole -e "$@"; else exec ptyxis -- "$@"; fi', "sh"].concat(Array.from(e.command)));
+        else e.execute();
+    }
     property real reveal: 0
     NumberAnimation { id: bloomIn; target: spot; property: "reveal"; from: 0; to: 1
         duration: R.Theme.bloom; easing.type: Easing.OutBack; easing.overshoot: R.Theme.bloomOvershoot }
@@ -116,14 +122,15 @@ PanelWindow {
 
     function activate(r) {
         if (!r) return;
-        if (r.app) r.app.execute();
+        if (r.app) spot.launch(r.app);
         else if (r.copy) runner.exec(["wl-copy", r.copy]);
         else if (r.path) runner.exec(["xdg-open", r.path]);
         else if (r.page) runner.exec(["ravana-settings", r.page]);
         else if (r.web) runner.exec(["xdg-open", "https://duckduckgo.com/?q=" + encodeURIComponent(r.web)]);
         hide();
     }
-    Process { id: runner; function exec(c) { command = c; running = true; } }
+    // Detached: Spotlight is unloaded after it hides, which would kill a Process it owns
+    QtObject { id: runner; function exec(c) { Quickshell.execDetached(c); } }
 
     MouseArea { anchors.fill: parent; onClicked: spot.hide() }
 

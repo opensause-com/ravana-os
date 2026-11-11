@@ -124,11 +124,10 @@ ShellRoot {
             onStreamFinished: {
                 const a = text.trim();
                 if (a === "restart") shell.bring(powerLoader).present("restart");
-                else if (a === "default") openSettings.running = true;
+                else if (a === "default") Quickshell.execDetached(["ravana-settings", "update"]);
             }
         }
     }
-    Process { id: openSettings; command: ["ravana-settings", "update"] }
     Connections {
         target: sys
         function onUpdateReadyChanged() {

@@ -77,8 +77,7 @@ PanelWindow {
 
     readonly property bool hasBattery: UPower.displayDevice && UPower.displayDevice.isLaptopBattery
 
-    function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }
-    Process { id: runner }
+    function run(cmd) { Quickshell.execDetached(["sh", "-c", cmd]); }
 
     RowLayout {
         anchors.fill: parent

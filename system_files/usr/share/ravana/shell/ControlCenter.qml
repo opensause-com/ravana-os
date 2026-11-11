@@ -54,7 +54,8 @@ PopupWindow {
             }
         }
     }
-    Process { id: action }
+    // show a change at once; the next status check confirms it
+    function setSt(k, v) { const s = Object.assign({}, st); s[k] = v; st = s; }
     function showPage(p) { visible = true; openPage(p); }
 
     // joining a new secured Wi-Fi: the password goes to the helper on stdin only
@@ -76,8 +77,20 @@ PopupWindow {
         joiner.running = true;
     }
     Process { id: appearance; command: ["/usr/libexec/ravana-appearance", "toggle"] }
-    function act(args) { action.command = ["/usr/libexec/ravana-cc"].concat(args); action.running = true; refreshSoon.restart(); }
-    Timer { id: refreshSoon; interval: 600; onTriggered: status.running = true }
+    // Detached: a slow action (joining Wi-Fi takes seconds) must not hold up the next one
+    function act(args) { Quickshell.execDetached(["/usr/libexec/ravana-cc"].concat(args)); refreshSoon.restart(); }
+    Timer { id: refreshSoon; interval: 1200; onTriggered: status.running = true }
+    // volume follows the pointer while dragging (at most ~10 changes a second)
+    property real pendingVolume: -1
+    function liveVolume(v) { pendingVolume = v; if (!volumeTick.running) volumeTick.start(); }
+    Timer {
+        id: volumeTick; interval: 90
+        onTriggered: if (cc.pendingVolume >= 0) {
+            Quickshell.execDetached(["/usr/libexec/ravana-cc", "volume", String(Math.round(cc.pendingVolume * 100))]);
+            cc.pendingVolume = -1;
+        }
+    }
+    onAskSsidChanged: if (askSsid) wifiPassword.forceActiveFocus()
     Timer { interval: 2500; repeat: true; running: cc.visible; triggeredOnStart: true; onTriggered: status.running = true }
 
     PopupSurface {
@@ -111,7 +124,7 @@ PopupWindow {
                             on: cc.flag("wifi_on")
                             status: !available ? qsTr("No Wi-Fi") : (!on ? qsTr("Off")
                                     : (cc.st.wifi_name || (cc.flag("net_wired") ? qsTr("Wired") : qsTr("Not connected"))))
-                            onToggled: cc.act(["wifi", on ? "off" : "on"])
+                            onToggled: { const to = !on; cc.act(["wifi", to ? "on" : "off"]); cc.setSt("wifi_on", to ? "1" : "0"); }
                             expandable: available
                             onExpanded: cc.openPage("wifi")
                         }
@@ -122,7 +135,7 @@ PopupWindow {
                             available: cc.flag("bt_available")
                             on: cc.flag("bt_on")
                             status: !available ? qsTr("Not available") : (!on ? qsTr("Off") : (cc.st.bt_devices || qsTr("On")))
-                            onToggled: cc.act(["bluetooth", on ? "off" : "on"])
+                            onToggled: { const to = !on; cc.act(["bluetooth", to ? "on" : "off"]); cc.setSt("bt_on", to ? "1" : "0"); }
                             expandable: available
                             onExpanded: cc.openPage("bluetooth")
                         }
@@ -140,7 +153,7 @@ PopupWindow {
                             title: qsTr("Focus")
                             on: cc.flag("focus_on")
                             status: on ? qsTr("On") : ""
-                            onToggled: cc.act(["focus", on ? "off" : "on"])
+                            onToggled: { const to = !on; cc.act(["focus", to ? "on" : "off"]); cc.setSt("focus_on", to ? "1" : "0"); }
                         }
                     }
                     R.Glass {
@@ -151,7 +164,7 @@ PopupWindow {
                             title: on ? qsTr("Dark") : qsTr("Light")
                             status: qsTr("Appearance")
                             on: cc.st.dark !== "0"
-                            onToggled: { appearance.running = true; refreshSoon.restart(); }
+                            onToggled: { const to = !on; appearance.running = true; cc.setSt("dark", to ? "1" : "0"); refreshSoon.restart(); }
                         }
                     }
                 }
@@ -197,7 +210,8 @@ PopupWindow {
                         available: cc.flag("sound_available")
                         iconName: cc.flag("muted") ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
                         value: parseInt(cc.st.volume || "50") / 100
-                        onReleased: v => cc.act(["volume", String(Math.round(v * 100))])
+                        onMoved: v => cc.liveVolume(v)
+                        onReleased: v => { cc.pendingVolume = -1; cc.act(["volume", String(Math.round(v * 100))]); }
                     }
                 }
             }
@@ -259,7 +273,12 @@ PopupWindow {
                     }
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: { cc.act([cc.page === "wifi" ? "wifi" : "bluetooth", parent.on ? "off" : "on"]); listRefresh.restart(); }
+                        onClicked: {
+                            const to = !parent.on, what = cc.page === "wifi" ? "wifi" : "bluetooth";
+                            cc.act([what, to ? "on" : "off"]);
+                            cc.setSt(what === "wifi" ? "wifi_on" : "bt_on", to ? "1" : "0");
+                            listRefresh.restart();
+                        }
                     }
                     Timer { id: listRefresh; interval: 1500; onTriggered: cc.openPage(cc.page) }
                 }
@@ -293,6 +312,7 @@ PopupWindow {
                     readonly property bool known: wifi && modelData[4] === "1"
                     onClicked: {
                         if (sound) { cc.act(["sink", modelData[0]]); listRefresh.restart(); return; }
+                        if (wifi && active) return;                    // already on this network
                         if (wifi && !active && secured && !known) { cc.askSsid = name; cc.joinError = ""; return; }
                         cc.act(wifi ? ["wifi-connect", name] : ["bt-device", modelData[0]]);
                         listRefresh.restart();
@@ -378,8 +398,10 @@ PopupWindow {
             MenuSeparator { Layout.fillWidth: true }
             MouseArea {
                 Layout.fillWidth: true; implicitHeight: 28
-                onClicked: { cc.visible = false; settingsRun.running = true; }
-                Process { id: settingsRun; command: ["systemsettings", cc.page === "wifi" ? "kcm_networkmanagement" : cc.page === "sound" ? "kcm_pulseaudio" : "kcm_bluetooth"] }
+                onClicked: {
+                    Quickshell.execDetached(["systemsettings", cc.page === "wifi" ? "kcm_networkmanagement" : cc.page === "sound" ? "kcm_pulseaudio" : "kcm_bluetooth"]);
+                    cc.visible = false;
+                }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter; leftPadding: 6
                     text: cc.page === "wifi" ? qsTr("Wi-Fi Settings…") : cc.page === "sound" ? qsTr("Sound Settings…") : qsTr("Bluetooth Settings…")

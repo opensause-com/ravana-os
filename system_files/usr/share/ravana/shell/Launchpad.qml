@@ -30,6 +30,12 @@ PanelWindow {
         search.forceActiveFocus();
     }
     function hide() { shown = 0; closeTimer.restart(); }
+    // Open an app; one that needs a terminal (htop, …) opens inside one
+    function launch(e) {
+        if (e.runInTerminal && e.command && e.command.length)
+            Quickshell.execDetached(["sh", "-c", 'if command -v konsole >/dev/null; then exec konsole -e "$@"; else exec ptyxis -- "$@"; fi', "sh"].concat(Array.from(e.command)));
+        else e.execute();
+    }
     Timer { id: closeTimer; interval: R.Theme.normal; onTriggered: pad.visible = false }
 
     // Technical tools and duplicates stay out of the grid (still searchable in Spotlight)
@@ -116,7 +122,7 @@ PanelWindow {
                 Keys.onLeftPressed: e => { if (!search.text) pages.decrementCurrentIndex(); else e.accepted = false; }
                 Keys.onRightPressed: e => { if (!search.text) pages.incrementCurrentIndex(); else e.accepted = false; }
                 Keys.onEscapePressed: search.text ? search.text = "" : (pad.openFolder ? pad.openFolder = null : pad.hide())
-                Keys.onReturnPressed: if (pad.apps.length) { pad.apps[0].execute(); pad.hide(); }
+                Keys.onReturnPressed: if (pad.apps.length) { pad.launch(pad.apps[0]); pad.hide(); }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("Search")
@@ -175,7 +181,7 @@ PanelWindow {
                             required property var modelData
                             width: 150; height: 140
                             hoverEnabled: true
-                            onClicked: modelData.folder ? pad.openFolder = modelData : (modelData.execute(), pad.hide())
+                            onClicked: modelData.folder ? pad.openFolder = modelData : (pad.launch(modelData), pad.hide())
                             Rectangle {
                                 anchors.fill: parent; anchors.margins: 6
                                 radius: R.Theme.radiusLarge
@@ -269,7 +275,7 @@ PanelWindow {
                             required property var modelData
                             width: 130; height: 130
                             hoverEnabled: true
-                            onClicked: { modelData.execute(); pad.openFolder = null; pad.hide(); }
+                            onClicked: { pad.launch(modelData); pad.openFolder = null; pad.hide(); }
                             R.AppIcon {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 y: 10; size: 72

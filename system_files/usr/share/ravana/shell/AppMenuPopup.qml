@@ -27,10 +27,8 @@ PopupWindow {
     implicitWidth: Math.max(220, col.implicitWidth + 12) + 28
     implicitHeight: col.implicitHeight + 12 + 28
 
-    Process { id: clicker }
     function click(id) {
-        clicker.command = ["/usr/libexec/ravana-appmenu", "click", pop.service, pop.objectPath, String(id)];
-        clicker.running = true;
+        Quickshell.execDetached(["/usr/libexec/ravana-appmenu", "click", pop.service, pop.objectPath, String(id)]);
         pop.visible = false;
         pop.triggered();
     }

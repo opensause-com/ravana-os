@@ -1,8 +1,8 @@
 name: Build Ravana OS live ISO
 
 # A live USB that boots straight into Ravana (try without installing) with an
-# "Install Ravana OS" button. The installer downloads the system from the registry,
-# so the ISO stays small.
+# "Install Ravana OS" button. The system image is embedded in the ISO, so installing
+# needs no internet connection.
 #
 # Runs:
 #   - automatically after a stable (main) image build that came from a push,
@@ -99,6 +99,55 @@ jobs:
             --build-arg RAVANA_TAG="$CHANNEL" \
             -t localhost/ravana-live:latest -f Containerfile.live .
           df -h / /mnt
+
+      # Proof that the USB can install with no internet: run the live system with the
+      # network switched off and do what the installer does (read the embedded OS image
+      # and deploy it to an empty disk folder). The live session's root is an overlay
+      # filesystem, and so is a container's, so the embedded image is read the same way.
+      # Reports only for now (does not stop the ISO build); the result is in the run summary.
+      - name: Offline install check (network off)
+        id: offline
+        continue-on-error: true
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          REF="ghcr.io/$OWNER/${{ matrix.image }}:$CHANNEL"
+          sudo mkdir -p /mnt/offline-target
+          set +e
+          sudo podman run --rm --network=none --privileged --security-opt label=disable \
+            -v /mnt/offline-target:/target -e REF="$REF" \
+            localhost/ravana-live:latest bash -c '
+              set -x
+              echo "== tools"; command -v fuse-overlayfs skopeo ostree bootc
+              echo "== root filesystem: $(stat -f -c %T /var/lib/containers/storage)"
+              echo "== 1. is the OS image on the USB?"
+              podman images || exit 11
+              podman image exists "$REF" || exit 12
+              echo "== 2. can it be read without a network?"
+              skopeo inspect --no-tags "containers-storage:$REF" >/dev/null || exit 13
+              echo "== 3. the installer'"'"'s own step: deploy it to an empty disk"
+              ostree admin init-fs --modern /target || exit 14
+              ostree config --repo=/target/ostree/repo set sysroot.bootloader none
+              ostree config --repo=/target/ostree/repo set sysroot.bootprefix true
+              ostree admin --sysroot=/target os-init default || exit 15
+              ostree container image deploy --sysroot=/target --image="$REF" \
+                --transport=containers-storage --stateroot=default --no-signature-verification || exit 16
+              ls /target/ostree/deploy/default/deploy
+              df -h /target /var/tmp
+            ' 2>&1 | tee /tmp/offline-check.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          sudo rm -rf /mnt/offline-target
+          {
+            echo "### Offline install check: ${{ matrix.image }}"
+            case "$rc" in
+              0)  echo "Passed: the embedded OS image deployed with the network off." ;;
+              11|12) echo "FAILED: the OS image is not in the live system (step 1, code $rc)." ;;
+              13) echo "FAILED: the embedded OS image cannot be read offline (step 2)." ;;
+              *)  echo "FAILED at the installer's deploy step (code $rc)." ;;
+            esac
+            echo; echo '```'; tail -40 /tmp/offline-check.log; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ "$rc" -eq 0 ] || { echo "::error::Offline install check failed (code $rc): see the run summary"; exit 1; }
 
       - name: Prepare output folder
         run: mkdir -p output

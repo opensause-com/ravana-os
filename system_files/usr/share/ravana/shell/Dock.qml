@@ -122,13 +122,26 @@ PanelWindow {
         stackPending = true;
         recentReader.running = true;
     }
-    Process { id: opener }
     DownloadsStack {
         id: stack
         visible: false
         files: dock.recent
-        onOpenFile: f => { opener.command = ["xdg-open", f]; opener.running = true; }   // no shell: names can't run code
+        onOpenFile: f => Quickshell.execDetached(["xdg-open", f])   // no shell: names can't run code
         onOpenFolder: dock.run('d="$(xdg-user-dir DOWNLOAD 2>/dev/null)"; [ -z "$d" ] || [ "$d" = "$HOME" ] && d="$HOME/Downloads"; dolphin "$d"')
+    }
+
+    // Clicking an app that has several windows: KDE's task model ignores "activate" for a
+    // group, so pick a window here. The first click brings the app forward, the next
+    // clicks walk through its windows.
+    function activateTask(index) {
+        const i = tasks.makeModelIndex(index);
+        if (!tasks.data(i, TaskManager.AbstractTasksModel.IsGroupParent)) { tasks.requestActivate(i); return; }
+        const n = tasks.rowCount(i);
+        if (n < 1) return;
+        let active = -1;
+        for (let k = 0; k < n; k++)
+            if (tasks.data(tasks.makeModelIndex(index, k), TaskManager.AbstractTasksModel.IsActive)) active = k;
+        tasks.requestActivate(tasks.makeModelIndex(index, (active + 1) % n));
     }
 
     // ---- right-click menu ----
@@ -157,7 +170,11 @@ PanelWindow {
             const i = tasks.makeModelIndex(dock.menuIndex);
             const launcher = tasks.data(i, TaskManager.AbstractTasksModel.LauncherUrlWithoutIcon);
             if (action === "new") tasks.requestNewInstance(i);
-            else if (action === "windows") tasks.requestActivate(i);
+            else if (action === "windows") {
+                // bring the app forward, then KWin's overview of this app's windows
+                dock.activateTask(dock.menuIndex);
+                dock.run("sleep 0.25; dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut string:ExposeClass");
+            }
             else if (action === "pin") tasks.requestAddLauncher(launcher);
             else if (action === "unpin") tasks.requestRemoveLauncher(launcher);
             else if (action === "quit") tasks.requestClose(i);
@@ -176,8 +193,8 @@ PanelWindow {
         }
     }
 
-    function run(cmd) { runner.command = ["sh", "-c", cmd]; runner.running = true; }
-    Process { id: runner }
+    // Detached: a file manager window that stays open must not hold up the next click
+    function run(cmd) { Quickshell.execDetached(["sh", "-c", cmd]); }
 
     R.Material {
         id: glass
@@ -228,7 +245,7 @@ PanelWindow {
                 label: model.display || model.AppName || ""
                 running: !model.IsLauncher && !model.IsStartup
                 launching: model.IsStartup || model.IsDemandingAttention
-                onClicked: tasks.requestActivate(tasks.makeModelIndex(index))
+                onClicked: dock.activateTask(index)
                 onMiddleClicked: tasks.requestNewInstance(tasks.makeModelIndex(index))
                 onRightClicked: dock.openMenu(dockItem, index)
             }

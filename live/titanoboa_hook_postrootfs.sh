@@ -605,15 +605,27 @@ fi
 
 # Let only browser/installer in the task-bar/dock
 if [[ $desktop_env == kde ]]; then
-    sed -i 's|tasks.writeConfig("launchers", \[|tasks.writeConfig("launchers", [\n    "applications:liveinst.desktop",|' \
-        /usr/share/plasma/layout-templates/org.ravana.dock/contents/layout.js
     # Live session uses the Firefox RPM (it also hosts the installer UI)
-    sed -i 's|"preferred://browser"|"applications:firefox.desktop"|' \
-        /usr/share/plasma/layout-templates/org.ravana.dock/contents/layout.js
-    grep -n 'liveinst\|firefox' /usr/share/plasma/layout-templates/org.ravana.dock/contents/layout.js
-    # Plasma Login Manager: log the live user straight in
+    RAVANA_DOCK=/usr/share/ravana/shell/Dock.qml
+    if [ -f "$RAVANA_DOCK" ]; then
+        # Ravana Shell: installer first in the Dock, then Firefox
+        sed -i 's|"preferred://browser",|"applications:liveinst.desktop",\n        "applications:firefox.desktop",|' "$RAVANA_DOCK"
+        grep -n 'liveinst\|firefox' "$RAVANA_DOCK"
+    else
+        # Plasma panels (images without Ravana Shell)
+        PLASMA_DOCK=/usr/share/plasma/layout-templates/org.ravana.dock/contents/layout.js
+        sed -i 's|tasks.writeConfig("launchers", \[|tasks.writeConfig("launchers", [\n    "applications:liveinst.desktop",|' "$PLASMA_DOCK"
+        sed -i 's|"preferred://browser"|"applications:firefox.desktop"|' "$PLASMA_DOCK"
+        grep -n 'liveinst\|firefox' "$PLASMA_DOCK"
+    fi
+    # Log the live user straight in, on whichever login manager the image uses
     kwriteconfig6 --file /etc/plasmalogin.conf --group Autologin --key User liveuser
     kwriteconfig6 --file /etc/plasmalogin.conf --group Autologin --key Session plasma.desktop
+    if [ -d /etc/sddm.conf.d ] || command -v sddm >/dev/null; then
+        mkdir -p /etc/sddm.conf.d
+        printf '[Autologin]\nUser=liveuser\nSession=plasma.desktop\nRelogin=false\n' >/etc/sddm.conf.d/20-ravana-live.conf
+        cat /etc/sddm.conf.d/20-ravana-live.conf
+    fi
 elif [[ $desktop_env == gnome ]]; then
     cat >/usr/share/glib-2.0/schemas/zz2-org.gnome.shell.gschema.override <<EOF
 [org.gnome.shell]

@@ -34,12 +34,12 @@ PanelWindow {
     function present(k) { kind = k; secondsLeft = 60; visible = true; reveal = 0; bloom.restart(); }
     function dismiss() { visible = false; }
     function confirm() {
+        // Detached: this alert is unloaded as soon as it hides, and a Process that belongs
+        // to it would be killed with it before the call is sent.
+        Quickshell.execDetached(["dbus-send", "--session", "--type=method_call", "--dest=org.kde.Shutdown",
+                                 "/Shutdown", "org.kde.Shutdown." + info.call]);
         visible = false;
-        act.command = ["dbus-send", "--session", "--type=method_call", "--dest=org.kde.Shutdown",
-                       "/Shutdown", "org.kde.Shutdown." + info.call];
-        act.running = true;
     }
-    Process { id: act }
     Timer { interval: 1000; repeat: true; running: dlg.visible; onTriggered: if (--dlg.secondsLeft <= 0) dlg.confirm() }
 
     property real reveal: 0

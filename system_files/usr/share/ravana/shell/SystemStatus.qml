@@ -28,7 +28,15 @@ Scope {
     Process { id: updReader; command: ["/usr/libexec/ravana-cc", "staged"]
         stdout: StdioCollector { onStreamFinished: sys.updateReady = /staged=1/.test(text) } }
 
-    Timer { interval: 20000; repeat: true; running: true; triggeredOnStart: true; onTriggered: netReader.running = true }
+    // NetworkManager says when something changes (connect, disconnect, Wi-Fi on/off), so
+    // the menu bar's icon follows at once; the slow timer is only a safety net
+    Process {
+        running: true
+        command: ["nmcli", "monitor"]
+        stdout: SplitParser { onRead: netSoon.restart() }
+    }
+    Timer { id: netSoon; interval: 400; onTriggered: netReader.running = true }
+    Timer { interval: 60000; repeat: true; running: true; triggeredOnStart: true; onTriggered: netReader.running = true }
     Timer { interval: 30000; repeat: true; running: true; triggeredOnStart: true; onTriggered: kbdReader.running = true }
     Timer { interval: 8000;  repeat: true; running: true; triggeredOnStart: true; onTriggered: micReader.running = true }
     Timer { interval: 1800000; repeat: true; running: true; onTriggered: updReader.running = true }

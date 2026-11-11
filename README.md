@@ -67,7 +67,7 @@ benchmarks won't reflect the installed experience.
      Give Ravana at least **80 GB**; 150 GB+ if you'll install games. A second drive is even simpler.
 2. Boot the live USB and click **Install Ravana OS**.
 3. Choose the free space (or the second drive). Don't select the Windows partition.
-4. The installer downloads Ravana (about 5.5 GB), so stay connected to the internet.
+4. Ravana installs from the USB itself; no internet connection is needed.
 5. Reboot. Pick **Ravana OS** or **Windows** in the boot menu, or from your PC's boot menu key.
 
 If a Windows update ever skips the Ravana boot menu, boot the live USB and run

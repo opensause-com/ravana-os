@@ -22,8 +22,8 @@ PopupWindow {
 
     readonly property string logout: "dbus-send --session --type=method_call --dest=org.kde.LogoutPrompt /LogoutPrompt org.kde.LogoutPrompt."
     onVisibleChanged: if (visible) { list.cur = -1; list.entries.forEach(e => e.keyFocus = false); list.forceActiveFocus(); }
-    function run(cmd) { menu.visible = false; runner.command = ["sh", "-c", cmd]; runner.running = true; }
-    Process { id: runner }
+    // Detached: an app opened from here (Settings stays open) must not hold up the next item
+    function run(cmd) { menu.visible = false; Quickshell.execDetached(["sh", "-c", cmd]); }
 
     PopupSurface {
         growFrom: Item.TopLeft

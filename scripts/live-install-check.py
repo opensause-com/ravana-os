@@ -162,17 +162,21 @@ def qemu(phase, with_iso, extra=()):
     cmd = ["qemu-system-x86_64", "-enable-kvm", "-cpu", "host", "-smp", "4", "-m", RAM,
            "-drive", f"if=pflash,format=raw,readonly=on,file={CODE}",
            "-drive", f"if=pflash,format=raw,file={VARS}",
-           "-drive", f"file={DISK},if=virtio,format=qcow2,cache=unsafe",
+           # every disk is an explicit virtio device, created in this order: the target disk is
+           # always vda, then (install phase only) the config disk and the ISO itself
+           "-drive", f"if=none,id=target,file={DISK},format=qcow2,cache=unsafe",
+           "-device", "virtio-blk-pci,drive=target,bootindex=1",
            "-netdev", "user,id=n0", "-device", "virtio-net-pci,netdev=n0",
            "-object", f"filter-dump,id=f0,netdev=n0,file={OUT}/{phase}.pcap",
            "-vga", "std", "-display", "none", "-monitor", f"unix:{mon},server,nowait",
            "-serial", f"unix:{ser},server=on,wait=off"]
     if with_iso:
-        # the ISO as a plain CD (as in the boot test); the kickstart and script come on a small
-        # read-only disk behind the target disk, found by its label (CIDATA) from inside
-        cmd += ["-cdrom", ISO, "-boot", "d",
-                "-drive", f"if=none,id=cfg,file={WORK}/cfg.iso,format=raw,readonly=on",
-                "-device", "virtio-blk-pci,drive=cfg", *extra]
+        # The live system finds its ISO by label on whatever block device holds it, and the
+        # kickstart/script disk by the label CIDATA (IDE CD drives were not detected in CI).
+        cmd += ["-drive", f"if=none,id=cfg,file={WORK}/cfg.iso,format=raw,readonly=on",
+                "-device", "virtio-blk-pci,drive=cfg",
+                "-drive", f"if=none,id=iso,file={ISO},format=raw,readonly=on",
+                "-device", "virtio-blk-pci,drive=iso", *extra]
     p = subprocess.Popen(cmd)
     return p, mon, ser
 

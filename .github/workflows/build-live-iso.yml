@@ -31,6 +31,10 @@ on:
         description: Upload to Cloudflare R2 / SourceForge (when set up)
         type: boolean
         default: true
+      reuse_run:
+        description: Only boot-test the ISO from this earlier run (run number from its address); builds nothing
+        type: string
+        default: ''
   workflow_run:
     workflows: ["Build Ravana OS image"]
     types: [completed]
@@ -59,8 +63,9 @@ jobs:
     needs: meta
     # Automatic runs only after successful stable builds triggered by a push
     if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+      (github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+      && (inputs.reuse_run || '') == ''
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -177,9 +182,7 @@ jobs:
       - name: Boot the ISO and measure network use
         continue-on-error: true
         run: |
-          sudo apt-get update -qq >/dev/null
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq qemu-system-x86 ovmf tshark imagemagick xorriso >/dev/null
-          sudo chmod 666 /dev/kvm 2>/dev/null || true
+          scripts/live-boot-check.sh --install-tools
           scripts/live-boot-check.sh "output/$ISO" boot-check 420
           cat boot-check/network.md >> "$GITHUB_STEP_SUMMARY"
           rm -f boot-check/monitor.sock
@@ -239,6 +242,40 @@ jobs:
           name: ${{ matrix.image }}-sha256
           path: output/${{ matrix.image }}-live.iso.sha256
           retention-days: 90
+
+  # Quick re-test: boot an ISO that an earlier run already built (about 12 minutes)
+  boot-check:
+    if: github.event_name == 'workflow_dispatch' && (inputs.reuse_run || '') != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    env:
+      ISO: ${{ inputs.image }}-live.iso
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Get the ISO from run ${{ inputs.reuse_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download "${{ inputs.reuse_run }}" -R "${{ github.repository }}" -n "${{ inputs.image }}-live-iso" -D output
+          ls -lh output
+
+      - name: Boot the ISO and measure network use
+        run: |
+          scripts/live-boot-check.sh --install-tools
+          scripts/live-boot-check.sh "output/$ISO" boot-check 420
+          cat boot-check/network.md >> "$GITHUB_STEP_SUMMARY"
+          rm -f boot-check/monitor.sock
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ${{ inputs.image }}-boot-check
+          path: boot-check
+          if-no-files-found: ignore
+          retention-days: 14
 
   release:
     needs: [meta, live-iso]

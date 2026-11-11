@@ -178,7 +178,7 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get update -qq >/dev/null
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq qemu-system-x86 ovmf tshark imagemagick >/dev/null
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq qemu-system-x86 ovmf tshark imagemagick xorriso >/dev/null
           sudo chmod 666 /dev/kvm 2>/dev/null || true
           scripts/live-boot-check.sh "output/$ISO" boot-check 420
           cat boot-check/network.md >> "$GITHUB_STEP_SUMMARY"

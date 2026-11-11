@@ -672,8 +672,14 @@ if [[ $desktop_env == kde ]]; then
     kwriteconfig6 --file /etc/plasmalogin.conf --group Autologin --key Session plasma.desktop
     if [ -d /etc/sddm.conf.d ] || command -v sddm >/dev/null; then
         mkdir -p /etc/sddm.conf.d
-        printf '[Autologin]\nUser=liveuser\nSession=plasma.desktop\nRelogin=false\n' >/etc/sddm.conf.d/20-ravana-live.conf
-        cat /etc/sddm.conf.d/20-ravana-live.conf
+        # Bazzite's Deck autologin helper runs before the login screen and writes an
+        # autologin file with an empty user (the live user doesn't exist yet), which
+        # wins over everything else: switch it off and sort ours last.
+        systemctl disable bazzite-autologin.service 2>/dev/null || true
+        systemctl mask bazzite-autologin.service 2>/dev/null || true
+        rm -f /etc/sddm.conf.d/zz-bazzite-autologin.conf /etc/sddm.conf.d/zz-holo-autologin.conf
+        printf '[Autologin]\nUser=liveuser\nSession=plasma.desktop\nRelogin=false\n' >/etc/sddm.conf.d/zzz-ravana-live.conf
+        cat /etc/sddm.conf.d/zzz-ravana-live.conf
     fi
 elif [[ $desktop_env == gnome ]]; then
     cat >/usr/share/glib-2.0/schemas/zz2-org.gnome.shell.gschema.override <<EOF

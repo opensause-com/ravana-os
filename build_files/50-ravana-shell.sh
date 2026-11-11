@@ -49,6 +49,14 @@ Font=Inter,10
 SDDM
 systemctl disable plasmalogin.service 2>/dev/null || true
 systemctl enable sddm.service
+# Bazzite's Steam Deck autologin helper writes SDDM files that log the first user in
+# without a password, into a Game Mode session Ravana doesn't ship (and it overrides
+# any other autologin setting). It was inert while Bazzite's login manager was in use;
+# with SDDM back it would act, so it is switched off for good.
+systemctl disable bazzite-autologin.service 2>/dev/null || true
+systemctl mask bazzite-autologin.service
+rm -f /etc/sddm.conf.d/zz-bazzite-autologin.conf /etc/sddm.conf.d/zz-holo-autologin.conf \
+      /etc/sddm.conf.d/zz-steamos-autologin.conf /etc/sddm.conf.d/steamos.conf
 ls -la /etc/systemd/system/display-manager.service
 
 # Administrator password sheet: Ravana Shell is the Polkit agent. KDE's agent is switched

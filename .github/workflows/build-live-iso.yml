@@ -104,10 +104,10 @@ jobs:
       # network switched off and do what the installer does (read the embedded OS image
       # and deploy it to an empty disk folder). The live session's root is an overlay
       # filesystem, and so is a container's, so the embedded image is read the same way.
-      # Reports only for now (does not stop the ISO build); the result is in the run summary.
+      # An ISO that can't install offline is not published: a failure stops the build.
+      # The result and the last lines of the log are in the run summary.
       - name: Offline install check (network off)
         id: offline
-        continue-on-error: true
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER,,}"
           REF="ghcr.io/$OWNER/${{ matrix.image }}:$CHANNEL"
@@ -136,7 +136,10 @@ jobs:
             ' 2>&1 | tee /tmp/offline-check.log
           rc=${PIPESTATUS[0]}
           set -e
-          sudo rm -rf /mnt/offline-target
+          # deployed systems are marked unchangeable; clear that before removing the test disk
+          sudo chattr -R -i /mnt/offline-target 2>/dev/null || true
+          sudo rm -rf /mnt/offline-target || true
+          df -h /mnt
           {
             echo "### Offline install check: ${{ matrix.image }}"
             case "$rc" in

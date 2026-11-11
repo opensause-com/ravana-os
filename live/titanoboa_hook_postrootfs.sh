@@ -320,6 +320,17 @@ EOF
         ublue-guest-user.service \
         ublue-os-media-automount.service \
         ublue-system-setup.service \
+        ublue-hardware-setup.service \
+        bazzite-flatpak-manager.service \
+        ublue-flatpak-manager.service \
+        flatpak-add-fedora-repos.service \
+        flatpak-system-update.timer \
+        greenboot-set-rollback-trigger.service \
+        greenboot-healthcheck.service \
+        input-remapper.service \
+        fwupd-refresh.timer \
+        dnf-makecache.timer \
+        packagekit.service \
         check-sb-key.service; do
         systemctl disable $s
     done
@@ -327,11 +338,49 @@ EOF
     for s in \
         ublue-flatpak-manager.service \
         podman-auto-update.timer \
+        bazzite-user-setup.service \
         ublue-user-setup.service; do
         systemctl --global disable $s
     done
     true  # units missing from this image are fine
 )
+
+# The live USB installs from itself, so nothing in the live session should spend data
+# on its own. Firefox (it hosts the installer) otherwise fetches updates, codecs,
+# add-on and safe-browsing lists and sends telemetry on its first start.
+mkdir -p /etc/firefox/policies
+cat >/etc/firefox/policies/policies.json <<'FFPOL'
+{
+  "policies": {
+    "DisableAppUpdate": true,
+    "DisableSystemAddonUpdate": true,
+    "ExtensionUpdate": false,
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisablePocket": true,
+    "DontCheckDefaultBrowser": true,
+    "CaptivePortal": false,
+    "NetworkPrediction": false,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "Homepage": { "URL": "about:blank", "StartPage": "none" },
+    "FirefoxHome": { "TopSites": false, "SponsoredTopSites": false, "Highlights": false, "Pocket": false, "SponsoredPocket": false, "Snippets": false },
+    "EncryptedMediaExtensions": { "Enabled": false },
+    "Preferences": {
+      "media.gmp-gmpopenh264.enabled": { "Value": false, "Status": "locked" },
+      "media.gmp-manager.url": { "Value": "", "Status": "locked" },
+      "browser.safebrowsing.malware.enabled": { "Value": false, "Status": "locked" },
+      "browser.safebrowsing.phishing.enabled": { "Value": false, "Status": "locked" },
+      "browser.safebrowsing.downloads.remote.enabled": { "Value": false, "Status": "locked" },
+      "services.settings.server": { "Value": "data:,#remote-settings-dummy/v1", "Status": "locked" },
+      "network.connectivity-service.enabled": { "Value": false, "Status": "locked" },
+      "app.normandy.enabled": { "Value": false, "Status": "locked" },
+      "extensions.getAddons.cache.enabled": { "Value": false, "Status": "locked" }
+    }
+  }
+}
+FFPOL
+python3 -c 'import json; json.load(open("/etc/firefox/policies/policies.json"))'
 
 # Add bootloader restoring script
 cat >/usr/bin/bootloader_restore.sh <<'SCRIPTEOF'

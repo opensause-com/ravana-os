@@ -171,6 +171,27 @@ jobs:
           [ "$(realpath "$SRC")" = "$(realpath -m "output/$ISO")" ] || mv "$SRC" "output/$ISO"
           ls -lh output
 
+      # A real boot of the ISO: does the live session reach the desktop, and what does it
+      # download by itself? (It installs from the USB, so the answer should be: next to nothing.)
+      # Reports only; the numbers and server names are in the run summary.
+      - name: Boot the ISO and measure network use
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq >/dev/null
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq qemu-system-x86 ovmf tshark imagemagick >/dev/null
+          sudo chmod 666 /dev/kvm 2>/dev/null || true
+          scripts/live-boot-check.sh "output/$ISO" boot-check 420
+          cat boot-check/network.md >> "$GITHUB_STEP_SUMMARY"
+          rm -f boot-check/monitor.sock
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ${{ matrix.image }}-boot-check
+          path: boot-check
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Checksum and inspect
         run: |
           cd output

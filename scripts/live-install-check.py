@@ -14,7 +14,7 @@ Everything is recorded: the installer's own logs, what the network carried (serv
 bytes) during the install and during the first boot, and screenshots of the first boot.
 Needs: qemu-system-x86_64, qemu-img, OVMF, tshark, imagemagick (convert), xorriso, /dev/kvm.
 """
-import os, pathlib, re, shutil, socket, subprocess, sys, time
+import os, pathlib, re, shutil, socket, subprocess, sys, threading, time
 
 ISO = os.path.abspath(sys.argv[1])
 OUT = pathlib.Path(sys.argv[2]).resolve(); OUT.mkdir(parents=True, exist_ok=True)
@@ -81,7 +81,7 @@ grep -E '^(ID|VARIANT_ID|PRETTY_NAME)=' /etc/os-release
 ls /etc/anaconda/profile.d/
 podman images
 echo "== starting the installer"
-yes '' | timeout 4200 anaconda --liveinst --cmdline --kickstart /tmp/ks.cfg > /tmp/anaconda-stdout.log 2>&1
+yes "" | timeout 4200 anaconda --liveinst --cmdline --kickstart /tmp/ks.cfg > /tmp/anaconda-stdout.log 2>&1
 rc=$?
 echo "ANACONDA-EXIT $rc"
 set +x
@@ -143,6 +143,20 @@ class Console:
     def send(self, text):
         self.s.sendall(text.encode())
 
+    def drain(self):
+        """Keep reading (and logging) in the background so the VM never stalls on a full socket."""
+        def loop():
+            while True:
+                try:
+                    d = self.s.recv(65536)
+                except OSError:
+                    return
+                if not d:
+                    return
+                self.log.write(d.decode(errors="replace")); self.log.flush()
+        self.s.settimeout(None)
+        threading.Thread(target=loop, daemon=True).start()
+
 
 def monitor_shot(sock_path, png):
     ppm = str(png) + ".ppm"
@@ -156,8 +170,8 @@ def monitor_shot(sock_path, png):
 
 
 def qemu(phase, with_iso, extra=()):
-    mon = str(WORK / f"{phase}.mon"); ser = str(WORK / f"{phase}.ser")
-    for p in (mon, ser):
+    mon = str(WORK / f"{phase}.mon"); ser = str(WORK / f"{phase}.ser"); dbg = str(WORK / f"{phase}.dbg")
+    for p in (mon, ser, dbg):
         pathlib.Path(p).unlink(missing_ok=True)
     cmd = ["qemu-system-x86_64", "-enable-kvm", "-cpu", "host", "-smp", "4", "-m", RAM,
            "-drive", f"if=pflash,format=raw,readonly=on,file={CODE}",
@@ -169,7 +183,9 @@ def qemu(phase, with_iso, extra=()):
            "-netdev", "user,id=n0", "-device", "virtio-net-pci,netdev=n0",
            "-object", f"filter-dump,id=f0,netdev=n0,file={OUT}/{phase}.pcap",
            "-vga", "std", "-display", "none", "-monitor", f"unix:{mon},server,nowait",
-           "-serial", f"unix:{ser},server=on,wait=off"]
+           "-serial", f"unix:{ser},server=on,wait=off",
+           # second serial port (ttyS1 in the guest): a root shell, so the test needs no password
+           "-chardev", f"socket,id=dbg,path={dbg},server=on,wait=off", "-device", "isa-serial,chardev=dbg"]
     if with_iso:
         # The live system finds its ISO by label on whatever block device holds it, and the
         # kickstart/script disk by the label CIDATA (IDE CD drives were not detected in CI).
@@ -178,7 +194,7 @@ def qemu(phase, with_iso, extra=()):
                 "-drive", f"if=none,id=iso,file={ISO},format=raw,readonly=on",
                 "-device", "virtio-blk-pci,drive=iso", *extra]
     p = subprocess.Popen(cmd)
-    return p, mon, ser
+    return p, mon, ser, dbg
 
 
 def net_summary(pcap, title):
@@ -220,37 +236,35 @@ if run(["xorriso", "-osirrox", "on", "-indev", ISO, "-extract", "/images/pxeboot
     run(["chmod", "u+rw", str(WORK / "vmlinuz"), str(WORK / "initrd.img")])
     kargs = ["-kernel", str(WORK / "vmlinuz"), "-initrd", str(WORK / "initrd.img"), "-append",
              f"root=live:CDLABEL={label.group(1) if label else 'RAVANA-OS'} rd.live.image enforcing=0 "
-             "console=tty0 console=ttyS0,115200 plymouth.enable=0"]
+             "console=tty0 console=ttyS0,115200 plymouth.enable=0 systemd.debug_shell=ttyS1"]
 
 say("phase 1: booting the live ISO")
-vm, mon, ser = qemu("install", True, kargs)
+vm, mon, ser, dbg = qemu("install", True, kargs)
 time.sleep(2)
 con = Console(ser, OUT / "install-console.log")
 install_rc = None
 try:
     if not con.wait(r"login: ", 420):
         raise RuntimeError("the live system never reached a login prompt (see install-console.log)")
-    say("live system is up; logging in")
-    con.send("liveuser\r")
-    m = con.wait(r"(Password: |\$ )", 60)
-    if m and m.group(1).startswith("Password"):
-        con.send("\r")
-    time.sleep(2)
-    con.send("echo RV-READY\r")
-    # the shell wraps its output in terminal escape codes, so don't rely on a line start:
-    # match the reply but not the echoed command ("echo RV-READY")
-    if not con.wait(r"(?<!echo )RV-READY", 60):
-        raise RuntimeError("could not log in on the serial console")
+    say("live system is up; opening the root shell on the second serial port")
+    con.drain()
+    sh = Console(dbg, OUT / "install-shell.log")
+    sh.send("\r")
+    time.sleep(1)
+    sh.send("echo RV-READY\r")
+    # the shell's output may be wrapped in terminal escape codes: match the reply, not the echoed command
+    if not sh.wait(r"(?<!echo )RV-READY", 90):
+        raise RuntimeError("no root shell on the second serial port (see install-shell.log)")
     monitor_shot(mon, OUT / "install-live-desktop.png")
     say("running the real installer (this takes a while)")
-    con.send("sudo -n bash -c 'mkdir -p /mnt/cfg && mount -L CIDATA /mnt/cfg && bash /mnt/cfg/run.sh'; echo RV-DONE-$?\r")
-    m = con.wait(r"RV-DONE-(\d+)", INSTALL_TIMEOUT, beat="installer still running")
+    sh.send("mkdir -p /mnt/cfg && mount -L CIDATA /mnt/cfg && bash /mnt/cfg/run.sh; echo RV-DONE-$?\r")
+    m = sh.wait(r"RV-DONE-(\d+)", INSTALL_TIMEOUT, beat="installer still running")
     if not m:
         raise RuntimeError(f"the installer did not finish within {INSTALL_TIMEOUT}s")
     install_rc = int(m.group(1))
     say(f"installer finished with exit code {install_rc}")
     time.sleep(3)
-    con.send("sudo -n poweroff\r")
+    sh.send("poweroff\r")
 except Exception as e:
     REPORT.append(f"**Install harness problem:** {e}\n")
     say(f"problem: {e}")
@@ -265,7 +279,8 @@ REPORT.insert(0, "## Real installer test\n\n" + (
     f"The installer **{'finished successfully' if install_rc == 0 else 'FAILED'}** (exit code {install_rc}).\n"
     if install_rc is not None else "The installer did not run to the end (see below).\n"))
 REPORT.append(net_summary(OUT / "install.pcap", "Network use while installing"))
-text = (OUT / "install-console.log").read_text(errors="replace") if (OUT / "install-console.log").exists() else ""
+_log = OUT / "install-shell.log"
+text = _log.read_text(errors="replace") if _log.exists() else ""
 text = re.sub(r"\x1b\[[0-9;?]*[A-Za-z]", "", text).replace("\r", "")
 i = text.find("ANACONDA-EXIT")
 REPORT.append("### Installer log (from the live system)\n```\n" + (text[i:][-9000:] if i >= 0 else text[-4000:]) + "\n```\n")
@@ -273,7 +288,7 @@ REPORT.append("### Installer log (from the live system)\n```\n" + (text[i:][-900
 # ---------------------------------------------------------------- phase 2: boot what was installed
 if install_rc == 0:
     say("phase 2: booting the installed system")
-    vm2, mon2, ser2 = qemu("firstboot", False)
+    vm2, mon2, ser2, _dbg2 = qemu("firstboot", False)
     third = FIRSTBOOT_SECS // 3
     for n in (1, 2, 3):
         time.sleep(third)

@@ -55,12 +55,7 @@ default_partitioning =
 
 [User Interface]
 custom_stylesheet = /usr/share/anaconda/pixmaps/ravana.css
-hidden_spokes =
-    NetworkSpoke
-    PasswordSpoke
-
 hidden_webui_pages =
-    root-password
     network
 
 [Localization]
@@ -214,6 +209,7 @@ ostreecontainer --url=$imageref:$imagetag --transport=containers-storage --no-si
 %include /usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %include /usr/share/anaconda/post-scripts/disable-fedora-flatpak.ks
 %include /usr/share/anaconda/post-scripts/install-flatpaks.ks
+%include /usr/share/anaconda/post-scripts/restore-selinux-labels.ks
 %include /usr/share/anaconda/post-scripts/secureboot-enroll-key.ks
 %include /usr/share/anaconda/post-scripts/secureboot-docs.ks
 
@@ -277,7 +273,22 @@ cat <<'EOF' >>/usr/share/anaconda/post-scripts/install-flatpaks.ks
 deployment="$(ostree rev-parse --repo=/mnt/sysimage/ostree/repo ostree/0/1/0)"
 target="/mnt/sysimage/ostree/deploy/default/deploy/$deployment.0/var/lib/"
 mkdir -p "$target"
-rsync -aAXUHKP --filter='-x security.selinux' /var/lib/flatpak "$target"
+rsync -aAXUHKP --open-noatime /var/lib/flatpak "$target"
+sync "$target"
+%end
+EOF
+
+# Give the installed system correct SELinux labels (as Bazzite's own installer does)
+cat <<'EOF' >>/usr/share/anaconda/post-scripts/restore-selinux-labels.ks
+%post --erroronfail --log=/tmp/anacoda_custom_logs/restore-selinux-labels.log
+# Make sure SELinux is disabled so restorecon can work.
+setenforce 0 || true
+
+# Fix critical policy-store labels.
+restorecon -R /etc/selinux
+
+# Properly restore SELinux labels for Flatpak.
+restorecon -R /var/lib/flatpak
 %end
 EOF
 

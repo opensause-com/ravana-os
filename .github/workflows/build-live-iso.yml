@@ -32,9 +32,13 @@ on:
         type: boolean
         default: true
       reuse_run:
-        description: Only boot-test the ISO from this earlier run (run number from its address); builds nothing
+        description: Only test the ISO from this earlier run (run number from its address); builds nothing
         type: string
         default: ''
+      install_test:
+        description: Also run the real installer in a VM onto a blank disk, then boot the result (about 40 min)
+        type: boolean
+        default: false
   workflow_run:
     workflows: ["Build Ravana OS image"]
     types: [completed]
@@ -198,6 +202,25 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+      - name: Install the ISO in a VM (real installer) and boot the result
+        if: inputs.install_test
+        continue-on-error: true
+        timeout-minutes: 100
+        run: |
+          scripts/live-boot-check.sh --install-tools
+          python3 scripts/live-install-check.py "output/$ISO" install-check
+          cat install-check/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always() && inputs.install_test
+        with:
+          name: ${{ matrix.image }}-install-check
+          path: |
+            install-check
+            !install-check/work
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Checksum and inspect
         run: |
           cd output
@@ -248,7 +271,7 @@ jobs:
 
   # Quick re-test: boot an ISO that an earlier run already built (about 12 minutes)
   boot-check:
-    if: github.event_name == 'workflow_dispatch' && (inputs.reuse_run || '') != ''
+    if: github.event_name == 'workflow_dispatch' && (inputs.reuse_run || '') != '' && !inputs.install_test
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -280,6 +303,48 @@ jobs:
         with:
           name: ${{ inputs.image }}-boot-check
           path: boot-check
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Quick re-test of an already-built ISO with the real installer (blank disk, then first boot)
+  install-check:
+    if: github.event_name == 'workflow_dispatch' && (inputs.reuse_run || '') != '' && inputs.install_test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      actions: read
+    env:
+      ISO: ${{ inputs.image }}-live.iso
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Free disk space
+        uses: ublue-os/remove-unwanted-software@cc0becac701cf642c8f0a6613bbdaf5dc36b259e # v9
+
+      - name: Get the ISO from the earlier run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REUSE_RUN: ${{ inputs.reuse_run }}
+          IMAGE: ${{ inputs.image }}
+        run: |
+          [[ "$REUSE_RUN" =~ ^[0-9]+$ ]] || { echo "::error::reuse_run must be the run number"; exit 1; }
+          gh run download "$REUSE_RUN" -R "$GITHUB_REPOSITORY" -n "$IMAGE-live-iso" -D output
+          ls -lh output
+
+      - name: Install the ISO in a VM (real installer) and boot the result
+        run: |
+          scripts/live-boot-check.sh --install-tools
+          python3 scripts/live-install-check.py "output/$ISO" install-check
+          cat install-check/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: ${{ inputs.image }}-install-check
+          path: |
+            install-check
+            !install-check/work
           if-no-files-found: ignore
           retention-days: 14
 

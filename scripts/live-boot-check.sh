@@ -13,7 +13,7 @@ set -uo pipefail
 if [ "${1:-}" = "--install-tools" ]; then   # on a CI machine (Ubuntu); retried, mirrors can hiccup
     for i in 1 2 3 4; do
         sudo apt-get update -qq >/dev/null 2>&1
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq qemu-system-x86 ovmf tshark imagemagick xorriso >/dev/null && break
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq qemu-system-x86 qemu-utils ovmf tshark imagemagick xorriso >/dev/null && break
         echo "tool install failed, retrying ($i)"; sleep 20
     done
     sudo chmod 666 /dev/kvm 2>/dev/null || true

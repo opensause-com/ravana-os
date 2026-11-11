@@ -90,6 +90,7 @@ PanelWindow {
                 Layout.fillWidth: true
                 spacing: 5
                 Text {
+                    textFormat: Text.PlainText
                     text: hud.kind === "text" ? hud.message : hud.titleFor()
                     color: R.Theme.text
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.DemiBold
@@ -109,6 +110,7 @@ PanelWindow {
                 }
             }
             Text {
+                textFormat: Text.PlainText
                 visible: hud.kind !== "text"
                 text: hud.level
                 color: R.Theme.secondaryText

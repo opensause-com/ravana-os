@@ -13,6 +13,9 @@ on:
         options: [testing, latest]
         default: testing
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-24.04
@@ -20,9 +23,9 @@ jobs:
       contents: read
       actions: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: '*-live-iso'
           merge-multiple: true
@@ -42,6 +45,9 @@ jobs:
           SF_USER: ${{ vars.SF_USER }}
           SF_PROJECT: ${{ vars.SF_PROJECT }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ inputs.run_id }}
+          CHANNEL_IN: ${{ inputs.channel }}
         run: |
-          STAMP="$(gh api "repos/${{ github.repository }}/actions/runs/${{ inputs.run_id }}" --jq '.created_at[0:10]' | tr -d -)"
-          scripts/sourceforge-upload.sh "${{ inputs.channel }}" "$STAMP" output/*-live.iso
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::run_id must be a number"; exit 1; }
+          STAMP="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" --jq '.created_at[0:10]' | tr -d -)"
+          scripts/sourceforge-upload.sh "$CHANNEL_IN" "$STAMP" output/*-live.iso

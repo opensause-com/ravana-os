@@ -11,6 +11,12 @@ Item {
     property var notification
     signal done()
 
+    // Notification text comes from any app (a web page can send one). Bold/italic/underline
+    // stay; <img> would make this desktop fetch from the internet by itself, so it goes,
+    // and so does a remote icon address.
+    function safeBody(t) { return String(t || "").replace(/<\s*img\b[^>]*>?/gi, ""); }
+    function safeIcon(i) { return /^[a-z][a-z0-9+.-]*:\/\//i.test(i || "") && !/^(file|qrc|image):\/\//i.test(i) ? "" : (i || ""); }
+
     readonly property bool critical: notification && notification.urgency === 2   // Critical
     readonly property date arrived: new Date()
     implicitHeight: body.implicitHeight + 28
@@ -51,7 +57,7 @@ Item {
         Kirigami.Icon {
             Layout.alignment: Qt.AlignTop
             Layout.preferredWidth: 36; Layout.preferredHeight: 36
-            source: card.notification ? (card.notification.image || card.notification.appIcon || "dialog-information") : ""
+            source: card.notification ? (card.notification.image || card.safeIcon(card.notification.appIcon) || "dialog-information") : ""
         }
         ColumnLayout {
             Layout.fillWidth: true
@@ -59,6 +65,7 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 Text {
+                    textFormat: Text.PlainText
                     Layout.fillWidth: true
                     text: card.notification ? (card.notification.appName || "").toUpperCase() : ""
                     color: R.Theme.secondaryText
@@ -66,11 +73,12 @@ Item {
                     elide: Text.ElideRight
                 }
                 Text {
+                    textFormat: Text.PlainText
                     text: hover.hovered ? "" : Qt.formatTime(card.arrived, Qt.locale().timeFormat(Locale.ShortFormat))
                     color: R.Theme.secondaryText
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption
                 }
-                Text {    // close
+                Text { textFormat: Text.PlainText;    // close
                     visible: hover.hovered
                     text: "✕"
                     color: R.Theme.secondaryText
@@ -79,6 +87,7 @@ Item {
                 }
             }
             Text {
+                textFormat: Text.PlainText
                 Layout.fillWidth: true
                 text: card.notification ? card.notification.summary : ""
                 color: R.Theme.text
@@ -88,7 +97,7 @@ Item {
             Text {
                 Layout.fillWidth: true
                 visible: text.length > 0
-                text: card.notification ? card.notification.body : ""
+                text: card.notification ? card.safeBody(card.notification.body) : ""
                 textFormat: Text.StyledText
                 color: R.Theme.text
                 opacity: 0.85
@@ -108,6 +117,7 @@ Item {
                         radius: 13
                         color: R.Theme.bubble
                         Text {
+                            textFormat: Text.PlainText
                             id: label; anchors.centerIn: parent
                             text: modelData.text
                             color: R.Theme.text

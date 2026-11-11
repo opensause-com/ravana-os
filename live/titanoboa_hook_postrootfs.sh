@@ -130,7 +130,10 @@ fi
 
 # Secureboot Key Fetch
 mkdir -p /usr/share/ublue-os
-curl -Lo /usr/share/ublue-os/sb_pubkey.der "$sbkey"
+curl -fsSL --retry 3 -o /usr/share/ublue-os/sb_pubkey.der "$sbkey"
+# Pinned: this key is enrolled into the user's firmware, so it must be exactly the one
+# Ravana expects. If upstream ever rotates it the build stops here, on purpose.
+echo "4e5c68474cb133fd8984d9599762cece9100c3e6cd8a9709aeaabd85dd9e70d1  /usr/share/ublue-os/sb_pubkey.der" | sha256sum -c -
 
 # Default Kickstart
 cat <<EOF >>/usr/share/anaconda/interactive-defaults.ks

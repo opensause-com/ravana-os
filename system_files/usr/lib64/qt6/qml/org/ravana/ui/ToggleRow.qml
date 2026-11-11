@@ -53,6 +53,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 1
         Text {
+            textFormat: Text.PlainText
             width: parent.width
             text: row.title
             color: Theme.text
@@ -63,6 +64,7 @@ Item {
             renderType: Text.NativeRendering
         }
         Text {
+            textFormat: Text.PlainText
             width: parent.width
             text: row.status
             visible: text.length > 0

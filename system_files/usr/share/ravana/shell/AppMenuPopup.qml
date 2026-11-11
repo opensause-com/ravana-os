@@ -85,7 +85,7 @@ PopupWindow {
                                 color: R.Theme.accent
                                 opacity: row.lit && row.enabled ? 1 : 0
                             }
-                            Text {    // check mark
+                            Text { textFormat: Text.PlainText;    // check mark
                                 x: 8; anchors.verticalCenter: parent.verticalCenter
                                 visible: modelData.checked
                                 text: "✓"
@@ -93,6 +93,7 @@ PopupWindow {
                                 font.pixelSize: 12
                             }
                             Text {
+                                textFormat: Text.PlainText
                                 id: label
                                 x: 24; anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.label
@@ -100,6 +101,7 @@ PopupWindow {
                                 font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
                             }
                             Text {
+                                textFormat: Text.PlainText
                                 id: keys
                                 anchors.right: parent.right; anchors.rightMargin: 10
                                 anchors.verticalCenter: parent.verticalCenter

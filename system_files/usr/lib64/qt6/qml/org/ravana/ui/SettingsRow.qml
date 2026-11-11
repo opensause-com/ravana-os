@@ -39,6 +39,7 @@ Item {
             source: row.icon; isMask: true; color: Theme.text
         }
         Text {
+            textFormat: Text.PlainText
             Layout.fillWidth: true
             text: row.label
             elide: Text.ElideRight
@@ -46,6 +47,7 @@ Item {
             font.family: Theme.fontFamily; font.pixelSize: Theme.sizeBody
         }
         Text {
+            textFormat: Text.PlainText
             visible: row.detail.length > 0
             text: row.detail
             Layout.maximumWidth: row.width * 0.55
@@ -55,6 +57,7 @@ Item {
         }
         Item { id: slot; implicitWidth: childrenRect.width; implicitHeight: childrenRect.height; Layout.alignment: Qt.AlignVCenter }
         Text {
+            textFormat: Text.PlainText
             visible: row.chevron
             text: "›"
             color: Theme.tertiaryText

@@ -185,6 +185,7 @@ PanelWindow {
                     Keys.onUpPressed: spot.selected = Math.max(spot.selected - 1, 0)
                     Keys.onReturnPressed: spot.activate(spot.results[spot.selected])
                     Text {
+                        textFormat: Text.PlainText
                         anchors.verticalCenter: parent.verticalCenter
                         text: qsTr("Ravana Search")
                         color: R.Theme.tertiaryText
@@ -213,7 +214,7 @@ PanelWindow {
                         required property int index
                         Layout.fillWidth: true
                         spacing: 0
-                        Text {   // group header, once per group
+                        Text { textFormat: Text.PlainText;   // group header, once per group
                             visible: entry.index === 0 || spot.results[entry.index - 1].group !== entry.modelData.group
                             Layout.leftMargin: 12; Layout.topMargin: entry.index === 0 ? 4 : 10; Layout.bottomMargin: 4
                             text: entry.modelData.group
@@ -243,6 +244,7 @@ PanelWindow {
                                     source: entry.modelData.icon
                                 }
                                 Text {
+                                    textFormat: Text.PlainText
                                     Layout.fillWidth: true
                                     text: entry.modelData.title
                                     elide: Text.ElideRight
@@ -252,6 +254,7 @@ PanelWindow {
                                     font.weight: entry.modelData.top ? Font.DemiBold : Font.Normal
                                 }
                                 Text {
+                                    textFormat: Text.PlainText
                                     Layout.maximumWidth: box.width * 0.45
                                     text: entry.modelData.sub
                                     elide: Text.ElideMiddle

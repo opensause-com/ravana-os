@@ -13,6 +13,9 @@ on:
         options: [testing, latest, shell]
         default: testing
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-24.04
@@ -20,9 +23,9 @@ jobs:
       contents: read
       actions: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: '*-live-iso'
           merge-multiple: true
@@ -44,4 +47,5 @@ jobs:
           R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
           R2_CHANNEL: ${{ vars.R2_CHANNEL }}
           R2_EDITIONS: ${{ vars.R2_EDITIONS }}
-        run: scripts/r2-upload.sh "${{ inputs.channel }}" output/*-live.iso
+          CHANNEL_IN: ${{ inputs.channel }}
+        run: scripts/r2-upload.sh "$CHANNEL_IN" output/*-live.iso

@@ -42,12 +42,14 @@ R.Glass {
             Layout.fillWidth: true
             spacing: 2
             Text {
+                textFormat: Text.PlainText
                 Layout.fillWidth: true
                 text: np.player ? (np.player.trackTitle || np.player.identity) : ""
                 color: R.Theme.text; elide: Text.ElideRight
                 font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.DemiBold
             }
             Text {
+                textFormat: Text.PlainText
                 Layout.fillWidth: true
                 text: np.player ? (np.player.trackArtist || np.player.identity || "") : ""
                 color: R.Theme.secondaryText; elide: Text.ElideRight

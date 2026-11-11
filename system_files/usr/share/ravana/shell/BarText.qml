@@ -23,6 +23,7 @@ MouseArea {
         Behavior on opacity { NumberAnimation { duration: R.Theme.fast } }
     }
     Text {
+        textFormat: Text.PlainText
         id: label
         anchors.centerIn: parent
         color: R.Theme.barText

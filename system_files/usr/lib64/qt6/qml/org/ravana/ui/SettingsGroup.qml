@@ -11,6 +11,7 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: 6
     Text {
+        textFormat: Text.PlainText
         visible: g.title.length > 0
         text: g.title
         Layout.leftMargin: 4
@@ -27,6 +28,7 @@ ColumnLayout {
         ColumnLayout { id: box; anchors.left: parent.left; anchors.right: parent.right; spacing: 0 }
     }
     Text {
+        textFormat: Text.PlainText
         visible: g.footer.length > 0
         text: g.footer
         Layout.fillWidth: true; Layout.leftMargin: 4

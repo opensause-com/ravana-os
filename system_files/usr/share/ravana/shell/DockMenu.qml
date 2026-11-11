@@ -65,6 +65,7 @@ PopupWindow {
                                 opacity: row.containsMouse || row.keyFocus ? 1 : 0
                             }
                             Text {
+                                textFormat: Text.PlainText
                                 id: label
                                 x: 12; anchors.verticalCenter: parent.verticalCenter
                                 text: (modelData.checked ? "✓  " : "") + modelData.label

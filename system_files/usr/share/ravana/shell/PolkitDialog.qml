@@ -101,6 +101,7 @@ Scope {
                     sourceSize: Qt.size(56, 56)
                 }
                 Text {
+                    textFormat: Text.PlainText
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     text: qsTr("Ravana OS wants to make changes.")
@@ -108,6 +109,7 @@ Scope {
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.Bold
                 }
                 Text {
+                    textFormat: Text.PlainText
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.Wrap
@@ -117,6 +119,7 @@ Scope {
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption
                 }
                 Text {
+                    textFormat: Text.PlainText
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     text: qsTr("Enter your password to allow this.")
@@ -144,6 +147,7 @@ Scope {
                         Keys.onEscapePressed: sheet.cancel()
                     }
                     Text {
+                        textFormat: Text.PlainText
                         anchors.verticalCenter: parent.verticalCenter; x: 14
                         visible: !pw.text
                         text: qsTr("Password")
@@ -151,7 +155,7 @@ Scope {
                         font.family: R.Theme.fontFamily; font.pixelSize: 13
                     }
                 }
-                Text {      // wrong password / extra messages from the system
+                Text { textFormat: Text.PlainText;      // wrong password / extra messages from the system
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.Wrap

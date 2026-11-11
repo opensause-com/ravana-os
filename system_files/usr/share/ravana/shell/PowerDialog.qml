@@ -88,6 +88,7 @@ PanelWindow {
                 sourceSize: Qt.size(56, 56)
             }
             Text {
+                textFormat: Text.PlainText
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
@@ -96,6 +97,7 @@ PanelWindow {
                 font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.Bold
             }
             Text {
+                textFormat: Text.PlainText
                 Layout.fillWidth: true
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
@@ -118,6 +120,7 @@ PanelWindow {
                         color: modelData.primary ? R.Theme.accent : (R.Theme.dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.07))
                         opacity: area.pressed ? 0.75 : 1
                         Text {
+                            textFormat: Text.PlainText
                             anchors.centerIn: parent
                             text: btn.modelData.label
                             color: btn.modelData.primary ? R.Theme.textOnAccent : R.Theme.text

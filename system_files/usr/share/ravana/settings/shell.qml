@@ -104,7 +104,7 @@ ShellRoot {
                     verticalAlignment: TextInput.AlignVCenter
                     color: R.Theme.text
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
-                    Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("Search"); visible: !search.text
+                    Text { textFormat: Text.PlainText; anchors.verticalCenter: parent.verticalCenter; text: qsTr("Search"); visible: !search.text
                         color: R.Theme.tertiaryText; font: search.font }
                     Keys.onReturnPressed: if (app.shown.length) app.page = app.shown[0].id
                 }
@@ -143,6 +143,7 @@ ShellRoot {
                                 source: navItem.modelData.icon; isMask: true; color: "white" }
                         }
                         Text {
+                            textFormat: Text.PlainText
                             anchors.left: sq.right; anchors.leftMargin: 9; anchors.verticalCenter: parent.verticalCenter
                             text: navItem.modelData.name
                             color: app.page === navItem.modelData.id ? R.Theme.textOnAccent : R.Theme.text
@@ -168,6 +169,7 @@ ShellRoot {
                 width: pageArea.width - 48
                 spacing: 18
                 Text {
+                    textFormat: Text.PlainText
                     text: app.current.name
                     color: R.Theme.text
                     font.family: R.Theme.fontFamily; font.pixelSize: 20; font.weight: Font.Bold
@@ -201,9 +203,9 @@ ShellRoot {
                     source: "file:///usr/share/icons/hicolor/256x256/apps/ravana-logo.png"
                     sourceSize: Qt.size(120, 120)
                 }
-                Text { Layout.alignment: Qt.AlignHCenter; text: app.about.name || "Ravana OS"; color: R.Theme.text
+                Text { textFormat: Text.PlainText; Layout.alignment: Qt.AlignHCenter; text: app.about.name || "Ravana OS"; color: R.Theme.text
                     font.family: R.Theme.fontFamily; font.pixelSize: 26; font.weight: Font.Bold }
-                Text { Layout.alignment: Qt.AlignHCenter; text: (app.about.version ? qsTr("Version %1").arg(app.about.version) : "") + (app.about.base ? "  ·  " + app.about.base : ""); color: R.Theme.secondaryText
+                Text { textFormat: Text.PlainText; Layout.alignment: Qt.AlignHCenter; text: (app.about.version ? qsTr("Version %1").arg(app.about.version) : "") + (app.about.base ? "  ·  " + app.about.base : ""); color: R.Theme.secondaryText
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody }
             }
             R.SettingsGroup {
@@ -271,9 +273,10 @@ ShellRoot {
                 }
                 ColumnLayout {
                     spacing: 2
-                    Text { text: "Ravana OS"; color: R.Theme.text
+                    Text { textFormat: Text.PlainText; text: "Ravana OS"; color: R.Theme.text
                         font.family: R.Theme.fontFamily; font.pixelSize: 18; font.weight: Font.Bold }
                     Text {
+                        textFormat: Text.PlainText
                         text: qsTr("Version %1").arg(up.st.current || app.about.version || "—")
                               + (up.st.channel ? "  ·  " + qsTr("%1 channel").arg(up.st.channel) : "")
                         color: R.Theme.secondaryText
@@ -297,6 +300,7 @@ ShellRoot {
                     spacing: 10
 
                     Text {
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         wrapMode: Text.Wrap
                         color: R.Theme.text
@@ -312,6 +316,7 @@ ShellRoot {
                         })[up.st.state] || ""
                     }
                     Text {
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         wrapMode: Text.Wrap
                         color: R.Theme.secondaryText
@@ -343,6 +348,7 @@ ShellRoot {
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
+                                textFormat: Text.PlainText
                                 text: up.st.state === "apps" ? qsTr("Almost done")
                                       : Math.floor(up.fraction * 100) + "%  ·  " + up.size(up.st.done) + qsTr(" of ") + up.size(up.st.size)
                                 color: R.Theme.text
@@ -351,6 +357,7 @@ ShellRoot {
                             }
                             Item { Layout.fillWidth: true }
                             Text {
+                                textFormat: Text.PlainText
                                 visible: up.st.state === "downloading"
                                 text: up.size(up.st.speed) + "/s" + (up.eta ? "  ·  " + up.eta : "")
                                 color: R.Theme.secondaryText
@@ -510,7 +517,7 @@ ShellRoot {
                                     }
                                     MouseArea { anchors.fill: parent; onClicked: app.run(["/usr/libexec/ravana-appearance", mode.modelData.id]) }
                                 }
-                                Text { anchors.horizontalCenter: parent.horizontalCenter; text: mode.modelData.name
+                                Text { textFormat: Text.PlainText; anchors.horizontalCenter: parent.horizontalCenter; text: mode.modelData.name
                                     color: R.Theme.text; font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody
                                     font.weight: mode.active ? Font.DemiBold : Font.Normal }
                             }

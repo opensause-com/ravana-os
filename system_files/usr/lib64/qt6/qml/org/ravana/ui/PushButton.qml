@@ -14,6 +14,7 @@ Rectangle {
     border.width: primary ? 0 : 1
     border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.08)
     Text {
+        textFormat: Text.PlainText
         id: label
         anchors.centerIn: parent
         text: b.text

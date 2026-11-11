@@ -177,6 +177,7 @@ PopupWindow {
                         R.SectionLabel { text: qsTr("Display") }
                         Item { Layout.fillWidth: true }
                         Text {
+                            textFormat: Text.PlainText
                             visible: !cc.flag("brightness_available")
                             text: qsTr("Use the display's buttons")
                             color: R.Theme.tertiaryText
@@ -200,7 +201,7 @@ PopupWindow {
                         Layout.fillWidth: true
                         R.SectionLabel { text: qsTr("Sound") }
                         Item { Layout.fillWidth: true }
-                        Text {      // choose the output (speakers, headphones, HDMI, Bluetooth)
+                        Text { textFormat: Text.PlainText;      // choose the output (speakers, headphones, HDMI, Bluetooth)
                             text: "›"; color: R.Theme.secondaryText; font.pixelSize: 16
                             MouseArea { anchors.fill: parent; anchors.margins: -8; onClicked: cc.openPage("sound") }
                         }
@@ -228,6 +229,7 @@ PopupWindow {
                     }
                     R.SectionLabel { Layout.fillWidth: true; text: qsTr("Battery") }
                     Text {
+                        textFormat: Text.PlainText
                         readonly property real p: UPower.displayDevice ? UPower.displayDevice.percentage : 0
                         text: Math.round(p <= 1 ? p * 100 : p) + "%"
                         color: R.Theme.secondaryText
@@ -252,9 +254,10 @@ PopupWindow {
                     implicitWidth: 28; implicitHeight: 28
                     onClicked: cc.page = ""
                     Rectangle { anchors.fill: parent; radius: 14; color: R.Theme.bubble }
-                    Text { anchors.centerIn: parent; text: "‹"; color: R.Theme.text; font.pixelSize: 18 }
+                    Text { textFormat: Text.PlainText; anchors.centerIn: parent; text: "‹"; color: R.Theme.text; font.pixelSize: 18 }
                 }
                 Text {
+                    textFormat: Text.PlainText
                     Layout.fillWidth: true; leftPadding: 6
                     text: cc.page === "wifi" ? qsTr("Wi-Fi") : cc.page === "sound" ? qsTr("Sound Output") : qsTr("Bluetooth")
                     color: R.Theme.text
@@ -290,6 +293,7 @@ PopupWindow {
                 font.pixelSize: R.Theme.sizeCaption
             }
             Text {
+                textFormat: Text.PlainText
                 visible: cc.listRows.length === 0
                 text: lister.running ? qsTr("Searching…") : (cc.page === "wifi" ? qsTr("No networks found") : cc.page === "sound" ? qsTr("No outputs") : qsTr("No paired devices"))
                 color: R.Theme.tertiaryText
@@ -333,6 +337,7 @@ PopupWindow {
                             }
                         }
                         Text {
+                            textFormat: Text.PlainText
                             Layout.fillWidth: true
                             text: net.name
                             color: R.Theme.text; elide: Text.ElideRight
@@ -353,6 +358,7 @@ PopupWindow {
                 visible: cc.page === "wifi" && cc.askSsid.length > 0
                 spacing: 8
                 Text {
+                    textFormat: Text.PlainText
                     Layout.leftMargin: 6
                     text: qsTr("Password for “%1”").arg(cc.askSsid)
                     color: R.Theme.text
@@ -374,6 +380,7 @@ PopupWindow {
                         Keys.onEscapePressed: cc.askSsid = ""
                     }
                     Text {
+                        textFormat: Text.PlainText
                         anchors.verticalCenter: parent.verticalCenter; x: 14
                         visible: !wifiPassword.text
                         text: qsTr("Password"); color: R.Theme.tertiaryText
@@ -381,6 +388,7 @@ PopupWindow {
                     }
                 }
                 Text {
+                    textFormat: Text.PlainText
                     visible: cc.joinError.length > 0
                     Layout.leftMargin: 6
                     text: cc.joinError
@@ -403,6 +411,7 @@ PopupWindow {
                     cc.visible = false;
                 }
                 Text {
+                    textFormat: Text.PlainText
                     anchors.verticalCenter: parent.verticalCenter; leftPadding: 6
                     text: cc.page === "wifi" ? qsTr("Wi-Fi Settings…") : cc.page === "sound" ? qsTr("Sound Settings…") : qsTr("Bluetooth Settings…")
                     color: R.Theme.text

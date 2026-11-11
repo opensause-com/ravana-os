@@ -22,6 +22,7 @@ R.Glass {
         RowLayout {
             Layout.fillWidth: true
             Text {
+                textFormat: Text.PlainText
                 Layout.fillWidth: true
                 text: Qt.formatDate(cal.month, "MMMM yyyy")
                 color: R.Theme.text
@@ -30,6 +31,7 @@ R.Glass {
             Repeater {
                 model: ["‹", "›"]
                 Text {
+                    textFormat: Text.PlainText
                     required property string modelData
                     required property int index
                     text: modelData
@@ -47,6 +49,7 @@ R.Glass {
             Repeater {
                 model: ["M", "T", "W", "T", "F", "S", "S"]
                 Text {
+                    textFormat: Text.PlainText
                     required property string modelData
                     width: parent.cell; height: 20
                     horizontalAlignment: Text.AlignHCenter
@@ -69,6 +72,7 @@ R.Glass {
                         visible: parent.today
                     }
                     Text {
+                        textFormat: Text.PlainText
                         anchors.centerIn: parent
                         visible: parent.day > 0
                         text: parent.day

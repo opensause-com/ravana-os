@@ -3,3 +3,7 @@
 # Never commit signing keys
 *.key
 cosign.password
+
+# Python caches
+__pycache__/
+*.pyc

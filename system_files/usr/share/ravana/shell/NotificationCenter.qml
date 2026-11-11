@@ -27,13 +27,19 @@ PanelWindow {
     function hide() { shown = 0; closer.restart(); }
     Timer { id: closer; interval: R.Theme.normal + 80; onTriggered: nc.visible = false }
 
+    // Notification text comes from any app (a web page can send one). Bold/italic/underline
+    // stay; <img> would make this desktop fetch from the internet by itself, so it goes,
+    // and so does a remote icon address.
+    function safeBody(t) { return String(t || "").replace(/<\s*img\b[^>]*>?/gi, ""); }
+    function safeIcon(i) { return /^[a-z][a-z0-9+.-]*:\/\//i.test(i || "") && !/^(file|qrc|image):\/\//i.test(i) ? "" : (i || ""); }
+
     readonly property var notes: history ? history.values : []
     readonly property var groups: {
         const g = [];
         notes.slice().reverse().forEach(n => {
             const key = n.appName || qsTr("Other");
             let grp = g.find(x => x.app === key);
-            if (!grp) { grp = { app: key, icon: n.appIcon, items: [] }; g.push(grp); }
+            if (!grp) { grp = { app: key, icon: nc.safeIcon(n.appIcon), items: [] }; g.push(grp); }
             grp.items.push(n);
         });
         return g;
@@ -66,11 +72,13 @@ PanelWindow {
                 spacing: 0
                 SystemClock { id: clock; precision: SystemClock.Minutes }
                 Text {
+                    textFormat: Text.PlainText
                     text: Qt.formatDate(clock.date, "dddd")
                     color: R.Theme.dark ? "white" : "#1d1d1f"; style: R.Theme.dark ? Text.Raised : Text.Normal; styleColor: Qt.rgba(0, 0, 0, 0.3)
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.DemiBold
                 }
                 Text {
+                    textFormat: Text.PlainText
                     text: Qt.formatDate(clock.date, "d MMMM")
                     color: R.Theme.dark ? "white" : "#1d1d1f"; style: R.Theme.dark ? Text.Raised : Text.Normal; styleColor: Qt.rgba(0, 0, 0, 0.3)
                     font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeDisplay; font.weight: Font.Bold
@@ -94,12 +102,14 @@ PanelWindow {
                                 ? "battery-full-charging-symbolic" : "battery-good-symbolic"
                     }
                     Text {
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         text: qsTr("Battery")
                         color: R.Theme.text
                         font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.DemiBold
                     }
                     Text {
+                        textFormat: Text.PlainText
                         readonly property real p: UPower.displayDevice ? UPower.displayDevice.percentage : 0
                         text: Math.round(p <= 1 ? p * 100 : p) + "%"
                         color: R.Theme.secondaryText
@@ -112,6 +122,7 @@ PanelWindow {
             RowLayout {
                 Layout.fillWidth: true; Layout.leftMargin: 6; Layout.rightMargin: 6; Layout.topMargin: 6
                 Text {
+                    textFormat: Text.PlainText
                     Layout.fillWidth: true
                     text: qsTr("Notifications")
                     color: R.Theme.dark ? "white" : "#1d1d1f"; style: R.Theme.dark ? Text.Raised : Text.Normal; styleColor: Qt.rgba(0, 0, 0, 0.3)
@@ -121,7 +132,7 @@ PanelWindow {
                     visible: nc.notes.length > 0
                     implicitWidth: clearAll.implicitWidth + 20; implicitHeight: 24; radius: 12
                     color: R.Theme.glassTint("thick")
-                    Text { id: clearAll; anchors.centerIn: parent; text: qsTr("Clear All"); color: R.Theme.text
+                    Text { textFormat: Text.PlainText; id: clearAll; anchors.centerIn: parent; text: qsTr("Clear All"); color: R.Theme.text
                            font.family: R.Theme.fontFamily; font.pixelSize: 12 }
                     MouseArea { anchors.fill: parent; onClicked: nc.notes.slice().forEach(n => n.dismiss()) }
                 }
@@ -130,6 +141,7 @@ PanelWindow {
                 Layout.fillWidth: true; implicitHeight: 60
                 visible: nc.notes.length === 0
                 Text {
+                    textFormat: Text.PlainText
                     anchors.centerIn: parent
                     text: qsTr("No Notifications")
                     color: R.Theme.secondaryText
@@ -153,12 +165,14 @@ PanelWindow {
                             Layout.fillWidth: true
                             Kirigami.Icon { implicitWidth: 18; implicitHeight: 18; source: group.modelData.icon || "dialog-information" }
                             Text {
+                                textFormat: Text.PlainText
                                 Layout.fillWidth: true
                                 text: group.modelData.app.toUpperCase() + (group.modelData.items.length > 1 ? "  ·  " + group.modelData.items.length : "")
                                 color: R.Theme.secondaryText
                                 font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeCaption; font.letterSpacing: 0.4
                             }
                             Text {
+                                textFormat: Text.PlainText
                                 text: "✕"; color: R.Theme.secondaryText; font.pixelSize: 12
                                 MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: group.modelData.items.forEach(n => n.dismiss()) }
                             }
@@ -180,6 +194,7 @@ PanelWindow {
                                     width: parent.width
                                     spacing: 1
                                     Text {
+                                        textFormat: Text.PlainText
                                         Layout.fillWidth: true
                                         text: item.modelData.summary
                                         color: R.Theme.text; elide: Text.ElideRight
@@ -188,7 +203,7 @@ PanelWindow {
                                     Text {
                                         Layout.fillWidth: true
                                         visible: text.length > 0
-                                        text: item.modelData.body
+                                        text: nc.safeBody(item.modelData.body)
                                         textFormat: Text.StyledText
                                         color: R.Theme.text; opacity: 0.85
                                         wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight
@@ -197,7 +212,7 @@ PanelWindow {
                                 }
                             }
                         }
-                        Text {      // stack: show the rest / show less
+                        Text { textFormat: Text.PlainText;      // stack: show the rest / show less
                             visible: group.modelData.items.length > 4
                             text: group.expanded ? qsTr("Show less") : qsTr("Show %1 more").arg(group.modelData.items.length - 4)
                             color: R.Theme.accent

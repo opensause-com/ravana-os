@@ -71,6 +71,7 @@ Item {
         border.width: 1
         border.color: R.Theme.dark ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.08)
         Text {
+            textFormat: Text.PlainText
             id: name
             anchors.centerIn: parent
             text: it.label

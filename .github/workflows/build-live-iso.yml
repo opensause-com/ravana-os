@@ -50,6 +50,9 @@ concurrency:
 env:
   CHANNEL: ${{ inputs.channel || (github.event.workflow_run.head_branch == 'testing' && 'testing') || 'latest' }}
 
+permissions:
+  contents: read
+
 jobs:
   meta:
     runs-on: ubuntu-24.04
@@ -78,12 +81,12 @@ jobs:
       SF_PROJECT: ${{ vars.SF_PROJECT }}
       ISO: ${{ matrix.image }}-live.iso
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Free disk space
-        uses: ublue-os/remove-unwanted-software@v9
+        uses: ublue-os/remove-unwanted-software@cc0becac701cf642c8f0a6613bbdaf5dc36b259e # v9
 
       - name: Put container storage on the big /mnt disk
         run: |
@@ -162,7 +165,7 @@ jobs:
 
       - name: Build ISO (Titanoboa)
         id: iso
-        uses: ublue-os/titanoboa@main
+        uses: ublue-os/titanoboa@5c457c3d0518bd17e754be0fd98a60d29d26abb4 # main, pinned: it runs privileged on the ISO
         with:
           image-ref: localhost/ravana-live:latest
           iso-dest: ${{ github.workspace }}/output/${{ matrix.image }}-live.iso
@@ -187,7 +190,7 @@ jobs:
           cat boot-check/network.md >> "$GITHUB_STEP_SUMMARY"
           rm -f boot-check/monitor.sock
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: ${{ matrix.image }}-boot-check
@@ -227,7 +230,7 @@ jobs:
           SF_USER: ${{ vars.SF_USER }}
         run: scripts/sourceforge-upload.sh "$CHANNEL" "${{ needs.meta.outputs.stamp }}" "output/$ISO"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ${{ matrix.image }}-live-iso
           path: |
@@ -237,7 +240,7 @@ jobs:
           retention-days: ${{ github.event_name == 'workflow_dispatch' && 7 || 90 }}
 
       # Small checksum file for the release job
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ${{ matrix.image }}-sha256
           path: output/${{ matrix.image }}-live.iso.sha256
@@ -253,13 +256,16 @@ jobs:
     env:
       ISO: ${{ inputs.image }}-live.iso
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Get the ISO from run ${{ inputs.reuse_run }}
+      - name: Get the ISO from the earlier run
         env:
           GH_TOKEN: ${{ github.token }}
+          REUSE_RUN: ${{ inputs.reuse_run }}
+          IMAGE: ${{ inputs.image }}
         run: |
-          gh run download "${{ inputs.reuse_run }}" -R "${{ github.repository }}" -n "${{ inputs.image }}-live-iso" -D output
+          [[ "$REUSE_RUN" =~ ^[0-9]+$ ]] || { echo "::error::reuse_run must be the run number"; exit 1; }
+          gh run download "$REUSE_RUN" -R "$GITHUB_REPOSITORY" -n "$IMAGE-live-iso" -D output
           ls -lh output
 
       - name: Boot the ISO and measure network use
@@ -269,7 +275,7 @@ jobs:
           cat boot-check/network.md >> "$GITHUB_STEP_SUMMARY"
           rm -f boot-check/monitor.sock
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: ${{ inputs.image }}-boot-check
@@ -284,20 +290,27 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: '*-sha256'
           merge-multiple: true
           path: checksums
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+        with:
+          cosign-release: 'v3.1.4'
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           VERSION="$(sed -n 's/^ARG IMAGE_VERSION=//p' Containerfile)"
           STAMP="${{ needs.meta.outputs.stamp }}"
@@ -307,6 +320,19 @@ jobs:
           SF_DIR="https://sourceforge.net/projects/$SF/files/releases/$VERSION-$STAMP"
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           cat checksums/*.sha256 > SHA256SUMS
+          # Sign the checksum list with the Ravana key (the same one that signs the images),
+          # so a download can be checked against more than the place it came from.
+          # The signature is only published if it verifies with the public key in the repo.
+          SIGS=()
+          if [ -n "${COSIGN_PRIVATE_KEY:-}" ]; then
+            if cosign sign-blob --yes --new-bundle-format=false --use-signing-config=false \
+                 --key env://COSIGN_PRIVATE_KEY --output-signature SHA256SUMS.sig SHA256SUMS >/dev/null \
+               && cosign verify-blob --key cosign.pub --signature SHA256SUMS.sig SHA256SUMS >/dev/null; then
+              SIGS=(SHA256SUMS.sig); echo "SHA256SUMS signed and verified"
+            else
+              echo "::warning::SHA256SUMS could not be signed; releasing without a signature"
+            fi
+          fi
           # SourceForge files carry the version and date in their names
           [ -z "$SF" ] || sed -Ei "s/ (ravana-os[a-z-]*)-live\.iso$/ \1-$VERSION-$STAMP-live.iso/" SHA256SUMS
           PREV="$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')"
@@ -336,6 +362,8 @@ jobs:
               echo
               echo "Downloads are kept for 90 days and need a GitHub sign-in. Verify with \`SHA256SUMS\` below."
             fi
+            echo "Check your download: \`sha256sum -c SHA256SUMS\`. The list is signed with [cosign.pub](https://github.com/${{ github.repository }}/blob/main/cosign.pub) when \`SHA256SUMS.sig\` is attached: \`cosign verify-blob --key cosign.pub --signature SHA256SUMS.sig SHA256SUMS\`."
+            echo
             echo "Want VS Code, Docker, VMs and ROCm? Open **Get Developer Tools** after installing."
             echo
             echo "Already on Ravana? Updates arrive automatically, or run \`ujust update\`."
@@ -346,10 +374,10 @@ jobs:
             echo "\`ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ravana-os:latest\` · \`ravana-os-nvidia\` · \`ravana-os-dx\` · \`ravana-os-dx-nvidia\`"
           } > notes.md
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" SHA256SUMS --clobber
+            gh release upload "$TAG" SHA256SUMS ${SIGS[@]+"${SIGS[@]}"} --clobber
             gh release edit "$TAG" --notes-file notes.md
           else
-            gh release create "$TAG" SHA256SUMS \
+            gh release create "$TAG" SHA256SUMS ${SIGS[@]+"${SIGS[@]}"} \
               --title "Ravana OS $VERSION ($DATE)" \
               --notes-file notes.md --generate-notes \
               ${PREV:+--notes-start-tag "$PREV"} \

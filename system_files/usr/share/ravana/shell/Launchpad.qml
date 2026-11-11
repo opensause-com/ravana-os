@@ -124,6 +124,7 @@ PanelWindow {
                 Keys.onEscapePressed: search.text ? search.text = "" : (pad.openFolder ? pad.openFolder = null : pad.hide())
                 Keys.onReturnPressed: if (pad.apps.length) { pad.launch(pad.apps[0]); pad.hide(); }
                 Text {
+                    textFormat: Text.PlainText
                     anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("Search")
                     color: pad.ink; opacity: 0.5
@@ -216,6 +217,7 @@ PanelWindow {
                                 }
                             }
                             Text {
+                                textFormat: Text.PlainText
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 y: 106
                                 width: 136
@@ -258,6 +260,7 @@ PanelWindow {
                 Behavior on scale { NumberAnimation { duration: R.Theme.bloom; easing.type: Easing.OutBack; easing.overshoot: R.Theme.bloomOvershoot } }
                 MouseArea { anchors.fill: parent }
                 Text {
+                    textFormat: Text.PlainText
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: 22
                     text: pad.openFolder ? pad.openFolder.name : ""
@@ -283,6 +286,7 @@ PanelWindow {
                                 scale: fcell.pressed ? 0.92 : 1
                             }
                             Text {
+                                textFormat: Text.PlainText
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 y: 92; width: 120
                                 horizontalAlignment: Text.AlignHCenter

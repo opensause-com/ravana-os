@@ -134,7 +134,7 @@ PanelWindow {
             icon: "weather-clear-night-symbolic"
             onClicked: controlCenter.visible = !controlCenter.visible
         }
-        Text {      // keyboard layout, click to switch
+        Text { textFormat: Text.PlainText;      // keyboard layout, click to switch
             visible: parseInt(bar.kbd.count || "0") > 1
             text: (bar.kbd.current || "").toUpperCase()
             color: R.Theme.barText
@@ -146,6 +146,7 @@ PanelWindow {
             }
         }
         Text {
+            textFormat: Text.PlainText
             visible: bar.hasBattery
             text: bar.hasBattery ? Math.round(UPower.displayDevice.percentage * (UPower.displayDevice.percentage <= 1 ? 100 : 1)) + "%" : ""
             color: R.Theme.barText
@@ -169,6 +170,7 @@ PanelWindow {
             onClicked: bar.run("qs ipc -p /usr/share/ravana/shell call spotlight toggle")
         }
         Text {
+            textFormat: Text.PlainText
             id: clockText
             leftPadding: 8
             color: R.Theme.barText

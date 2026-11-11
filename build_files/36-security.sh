@@ -21,7 +21,7 @@ else
 fi
 
 # --- No remote login or remote printer discovery unless the user turns them on ---
-for unit in sshd.service sshd.socket cups-browsed.service; do
+for unit in sshd.service sshd.socket cups-browsed.service cockpit.socket cockpit.service; do
     systemctl disable "$unit" 2>/dev/null || true
 done
 

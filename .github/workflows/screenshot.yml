@@ -24,9 +24,13 @@ on:
         description: Image tag
         default: testing
 
+permissions:
+  contents: read
+
 jobs:
   screenshot:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    # (a build started by a fork's pull request is never screenshotted: it would run that fork's code here)
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     # job-level, so skipped runs (cancelled builds) never cancel a real one
     concurrency:
       group: screenshot-${{ github.event.workflow_run.head_branch || github.ref_name }}
@@ -36,12 +40,12 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Free disk space
-        uses: ublue-os/remove-unwanted-software@v9
+        uses: ublue-os/remove-unwanted-software@cc0becac701cf642c8f0a6613bbdaf5dc36b259e # v9
 
       - name: Virtual GPU (vgem) so KWin has a render device
         run: |
@@ -49,8 +53,16 @@ jobs:
           sudo modprobe vgem && ls -la /dev/dri || echo "vgem not available"
 
       - name: Screenshot the desktop
+        env:
+          TAG_IN: ${{ inputs.tag }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
-          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ravana-os:${{ inputs.tag || ((github.event.workflow_run.head_branch == 'ravana-shell' || github.ref_name == 'ravana-shell') && 'shell') || 'testing' }}"
+          TAG="${TAG_IN:-}"
+          [[ -z "$TAG" || "$TAG" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "::error::bad image tag"; exit 1; }
+          if [ -z "$TAG" ]; then
+            if [ "$HEAD_BRANCH" = ravana-shell ] || [ "$GITHUB_REF_NAME" = ravana-shell ]; then TAG=shell; else TAG=testing; fi
+          fi
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ravana-os:$TAG"
           sudo podman pull -q "$IMAGE"
           mkdir -p shots
           OVERLAY=()
@@ -83,19 +95,19 @@ jobs:
                   "shell-jpg/" + os.path.basename(f)[:-4] + ".jpg", quality=80)
           PY
           du -sh logs shell-jpg shots
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: logs
           path: logs
           retention-days: 14
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: shell-jpg
           path: shell-jpg
           retention-days: 14
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: desktop-screenshots

@@ -31,8 +31,12 @@ target="$base/$target_name:$tag"
 
 kdialog --title "$title" --yes-label "Continue" --no-label "Cancel" --yesno "$text" || exit 0
 
-if konsole --hide-menubar -e bash -c "echo 'Switching to $target'; echo; pkexec bootc switch --enforce-container-sigpolicy '$target'; echo \$? > /tmp/ravana-edition-switch.rc; echo; read -rp 'Press Enter to close'"; \
-   [ "$(cat /tmp/ravana-edition-switch.rc 2>/dev/null)" = 0 ]; then
+# result file in the user's own private runtime folder (a fixed name in /tmp can be
+# pre-created by another user to redirect this write or fake the result)
+rc="$(mktemp "${XDG_RUNTIME_DIR:-$HOME}/ravana-edition-switch.XXXXXX")" || exit 1
+trap 'rm -f "$rc"' EXIT
+if konsole --hide-menubar -e bash -c 'echo "Switching to $1"; echo; pkexec bootc switch --enforce-container-sigpolicy "$1"; echo $? > "$2"; echo; read -rp "Press Enter to close"' _ "$target" "$rc"; \
+   [ "$(cat "$rc" 2>/dev/null)" = 0 ]; then
     kdialog --title "$title" --yes-label "Restart now" --no-label "Later" \
         --yesno "Ready. Restart to start using the new edition." && systemctl reboot
 else

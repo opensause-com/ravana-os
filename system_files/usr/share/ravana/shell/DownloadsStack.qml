@@ -48,11 +48,13 @@ PopupWindow {
             anchors.margins: 12
             spacing: 8
             Text {
+                textFormat: Text.PlainText
                 text: qsTr("Downloads")
                 color: R.Theme.text
                 font.family: R.Theme.fontFamily; font.pixelSize: R.Theme.sizeBody; font.weight: Font.Bold
             }
             Text {
+                textFormat: Text.PlainText
                 visible: pop.files.length === 0
                 text: qsTr("Nothing downloaded yet")
                 color: R.Theme.secondaryText
@@ -87,6 +89,7 @@ PopupWindow {
                             source: pop.isPicture(cell.modelData[1]) ? "image-x-generic" : pop.iconFor(cell.modelData[1])
                         }
                         Text {
+                            textFormat: Text.PlainText
                             anchors.horizontalCenter: parent.horizontalCenter; y: 66
                             width: 88
                             horizontalAlignment: Text.AlignHCenter

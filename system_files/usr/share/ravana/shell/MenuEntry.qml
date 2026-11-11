@@ -21,6 +21,7 @@ MouseArea {
         Behavior on opacity { NumberAnimation { duration: 90 } }
     }
     Text {
+        textFormat: Text.PlainText
         id: label
         anchors.verticalCenter: parent.verticalCenter
         x: 12

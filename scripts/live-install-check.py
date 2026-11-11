@@ -237,7 +237,9 @@ try:
         con.send("\r")
     time.sleep(2)
     con.send("echo RV-READY\r")
-    if not con.wait(r"\nRV-READY", 60):
+    # the shell wraps its output in terminal escape codes, so don't rely on a line start:
+    # match the reply but not the echoed command ("echo RV-READY")
+    if not con.wait(r"(?<!echo )RV-READY", 60):
         raise RuntimeError("could not log in on the serial console")
     monitor_shot(mon, OUT / "install-live-desktop.png")
     say("running the real installer (this takes a while)")

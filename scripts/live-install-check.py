@@ -168,8 +168,11 @@ def qemu(phase, with_iso, extra=()):
            "-vga", "std", "-display", "none", "-monitor", f"unix:{mon},server,nowait",
            "-serial", f"unix:{ser},server=on,wait=off"]
     if with_iso:
-        cmd += ["-drive", f"file={ISO},media=cdrom,readonly=on,if=ide,index=0",
-                "-drive", f"file={WORK}/cfg.iso,media=cdrom,readonly=on,if=ide,index=1", "-boot", "d", *extra]
+        # the ISO as a plain CD (as in the boot test); the kickstart and script come on a small
+        # read-only disk behind the target disk, found by its label (CIDATA) from inside
+        cmd += ["-cdrom", ISO, "-boot", "d",
+                "-drive", f"if=none,id=cfg,file={WORK}/cfg.iso,format=raw,readonly=on",
+                "-device", "virtio-blk-pci,drive=cfg", *extra]
     p = subprocess.Popen(cmd)
     return p, mon, ser
 

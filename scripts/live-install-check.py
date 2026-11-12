@@ -88,9 +88,11 @@ podman images
 mkdir -p /usr/local/bin
 cat > /usr/local/bin/systemd-tmpfiles <<'WRAP'
 #!/bin/bash
-L=/tmp/tmpfiles-wrap.log
+# only the installer's (root) calls are recorded; the desktop session's own run untouched
+[ "$(id -u)" = 0 ] || exec /usr/bin/systemd-tmpfiles "$@"
+L=/var/log/tmpfiles-wrap.log
 echo "[wrap] $*" >> $L
-/usr/bin/systemd-tmpfiles "$@" >> $L 2>&1; rc=$?
+SYSTEMD_LOG_LEVEL=debug /usr/bin/systemd-tmpfiles "$@" >> $L 2>&1; rc=$?
 echo "[wrap] exit code $rc" >> $L
 if [ $rc -ne 0 ]; then
   echo "[wrap] rules that apply (cat-config, /var/home):" >> $L
@@ -110,7 +112,7 @@ yes "" | timeout 4200 anaconda --cmdline --kickstart /tmp/ks.cfg > /tmp/anaconda
 rc=$?
 echo "ANACONDA-EXIT $rc"
 set +x
-echo "== tmpfiles wrapper log"; cat /tmp/tmpfiles-wrap.log 2>/dev/null | tail -n 150
+echo "== tmpfiles wrapper log"; tail -n 200 /var/log/tmpfiles-wrap.log 2>/dev/null
 echo "== installer output (last 80 lines)"; tail -n 80 /tmp/anaconda-stdout.log
 for f in /tmp/anaconda.log /tmp/program.log /tmp/storage.log /tmp/packaging.log /tmp/syslog /tmp/anacoda_custom_logs/*; do
   [ -f "$f" ] || continue

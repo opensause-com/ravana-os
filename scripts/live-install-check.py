@@ -76,6 +76,10 @@ shutdown
 RUN_SH = r"""#!/bin/bash
 set -x
 cp /mnt/cfg/ks.cfg /tmp/ks.cfg
+# the debug shell has a bare environment; a real session always has a language and a home
+set -a; [ -f /etc/locale.conf ] && . /etc/locale.conf; set +a
+: "${LANG:=en_US.UTF-8}"; export LANG LC_ALL="$LANG"
+export HOME="${HOME:-/root}" TERM=dumb
 echo "== live system"; free -m; df -h / /var/tmp; lsblk
 grep -E '^(ID|VARIANT_ID|PRETTY_NAME)=' /etc/os-release
 ls /etc/anaconda/profile.d/

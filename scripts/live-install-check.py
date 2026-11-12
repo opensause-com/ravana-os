@@ -84,6 +84,25 @@ echo "== live system"; free -m; df -h / /var/tmp; lsblk
 grep -E '^(ID|VARIANT_ID|PRETTY_NAME)=' /etc/os-release
 ls /etc/anaconda/profile.d/
 podman images
+# Record what systemd-tmpfiles says (the installer's /var/home step failed with no message)
+mkdir -p /usr/local/bin
+cat > /usr/local/bin/systemd-tmpfiles <<'WRAP'
+#!/bin/bash
+L=/tmp/tmpfiles-wrap.log
+echo "[wrap] $*" >> $L
+/usr/bin/systemd-tmpfiles "$@" >> $L 2>&1; rc=$?
+echo "[wrap] exit code $rc" >> $L
+if [ $rc -ne 0 ]; then
+  echo "[wrap] rules that apply (cat-config, /var/home):" >> $L
+  /usr/bin/systemd-tmpfiles --cat-config --root=/mnt/sysroot --prefix=/var/home >> $L 2>&1
+  echo "[wrap] state of /mnt/sysroot/var:" >> $L
+  ls -la /mnt/sysroot/var /mnt/sysroot/var/home >> $L 2>&1
+  findmnt -R /mnt/sysroot >> $L 2>&1
+fi
+exit $rc
+WRAP
+chmod +x /usr/local/bin/systemd-tmpfiles
+export PATH=/usr/local/bin:$PATH
 echo "== starting the installer"
 # (--liveinst would ignore the kickstart file and needs the user's desktop session; the
 # command-line mode runs the same installer with the same profile, image source and steps)
@@ -91,6 +110,7 @@ yes "" | timeout 4200 anaconda --cmdline --kickstart /tmp/ks.cfg > /tmp/anaconda
 rc=$?
 echo "ANACONDA-EXIT $rc"
 set +x
+echo "== tmpfiles wrapper log"; cat /tmp/tmpfiles-wrap.log 2>/dev/null | tail -n 150
 echo "== installer output (last 80 lines)"; tail -n 80 /tmp/anaconda-stdout.log
 for f in /tmp/anaconda.log /tmp/program.log /tmp/storage.log /tmp/packaging.log /tmp/syslog /tmp/anacoda_custom_logs/*; do
   [ -f "$f" ] || continue

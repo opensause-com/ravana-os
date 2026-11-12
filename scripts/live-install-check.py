@@ -112,7 +112,9 @@ rc=$?
 echo "ANACONDA-EXIT $rc"
 set +x
 echo "== tmpfiles calls"; cat /var/log/tmpfiles-calls.txt 2>/dev/null
-echo "== tmpfiles: the failing call (debug output first)"; head -n 220 /var/log/tmpfiles-FAILED.log 2>/dev/null
+echo "== tmpfiles: the failing call, without the thousands of skipped entries"
+grep -v -E 'does not match any include prefix|^Reading config file|^Skipping file|^Looking for|^	/mnt/sysroot|libselinux|SELinux database' /var/log/tmpfiles-FAILED.log 2>/dev/null | head -n 200
+echo "== tmpfiles: last 40 raw lines"; tail -n 40 /var/log/tmpfiles-FAILED.log 2>/dev/null | cut -c1-220
 echo "== installer output (last 80 lines)"; tail -n 80 /tmp/anaconda-stdout.log
 for f in /tmp/anaconda.log /tmp/program.log /tmp/storage.log /tmp/packaging.log /tmp/syslog /tmp/anacoda_custom_logs/*; do
   [ -f "$f" ] || continue

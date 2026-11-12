@@ -81,7 +81,9 @@ grep -E '^(ID|VARIANT_ID|PRETTY_NAME)=' /etc/os-release
 ls /etc/anaconda/profile.d/
 podman images
 echo "== starting the installer"
-yes "" | timeout 4200 anaconda --liveinst --cmdline --kickstart /tmp/ks.cfg > /tmp/anaconda-stdout.log 2>&1
+# (--liveinst would ignore the kickstart file and needs the user's desktop session; the
+# command-line mode runs the same installer with the same profile, image source and steps)
+yes "" | timeout 4200 anaconda --cmdline --kickstart /tmp/ks.cfg > /tmp/anaconda-stdout.log 2>&1
 rc=$?
 echo "ANACONDA-EXIT $rc"
 set +x

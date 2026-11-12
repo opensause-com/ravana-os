@@ -90,17 +90,16 @@ cat > /usr/local/bin/systemd-tmpfiles <<'WRAP'
 #!/bin/bash
 # only the installer's (root) calls are recorded; the desktop session's own run untouched
 [ "$(id -u)" = 0 ] || exec /usr/bin/systemd-tmpfiles "$@"
-L=/var/log/tmpfiles-wrap.log
-echo "[wrap] $*" >> $L
-SYSTEMD_LOG_LEVEL=debug /usr/bin/systemd-tmpfiles "$@" >> $L 2>&1; rc=$?
-echo "[wrap] exit code $rc" >> $L
+T=$(mktemp /var/log/tmpfiles-call.XXXXXX)
+echo "[wrap] $*" >> /var/log/tmpfiles-calls.txt
+SYSTEMD_LOG_LEVEL=debug /usr/bin/systemd-tmpfiles "$@" > $T 2>&1; rc=$?
+echo "[wrap] exit code $rc: $*" >> /var/log/tmpfiles-calls.txt
 if [ $rc -ne 0 ]; then
-  echo "[wrap] rules that apply (cat-config, /var/home):" >> $L
-  /usr/bin/systemd-tmpfiles --cat-config --root=/mnt/sysroot --prefix=/var/home >> $L 2>&1
-  echo "[wrap] state of /mnt/sysroot/var:" >> $L
-  ls -la /mnt/sysroot/var /mnt/sysroot/var/home >> $L 2>&1
-  findmnt -R /mnt/sysroot >> $L 2>&1
+  { echo "[wrap] FAILED with exit code $rc: $*"; cat $T
+    echo "[wrap] state of /mnt/sysroot/var:"; ls -la /mnt/sysroot/var /mnt/sysroot/var/home 2>&1
+    echo "[wrap] mounts:"; findmnt -R /mnt/sysroot 2>&1; } > /var/log/tmpfiles-FAILED.log
 fi
+rm -f $T
 exit $rc
 WRAP
 chmod +x /usr/local/bin/systemd-tmpfiles
@@ -112,7 +111,8 @@ yes "" | timeout 4200 anaconda --cmdline --kickstart /tmp/ks.cfg > /tmp/anaconda
 rc=$?
 echo "ANACONDA-EXIT $rc"
 set +x
-echo "== tmpfiles wrapper log"; tail -n 200 /var/log/tmpfiles-wrap.log 2>/dev/null
+echo "== tmpfiles calls"; cat /var/log/tmpfiles-calls.txt 2>/dev/null
+echo "== tmpfiles: the failing call (debug output first)"; head -n 220 /var/log/tmpfiles-FAILED.log 2>/dev/null
 echo "== installer output (last 80 lines)"; tail -n 80 /tmp/anaconda-stdout.log
 for f in /tmp/anaconda.log /tmp/program.log /tmp/storage.log /tmp/packaging.log /tmp/syslog /tmp/anacoda_custom_logs/*; do
   [ -f "$f" ] || continue

@@ -95,3 +95,25 @@ cp /src/iso.yaml /usr/lib/bootc-image-builder/iso.yaml
 
 # Clean up dnf cache to save space
 dnf clean all || :
+
+# The installer's /var/home step fails on this live system with
+#   "Path '/mnt/sysroot/var/home' is not under root '/var/mnt/sysroot', refusing SELinux label fix"
+# (systemd-tmpfiles exit code 73, which aborts the install). In the live system /mnt is a
+# symlink to /var/mnt, the installer names the target root through the symlink, and
+# systemd 262 now refuses that. Give tmpfiles the real path of --root. Live system only:
+# the installed system's files come from the image, not from this layer. Done last so
+# nothing above can put the original back.
+mv /usr/bin/systemd-tmpfiles /usr/libexec/systemd-tmpfiles.real
+cat > /usr/bin/systemd-tmpfiles <<'TMPF'
+#!/bin/bash
+args=()
+for a in "$@"; do
+    case "$a" in
+        --root=*) args+=("--root=$(realpath -m -- "${a#--root=}")") ;;
+        *) args+=("$a") ;;
+    esac
+done
+exec /usr/libexec/systemd-tmpfiles.real "${args[@]}"
+TMPF
+chmod 0755 /usr/bin/systemd-tmpfiles
+/usr/bin/systemd-tmpfiles --version | head -1

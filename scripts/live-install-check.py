@@ -72,6 +72,10 @@ clearpart --all --initlabel --drives=vda
 autopart --type=btrfs
 bootloader --location=mbr --boot-drive=vda
 shutdown
+# the command-line installer picks the text target; the graphical installer picks the graphical one
+%post
+systemctl set-default graphical.target
+%end
 """
 RUN_SH = r"""#!/bin/bash
 set -x

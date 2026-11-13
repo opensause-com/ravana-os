@@ -121,13 +121,15 @@ cat /tmp/ubuntu-before.sha
 """
 CHECK_DUAL = r"""
 echo "== dual boot check"
-mkdir -p /mnt/c1 /mnt/c2; mount -o ro /dev/vda1 /mnt/c1; mount -o ro /dev/vda2 /mnt/c2
-(cd /mnt/c1 && find EFI -type f | grep '^EFI/ubuntu' | sort | xargs sha256sum; cd /mnt/c2 && sha256sum MARKER DATA) > /tmp/ubuntu-after.sha
+# the installer may still hold the partitions: read from where they are mounted, else mount them
+c1=$(findmnt -n -o TARGET /dev/vda1 | head -1); c2=$(findmnt -n -o TARGET /dev/vda2 | head -1)
+[ -n "$c1" ] || { mkdir -p /mnt/c1; mount -o ro /dev/vda1 /mnt/c1; c1=/mnt/c1; }
+[ -n "$c2" ] || { mkdir -p /mnt/c2; mount -o ro /dev/vda2 /mnt/c2; c2=/mnt/c2; }
+(cd $c1 && find EFI -type f | grep '^EFI/ubuntu' | sort | xargs sha256sum; cd $c2 && sha256sum MARKER DATA) > /tmp/ubuntu-after.sha
 if cmp -s /tmp/ubuntu-before.sha /tmp/ubuntu-after.sha; then echo "DUAL-UBUNTU-INTACT"; else echo "DUAL-UBUNTU-CHANGED"; diff /tmp/ubuntu-before.sha /tmp/ubuntu-after.sha; fi
-echo "EFI folders now:"; ls /mnt/c1/EFI; ls /mnt/c1/EFI/BOOT /mnt/c1/EFI/fedora 2>&1
-[ -f /mnt/c1/EFI/fedora/shimx64.efi ] && echo "DUAL-RAVANA-BOOTFILES" || echo "DUAL-RAVANA-BOOTFILES-MISSING"
+echo "EFI folders now:"; ls $c1/EFI; ls $c1/EFI/BOOT $c1/EFI/fedora $c1/EFI/ubuntu 2>&1
+[ -f $c1/EFI/fedora/shimx64.efi ] && echo "DUAL-RAVANA-BOOTFILES" || echo "DUAL-RAVANA-BOOTFILES-MISSING"
 lsblk -o NAME,SIZE,FSTYPE,LABEL /dev/vda
-umount /mnt/c1 /mnt/c2
 """
 RUN_SH = r"""#!/bin/bash
 set -x

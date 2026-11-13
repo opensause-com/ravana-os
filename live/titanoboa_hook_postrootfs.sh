@@ -206,6 +206,7 @@ run0 --user=liveuser yad \
 # Offline install: the system image is embedded in the live system's container
 # storage (see build.sh), so installing needs no internet connection.
 ostreecontainer --url=$imageref:$imagetag --transport=containers-storage --no-signature-verification
+%include /usr/share/anaconda/post-scripts/protect-other-bootloaders.ks
 %include /usr/share/anaconda/post-scripts/install-configure-upgrade.ks
 %include /usr/share/anaconda/post-scripts/disable-fedora-flatpak.ks
 %include /usr/share/anaconda/post-scripts/install-flatpaks.ks
@@ -266,6 +267,30 @@ LC_ALL=C mokutil -t "\$SECUREBOOT_KEY" | grep -q "is already in the enrollment r
 EOF
 
 qrencode -o "$SECUREBOOT_DOC_URL_QR" "$SECUREBOOT_DOC_URL"
+
+# Installing next to another Linux: libostree sees that system's EFI/<name>/grub.cfg, decides GRUB
+# is in use, and runs grub2-mkconfig in the new deployment (which fails there and aborts the whole
+# install; it would also rewrite the other system's boot config). Set those files aside for the
+# duration of the install and put them back untouched afterwards, also when the install fails.
+cat <<'EOF' >/usr/share/anaconda/post-scripts/protect-other-bootloaders.ks
+%pre-install --erroronfail --log=/tmp/anacoda_custom_logs/protect-bootloaders-pre.log
+for f in /mnt/sysroot/boot/efi/EFI/*/grub.cfg; do
+    [ -f "$f" ] || continue
+    case "$f" in */EFI/fedora/*) continue ;; esac
+    echo "setting aside $f"; mv -f "$f" "$f.ravana-hold"
+done
+%end
+%onerror --nochroot --log=/tmp/anacoda_custom_logs/protect-bootloaders-onerror.log
+for f in /mnt/sysroot/boot/efi/EFI/*/grub.cfg.ravana-hold /mnt/sysimage/boot/efi/EFI/*/grub.cfg.ravana-hold; do
+    [ -f "$f" ] && mv -f "$f" "${f%.ravana-hold}"
+done
+%end
+%post --nochroot --log=/tmp/anacoda_custom_logs/protect-bootloaders-post.log
+for f in /mnt/sysimage/boot/efi/EFI/*/grub.cfg.ravana-hold; do
+    [ -f "$f" ] && { echo "putting back $f"; mv -f "$f" "${f%.ravana-hold}"; }
+done
+%end
+EOF
 
 # Install Flatpaks
 cat <<'EOF' >>/usr/share/anaconda/post-scripts/install-flatpaks.ks

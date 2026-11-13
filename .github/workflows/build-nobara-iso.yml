@@ -1,0 +1,65 @@
+name: Build Ravana OS ISO (Nobara base)
+
+# Builds the live ISO from Nobara's published kickstart plus Ravana's files, in a Fedora 44
+# container (livemedia-creator --no-virt, as Nobara's own example workflow does).
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: Commit of Nobara-Project/nobara-images to build from
+        default: d6bbc0a236f9aa234998b93e4033dea4f4db9623
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Free disk space
+        uses: ublue-os/remove-unwanted-software@cc0becac701cf642c8f0a6613bbdaf5dc36b259e # v9
+        continue-on-error: true
+
+      - name: Get Nobara's kickstarts
+        env:
+          REF: ${{ inputs.upstream_ref }}
+        run: |
+          [[ "$REF" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::upstream_ref must be a full commit hash"; exit 1; }
+          git init -q nobara-images && cd nobara-images
+          git fetch -q --depth 1 https://github.com/Nobara-Project/nobara-images.git "$REF"
+          git checkout -q FETCH_HEAD
+
+      - name: Build the ISO
+        run: |
+          mkdir -p out
+          docker run --rm --privileged \
+            -v "$PWD:/src" -v "$PWD/out:/out" -w /src/nobara-images/ISO-ready-flattened-kickstarts/44 \
+            -e RAVANA_SRC=/src -e NOBARA_SB_ALLOW_UNSIGNED=1 \
+            registry.fedoraproject.org/fedora:44 bash -euxo pipefail -c '
+              dnf install -y lorax lorax-lmc-novirt anaconda pykickstart sbsigntools openssl kmod findutils python3 zstd xz
+              python3 /src/nobara/make-ks.py nv-flat-nobara-live-kde-44.ks /tmp/ravana.ks
+              ksvalidator /tmp/ravana.ks
+              cp -R /src/nobara-images/lorax-default /tmp/lorax-default
+              livemedia-creator --ks /tmp/ravana.ks --no-virt --resultdir /tmp/release --project Ravana --make-iso \
+                --volid RAVANA-OS --iso-only --iso-name ravana-os-nobara-live.iso --releasever 44 --macboot \
+                --extra-boot-args "modules_load=nvidia" --lorax-templates /tmp/lorax-default
+              cp /tmp/release/*.iso /out/ || true
+              cp /tmp/ravana.ks /out/ravana.ks
+              cp /tmp/lmc*.log /tmp/anaconda/*.log /out/ 2>/dev/null || true
+            '
+          ls -lh out
+
+      - name: Checksum
+        if: always()
+        run: cd out && (sha256sum *.iso > ravana-os-nobara-live.iso.sha256 || true); ls -lh
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: ravana-nobara-iso
+          path: out/
+          retention-days: 7

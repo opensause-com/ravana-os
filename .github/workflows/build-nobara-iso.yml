@@ -3,12 +3,15 @@ name: Build Ravana OS ISO (Nobara base)
 # Builds the live ISO from Nobara's published kickstart plus Ravana's files, in a Fedora 44
 # container (livemedia-creator --no-virt, as Nobara's own example workflow does).
 on:
+  push:
+    branches: [ravana-nobara]
+    paths: [nobara/**, .github/workflows/build-nobara-iso.yml, system_files/**]
   workflow_dispatch:
     inputs:
       upstream_ref:
         description: Commit of Nobara-Project/nobara-images to build from
         default: d6bbc0a236f9aa234998b93e4033dea4f4db9623
-        required: true
+        required: false
 
 permissions:
   contents: read
@@ -26,7 +29,7 @@ jobs:
 
       - name: Get Nobara's kickstarts
         env:
-          REF: ${{ inputs.upstream_ref }}
+          REF: ${{ inputs.upstream_ref || 'd6bbc0a236f9aa234998b93e4033dea4f4db9623' }}
         run: |
           [[ "$REF" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::upstream_ref must be a full commit hash"; exit 1; }
           git init -q nobara-images && cd nobara-images

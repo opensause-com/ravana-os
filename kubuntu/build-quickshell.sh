@@ -16,7 +16,7 @@ apt-get install -y -qq --no-install-recommends \
 git clone --depth 1 --branch "$TAG" https://github.com/quickshell-mirror/quickshell.git /src
 cd /src
 cmake -GNinja -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCRASH_REPORTER=OFF -DDISTRIBUTOR="Ravana OS" -DINSTALL_QML_PREFIX=lib/x86_64-linux-gnu/qt6/qml
+    -DCRASH_HANDLER=OFF -DDISTRIBUTOR="Ravana OS" -DINSTALL_QML_PREFIX=lib/x86_64-linux-gnu/qt6/qml
 cmake --build build
 DESTDIR=/stage cmake --install build
 # runtime libraries the binary needs, so the ISO can install exactly those

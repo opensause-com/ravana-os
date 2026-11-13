@@ -280,7 +280,7 @@ for f in /mnt/sysroot/boot/efi/EFI/*/grub.cfg; do
     echo "setting aside $f"; mv -f "$f" "$f.ravana-hold"
 done
 %end
-%onerror --nochroot --log=/tmp/anacoda_custom_logs/protect-bootloaders-onerror.log
+%onerror --log=/tmp/anacoda_custom_logs/protect-bootloaders-onerror.log
 for f in /mnt/sysroot/boot/efi/EFI/*/grub.cfg.ravana-hold /mnt/sysimage/boot/efi/EFI/*/grub.cfg.ravana-hold; do
     [ -f "$f" ] && mv -f "$f" "${f%.ravana-hold}"
 done

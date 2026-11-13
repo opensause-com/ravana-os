@@ -77,6 +77,58 @@ shutdown
 systemctl set-default graphical.target
 %end
 """
+# Dual boot: the disk already holds another Linux (its own EFI folder, boot loader config and root
+# partition); Ravana goes into the free space and shares that EFI partition.
+DUALBOOT = os.environ.get("DUALBOOT", "1") == "1"
+KS_DUAL = r"""# complete kickstart for an unattended install next to another system
+%include /usr/share/anaconda/interactive-defaults.ks
+lang en_US.UTF-8
+keyboard us
+timezone UTC --utc
+rootpw --lock
+user --name=tester --password=tester --plaintext --groups=wheel
+ignoredisk --only-use=vda
+clearpart --none
+part /boot/efi --onpart=vda1 --noformat
+part /boot --fstype=ext4 --size=2048
+part btrfs.01 --fstype=btrfs --size=1 --grow
+btrfs none --label=ravana btrfs.01
+btrfs / --subvol --name=root LABEL=ravana
+btrfs /home --subvol --name=home LABEL=ravana
+btrfs /var --subvol --name=var LABEL=ravana
+bootloader --location=none
+shutdown
+%post
+systemctl set-default graphical.target
+%end
+"""
+# runs in the live system before the installer: builds a disk that looks like a PC with Ubuntu on it
+PREP_DUAL = r"""
+echo "== preparing a disk that already has another Linux on it"
+wipefs -a /dev/vda
+parted -s /dev/vda mklabel gpt mkpart EFI fat32 1MiB 513MiB set 1 esp on mkpart ubuntu-root ext4 513MiB 20993MiB
+partprobe /dev/vda; sleep 2
+mkfs.vfat -F32 /dev/vda1; mkfs.ext4 -q -L ubuntu-root /dev/vda2
+mkdir -p /mnt/u1 /mnt/u2; mount /dev/vda1 /mnt/u1; mount /dev/vda2 /mnt/u2
+mkdir -p /mnt/u1/EFI/ubuntu
+echo "# ubuntu grub config" > /mnt/u1/EFI/ubuntu/grub.cfg
+head -c 400000 /dev/urandom > /mnt/u1/EFI/ubuntu/shimx64.efi
+head -c 900000 /dev/urandom > /mnt/u1/EFI/ubuntu/grubx64.efi
+echo "my ubuntu files" > /mnt/u2/MARKER; head -c 3000000 /dev/urandom > /mnt/u2/DATA
+(cd /mnt/u1 && find EFI -type f | sort | xargs sha256sum; cd /mnt/u2 && sha256sum MARKER DATA) > /tmp/ubuntu-before.sha
+sync; umount /mnt/u1 /mnt/u2
+cat /tmp/ubuntu-before.sha
+"""
+CHECK_DUAL = r"""
+echo "== dual boot check"
+mkdir -p /mnt/c1 /mnt/c2; mount -o ro /dev/vda1 /mnt/c1; mount -o ro /dev/vda2 /mnt/c2
+(cd /mnt/c1 && find EFI -type f | grep '^EFI/ubuntu' | sort | xargs sha256sum; cd /mnt/c2 && sha256sum MARKER DATA) > /tmp/ubuntu-after.sha
+if cmp -s /tmp/ubuntu-before.sha /tmp/ubuntu-after.sha; then echo "DUAL-UBUNTU-INTACT"; else echo "DUAL-UBUNTU-CHANGED"; diff /tmp/ubuntu-before.sha /tmp/ubuntu-after.sha; fi
+echo "EFI folders now:"; ls /mnt/c1/EFI; ls /mnt/c1/EFI/BOOT /mnt/c1/EFI/fedora 2>&1
+[ -f /mnt/c1/EFI/fedora/shimx64.efi ] && echo "DUAL-RAVANA-BOOTFILES" || echo "DUAL-RAVANA-BOOTFILES-MISSING"
+lsblk -o NAME,SIZE,FSTYPE,LABEL /dev/vda
+umount /mnt/c1 /mnt/c2
+"""
 RUN_SH = r"""#!/bin/bash
 set -x
 cp /mnt/cfg/ks.cfg /tmp/ks.cfg
@@ -108,6 +160,7 @@ exit $rc
 WRAP
 chmod +x /usr/local/bin/systemd-tmpfiles
 export PATH=/usr/local/bin:$PATH
+@@PREP@@
 echo "== starting the installer"
 # (--liveinst would ignore the kickstart file and needs the user's desktop session; the
 # command-line mode runs the same installer with the same profile, image source and steps)
@@ -115,6 +168,7 @@ yes "" | timeout 4200 anaconda --cmdline --kickstart /tmp/ks.cfg > /tmp/anaconda
 rc=$?
 echo "ANACONDA-EXIT $rc"
 set +x
+@@CHECK@@
 echo "== tmpfiles calls"; cat /var/log/tmpfiles-calls.txt 2>/dev/null
 echo "== tmpfiles: the failing call, without the thousands of skipped entries"
 grep -v -E 'does not match any include prefix|^Reading config file|^Skipping file|^Looking for|^	/mnt/sysroot|libselinux|SELinux database' /var/log/tmpfiles-FAILED.log 2>/dev/null | head -n 200
@@ -260,7 +314,8 @@ def net_summary(pcap, title):
 
 # ---------------------------------------------------------------- phase 1: install
 cfg = WORK / "cfg"; cfg.mkdir(exist_ok=True)
-(cfg / "ks.cfg").write_text(KS); (cfg / "run.sh").write_text(RUN_SH)
+run_sh = RUN_SH.replace("@@PREP@@", PREP_DUAL if DUALBOOT else "").replace("@@CHECK@@", CHECK_DUAL if DUALBOOT else "")
+(cfg / "ks.cfg").write_text(KS_DUAL if DUALBOOT else KS); (cfg / "run.sh").write_text(run_sh)
 run(["xorriso", "-as", "mkisofs", "-V", "CIDATA", "-o", str(WORK / "cfg.iso"), str(cfg)], check=True)
 
 kargs = []
@@ -312,6 +367,12 @@ finally:
 REPORT.insert(0, "## Real installer test\n\n" + (
     f"The installer **{'finished successfully' if install_rc == 0 else 'FAILED'}** (exit code {install_rc}).\n"
     if install_rc is not None else "The installer did not run to the end (see below).\n"))
+if DUALBOOT:
+    _t = re.sub(r"\x1b\[[0-9;?]*[A-Za-z]", "", (OUT / "install-shell.log").read_text(errors="replace") if (OUT / "install-shell.log").exists() else "").replace("\r", "")
+    ok = "DUAL-UBUNTU-INTACT" in _t and "DUAL-RAVANA-BOOTFILES\n" in _t.replace("\r", "") + "\n"
+    REPORT.insert(1, "### Dual boot (installed next to an existing Ubuntu-style system)\n"
+                  + ("**Ubuntu's boot files and partition are untouched, and Ravana's boot files are on the shared EFI partition.**\n"
+                     if ok else "**PROBLEM: see the installer log below (look for DUAL- lines).**\n"))
 REPORT.append(net_summary(OUT / "install.pcap", "Network use while installing"))
 _log = OUT / "install-shell.log"
 text = _log.read_text(errors="replace") if _log.exists() else ""

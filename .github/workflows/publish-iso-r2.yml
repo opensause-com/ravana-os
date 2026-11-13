@@ -12,6 +12,14 @@ on:
         type: choice
         options: [testing, latest, shell]
         default: testing
+      artifact_name:
+        description: Artifact to publish (empty = the usual *-live-iso)
+        required: false
+        default: ''
+      make_room:
+        description: Delete the older ISO in this folder first if the bucket would pass its free limit
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,7 +35,8 @@ jobs:
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          pattern: '*-live-iso'
+          name: ${{ inputs.artifact_name || '' }}
+          pattern: ${{ inputs.artifact_name == '' && '*-live-iso' || '' }}
           merge-multiple: true
           path: output
           run-id: ${{ inputs.run_id }}
@@ -40,12 +49,21 @@ jobs:
 
       - name: Upload to Cloudflare R2
         env:
+          MAKE_ROOM: ${{ inputs.make_room }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
           R2_BUCKET: ${{ vars.R2_BUCKET }}
           R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
           R2_CHANNEL: ${{ vars.R2_CHANNEL }}
-          R2_EDITIONS: ${{ vars.R2_EDITIONS }}
+          R2_EDITIONS: ${{ vars.R2_EDITIONS }}${{ inputs.artifact_name != '' && ' ravana-os-nobara' || '' }}
           CHANNEL_IN: ${{ inputs.channel }}
-        run: scripts/r2-upload.sh "$CHANNEL_IN" output/*-live.iso
+        run: |
+          if [ "$MAKE_ROOM" = true ]; then
+            export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=auto
+            EP=(--endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com")
+            for k in ravana-os-live.iso ravana-os-live.iso.sha256; do
+              echo "making room: removing $CHANNEL_IN/$k"; aws s3 rm "${EP[@]}" "s3://$R2_BUCKET/$CHANNEL_IN/$k" || true
+            done
+          fi
+          scripts/r2-upload.sh "$CHANNEL_IN" output/*-live.iso

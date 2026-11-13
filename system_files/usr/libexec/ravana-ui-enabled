@@ -1,0 +1,14 @@
+#!/bin/sh
+# Is Ravana's own desktop (menu bar, dock, ...) switched on for this user?
+#   ravana-ui-enabled        exit 0 if the Ravana UI is on
+#   ravana-ui-enabled off    exit 0 if it is off (classic Plasma desktop)
+# Used by systemd: exit 1 only makes the unit skip, it is not a failure.
+# Setting: ~/.config/ravana/ui ("on"/"off"), else the system default /etc/ravana/ui, else off.
+state=off
+for f in /etc/ravana/ui "${XDG_CONFIG_HOME:-$HOME/.config}/ravana/ui"; do
+    [ -r "$f" ] && state=$(tr -d ' \n\t' < "$f")
+done
+[ "$state" = on ] || state=off
+[ "${1:-on}" = off ] && [ "$state" = off ] && exit 0
+[ "${1:-on}" = on ] && [ "$state" = on ] && exit 0
+exit 1

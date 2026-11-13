@@ -1,0 +1,30 @@
+#!/bin/bash
+# Switch Ravana's own desktop on or off without logging out.
+#   ravana-ui on | off | status
+# "off" gives the classic Plasma desktop (panel, start menu); "on" gives Ravana Shell.
+cfg="${XDG_CONFIG_HOME:-$HOME/.config}/ravana"
+sd() { systemctl --user "$@" 2>/dev/null; }
+reconfigure() { qdbus6 org.kde.KWin /KWin reconfigure >/dev/null 2>&1 || true; }
+case "${1:-status}" in
+  on)
+    mkdir -p "$cfg"; echo on > "$cfg/ui"
+    sd stop plasma-plasmashell.service plasma-polkit-agent.service
+    # ⌘Tab switcher of Ravana
+    kwriteconfig6 --file kwinrc --group TabBox --key LayoutName ravana
+    kwriteconfig6 --file kwinrc --group TabBox --key ApplicationsMode 1
+    reconfigure
+    sd start ravana-osd.service ravana-shell.service
+    echo "Ravana UI: on" ;;
+  off)
+    mkdir -p "$cfg"; echo off > "$cfg/ui"
+    sd stop ravana-shell.service ravana-osd.service
+    pkill -u "$USER" -x quickshell 2>/dev/null
+    kwriteconfig6 --file kwinrc --group TabBox --key LayoutName org.kde.breeze.desktop
+    kwriteconfig6 --file kwinrc --group TabBox --key ApplicationsMode 0
+    reconfigure
+    sd start plasma-plasmashell.service plasma-polkit-agent.service
+    echo "Ravana UI: off (classic Plasma desktop)" ;;
+  status)
+    if /usr/libexec/ravana-ui-enabled; then echo "Ravana UI: on"; else echo "Ravana UI: off (classic Plasma desktop)"; fi ;;
+  *) echo "usage: ravana-ui on|off|status"; exit 2 ;;
+esac

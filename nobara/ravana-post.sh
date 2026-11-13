@@ -18,11 +18,12 @@ setkv SUPPORT_URL "https://github.com/ravana-os/ravana-os/discussions"
 # --- the shell: Ravana Shell replaces Plasma's shell; KWin stays the window engine
 test -x /usr/bin/quickshell
 test -f /usr/share/ravana/shell/shell.qml
+# On/off switch (see /usr/libexec/ravana-ui-enabled): both desktops are installed, and each
+# starts only when the user's setting says so. Default is OFF (classic Plasma) while Ravana
+# Shell is not stable: `ravana-ui on` switches it on, `ravana-ui off` back. Nothing is masked.
 systemctl --global enable ravana-shell.service ravana-osd.service
-systemctl --global mask plasma-plasmashell.service plasma-polkit-agent.service || true
 rm -f /etc/xdg/autostart/ravana-look-update.desktop
-f=/etc/xdg/autostart/polkit-kde-authentication-agent-1.desktop
-[ -f "$f" ] && { grep -q '^Hidden=true' "$f" || echo 'Hidden=true' >> "$f"; }
+test -x /usr/bin/ravana-ui && test -f /etc/ravana/ui
 echo i2c-dev > /usr/lib/modules-load.d/ravana-ddc.conf
 
 # --- login screen: SDDM with the Ravana theme
@@ -50,6 +51,10 @@ LIVE
 
 # --- desktop settings (plain config: shortcuts, switcher, settings app)
 bash /tmp/ravana-build/55-ravana-shell-config.sh
+# the Ravana ⌘Tab switcher belongs to the Ravana UI: classic Plasma keeps its own until `ravana-ui on`
+kwriteconfig6 --file /etc/xdg/kwinrc --group TabBox --key LayoutName org.kde.breeze.desktop
+kwriteconfig6 --file /etc/xdg/kwinrc --group TabBox --key ApplicationsMode 0
+kwriteconfig6 --file /etc/xdg/kwinrc --group TabBoxAlternative --key LayoutName org.kde.breeze.desktop
 bash /tmp/ravana-build/57-ravana-performance.sh || true
 
 # --- the installer (Calamares) copies this live system to the disk. The live autologin must not

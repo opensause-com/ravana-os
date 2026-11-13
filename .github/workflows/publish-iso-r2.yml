@@ -16,6 +16,10 @@ on:
         description: Artifact to publish (empty = the usual *-live-iso)
         required: false
         default: ''
+      take_down:
+        description: Only remove the ISOs from this folder (no upload)
+        type: boolean
+        default: false
       make_room:
         description: Delete the older ISO in this folder first if the bucket would pass its free limit
         type: boolean
@@ -33,7 +37,25 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      - name: Take down (remove the public ISOs, nothing else)
+        if: inputs.take_down
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          CHANNEL_IN: ${{ inputs.channel }}
+        run: |
+          EP=(--endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com")
+          aws s3 ls "${EP[@]}" "s3://$R2_BUCKET/$CHANNEL_IN/" || true
+          for k in ravana-os-nobara-live.iso ravana-os-nobara-live.iso.sha256 ravana-os-live.iso ravana-os-live.iso.sha256; do
+            aws s3 rm "${EP[@]}" "s3://$R2_BUCKET/$CHANNEL_IN/$k" || true
+          done
+          aws s3 ls "${EP[@]}" "s3://$R2_BUCKET/" --recursive || true
+
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        if: ${{ !inputs.take_down }}
         with:
           name: ${{ inputs.artifact_name || '' }}
           pattern: ${{ inputs.artifact_name == '' && '*-live-iso' || '' }}
@@ -43,11 +65,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check
+        if: ${{ !inputs.take_down }}
         run: |
           ls -lh output
           cd output && sha256sum -c *.sha256
 
       - name: Upload to Cloudflare R2
+        if: ${{ !inputs.take_down }}
         env:
           MAKE_ROOM: ${{ inputs.make_room }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}

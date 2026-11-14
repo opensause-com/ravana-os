@@ -54,7 +54,7 @@ EFI_START=$(xorriso -indev "$SRC_ISO" -report_el_torito as_mkisofs 2>/dev/null |
 read -r ES EZ <<< "$EFI_START"
 dd if="$SRC_ISO" of=efi.img bs=512 skip=$((ES * 4)) count="$EZ" status=none
 LABEL="$(xorriso -indev "$SRC_ISO" -pvd_info 2>/dev/null | sed -n 's/^Volume Id *: *//p' | head -1)"
-xorriso -as mkisofs -r -V "$LABEL" -o "$OUT" -J -joliet-long -cache-inodes \
+xorriso -as mkisofs -iso-level 3 -r -V "$LABEL" -o "$OUT" -J -joliet-long -cache-inodes \
     --grub2-mbr mbr.bin --protective-msdos-label -partition_offset 16 -partition_cyl_align off \
     --mbr-force-bootable -append_partition 2 28732ac11ff8d211ba4b00a0c93ec93b efi.img -appended_part_as_gpt \
     -iso_mbr_part_type a2a0d0ebe5b9334487c068b6b72699c7 \

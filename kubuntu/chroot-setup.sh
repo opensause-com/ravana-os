@@ -3,9 +3,28 @@
 set -euxo pipefail
 export DEBIAN_FRONTEND=noninteractive LC_ALL=C
 
-# --- package sources: Steam lives in multiverse, 32-bit libraries need i386
+# --- package sources: the live image points apt at its own CD; use the real archive while building
+ls -la /etc/apt/sources.list.d/ /etc/apt/sources.list 2>&1 || true
+mkdir -p /root/apt-keep
+for f in /etc/apt/sources.list.d/cdrom.sources /etc/apt/sources.list; do
+    [ -f "$f" ] && mv "$f" "/root/apt-keep/$(basename "$f")"
+done
+if ! ls /etc/apt/sources.list.d/*.sources >/dev/null 2>&1; then
+cat > /etc/apt/sources.list.d/ubuntu.sources <<'SRC'
+Types: deb
+URIs: http://archive.ubuntu.com/ubuntu/
+Suites: resolute resolute-updates resolute-backports
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: http://security.ubuntu.com/ubuntu/
+Suites: resolute-security
+Components: main restricted universe multiverse
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+SRC
+fi
 for f in /etc/apt/sources.list.d/*.sources; do
-    [ -f "$f" ] || continue
     sed -i -E 's/^Components:.*/Components: main restricted universe multiverse/' "$f"
 done
 dpkg --add-architecture i386
@@ -64,6 +83,9 @@ GRUB_DISTRIBUTOR="Ravana OS"
 GRUBD
 
 # --- tidy
+[ -f /root/apt-keep/cdrom.sources ] && mv /root/apt-keep/cdrom.sources /etc/apt/sources.list.d/cdrom.sources
+[ -f /root/apt-keep/sources.list ] && mv /root/apt-keep/sources.list /etc/apt/sources.list
+rm -rf /root/apt-keep
 apt-get clean
 rm -f /quickshell-runtime-packages.txt
 rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
